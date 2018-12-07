@@ -49,10 +49,13 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
         super(service);
     }
 
-    private static String extractStanzaId(Element packet, boolean isTypeGroupChat, Conversation conversation) {
+    private static String extractStanzaId(MessagePacket packet, boolean isTypeGroupChat, Conversation conversation) {
         final Jid by;
         final boolean safeToExtract;
         if (isTypeGroupChat) {
+            if (conversation.getMucOptions().isMix()) {
+                return packet.getId();
+            }
             by = conversation.getJid().asBareJid();
             safeToExtract = conversation.getMucOptions().hasFeature(Namespace.STANZA_IDS);
         } else {
@@ -221,6 +224,32 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 final Element storage = i == null ? null : i.findChild("storage", Namespace.BOOKMARKS);
                 mXmppConnectionService.processBookmarks(account, storage);
             }
+        } else if ("urn:xmpp:mix:nodes:participants".equals(node)) {
+            Conversation conversation = mXmppConnectionService.find(account, from.asBareJid());
+            if (conversation == null) {
+                Log.d(Config.LOGTAG,"not finding proper conversation for participant event");
+                return;
+            }
+            for(Element item : items.getChildren()) {
+                if ("item".equals(item.getName())) {
+                    MucOptions.User user = AbstractParser.parseParticipant(conversation, item);
+                    if (conversation.getMucOptions().updateUser(user)) {
+                        mXmppConnectionService.getAvatarService().clear(conversation);
+                    }
+                    Log.d(Config.LOGTAG,"updating user with full jid="+user.getFullJid());
+                    //Log.d(Config.LOGTAG,item.toString());
+                } else if ("retract".equals(item.getName())) {
+                    String id = item.getAttribute("id");
+                    if (id != null) {
+                        Jid jid = conversation.getJid().asBareJid().withResource(id);
+                        MucOptions.User user = conversation.getMucOptions().deleteUser(jid);
+                        Log.d(Config.LOGTAG,account.getJid().asBareJid()+": retracting user "+jid);
+                        if (user != null) {
+                            mXmppConnectionService.getAvatarService().clear(conversation);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -387,20 +416,34 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             }
 
             if (isTypeGroupChat) {
-                if (conversation.getMucOptions().isSelf(counterpart)) {
-                    status = Message.STATUS_SEND_RECEIVED;
-                    isCarbon = true; //not really carbon but received from another resource
-                    if (mXmppConnectionService.markMessage(conversation, remoteMsgId, status, serverMsgId)) {
-                        return;
-                    } else if (remoteMsgId == null || Config.IGNORE_ID_REWRITE_IN_MUC) {
-                        Message message = conversation.findSentMessageWithBody(packet.getBody());
-                        if (message != null) {
-                            mXmppConnectionService.markMessage(message, status);
+                if (conversation.getMucOptions().isMix()) {
+                    if (account.getJid().asBareJid().equals(extractJid(packet))) {
+                        status = Message.STATUS_SEND_RECEIVED;
+                        isCarbon = true;
+                        Element mix = packet.findChild("mix",Namespace.MIX_CORE);
+                        String submissionId = mix == null ? null : mix.findChildContent("submission-id");
+                        if (submissionId != null && mXmppConnectionService.markMessage(conversation, submissionId, status, serverMsgId)) {
                             return;
                         }
+                    } else {
+                        status = Message.STATUS_RECEIVED;
                     }
                 } else {
-                    status = Message.STATUS_RECEIVED;
+                    if (conversation.getMucOptions().isSelf(counterpart)) {
+                        status = Message.STATUS_SEND_RECEIVED;
+                        isCarbon = true; //not really carbon but received from another resource
+                        if (mXmppConnectionService.markMessage(conversation, remoteMsgId, status, serverMsgId)) {
+                            return;
+                        } else if (remoteMsgId == null || Config.IGNORE_ID_REWRITE_IN_MUC) {
+                            Message message = conversation.findSentMessageWithBody(packet.getBody());
+                            if (message != null) {
+                                mXmppConnectionService.markMessage(message, status);
+                                return;
+                            }
+                        }
+                    } else {
+                        status = Message.STATUS_RECEIVED;
+                    }
                 }
             }
             final Message message;
@@ -491,14 +534,18 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             message.markable = packet.hasChild("markable", "urn:xmpp:chat-markers:0");
             if (conversationMultiMode) {
                 message.setMucUser(conversation.getMucOptions().findUserByFullJid(counterpart));
-                final Jid fallback = conversation.getMucOptions().getTrueCounterpart(counterpart);
-                Jid trueCounterpart;
-                if (message.getEncryption() == Message.ENCRYPTION_AXOLOTL) {
-                    trueCounterpart = message.getTrueCounterpart();
-                } else if (query != null && query.safeToExtractTrueCounterpart()) {
-                    trueCounterpart = getTrueCounterpart(mucUserElement, fallback);
+                final Jid trueCounterpart;
+                if (conversation.getMucOptions().isMix()) {
+                    trueCounterpart = extractJid(packet);
                 } else {
-                    trueCounterpart = fallback;
+                    final Jid fallback = conversation.getMucOptions().getTrueCounterpart(counterpart);
+                    if (message.getEncryption() == Message.ENCRYPTION_AXOLOTL) {
+                        trueCounterpart = message.getTrueCounterpart();
+                    } else if (query != null && query.safeToExtractTrueCounterpart()) {
+                        trueCounterpart = getTrueCounterpart(mucUserElement, fallback);
+                    } else {
+                        trueCounterpart = fallback;
+                    }
                 }
                 if (trueCounterpart != null && trueCounterpart.asBareJid().equals(account.getJid().asBareJid())) {
                     status = isTypeGroupChat ? Message.STATUS_SEND_RECEIVED : Message.STATUS_SEND;
@@ -807,6 +854,12 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 mXmppConnectionService.getAvatarService().clear(contact);
             }
         }
+    }
+
+    private static Jid extractJid(MessagePacket message) {
+        Element mix = message.findChild("mix",Namespace.MIX_CORE);
+        String jid = mix == null ? null : mix.findChildContent("jid");
+        return jid == null ? null : Jid.of(jid);
     }
 
     private void dismissNotification(Account account, Jid counterpart, MessageArchiveService.Query query) {

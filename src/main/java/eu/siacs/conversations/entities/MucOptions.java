@@ -16,6 +16,7 @@ import eu.siacs.conversations.R;
 import eu.siacs.conversations.services.MessageArchiveService;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import eu.siacs.conversations.xmpp.forms.Data;
 import eu.siacs.conversations.xmpp.forms.Field;
@@ -109,6 +110,10 @@ public class MucOptions {
 
     public boolean mamSupport() {
         return MessageArchiveService.Version.has(getFeatures());
+    }
+
+    public boolean isMix() {
+        return hasFeature(Namespace.MIX_CORE);
     }
 
     public boolean updateConfiguration(ServiceDiscoveryResult serviceDiscoveryResult) {
@@ -716,12 +721,20 @@ public class MucOptions {
             this.role = Role.of(role);
         }
 
+        public void setRole(Role role) {
+            this.role = role;
+        }
+
         public Affiliation getAffiliation() {
             return this.affiliation;
         }
 
         public void setAffiliation(String affiliation) {
             this.affiliation = Affiliation.of(affiliation);
+        }
+
+        public void setAffiliation(Affiliation affiliation) {
+            this.affiliation = affiliation;
         }
 
         public long getPgpKeyId() {

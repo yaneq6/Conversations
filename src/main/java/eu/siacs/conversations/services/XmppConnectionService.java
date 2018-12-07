@@ -1846,7 +1846,11 @@ public class XmppConnectionService extends Service {
 						pushBookmarks(bookmark.getAccount());
 					}
 				}
-				leaveMuc(conversation);
+				if (conversation.getMucOptions().isMix()) {
+                    leaveMix(conversation);
+                } else {
+                    leaveMuc(conversation);
+                }
 			} else {
 				if (conversation.getContact().getOption(Contact.Options.PENDING_SUBSCRIPTION_REQUEST)) {
 				    stopPresenceUpdatesTo(conversation.getContact());
@@ -2295,8 +2299,8 @@ public class XmppConnectionService extends Service {
 			conversation.setHasMessagesLeftOnServer(false);
 			fetchConferenceConfiguration(conversation, new OnConferenceConfigurationFetched() {
 
-				private void join(Conversation conversation) {
-					Account account = conversation.getAccount();
+			    private void joinMuc(Conversation conversation) {
+			        Account account = conversation.getAccount();
 					final MucOptions mucOptions = conversation.getMucOptions();
 					final Jid joinJid = mucOptions.getSelf().getFullJid();
 					Log.d(Config.LOGTAG, account.getJid().asBareJid().toString() + ": joining conversation " + joinJid.toString());
@@ -2333,6 +2337,32 @@ public class XmppConnectionService extends Service {
 						}
 					}
 					sendUnsentMessages(conversation);
+                }
+
+                private void joinMix(Conversation conversation) {
+                    IqPacket clientJoin = new IqPacket(IqPacket.TYPE.SET);
+                    Element join = clientJoin.addChild("client-join",Namespace.MIX_PAM).setAttribute("channel",conversation.getJid().asBareJid().toEscapedString()).addChild("join",Namespace.MIX_CORE);
+                    join.addChild("subscribe").setAttribute("node","urn:xmpp:mix:nodes:messages");
+                    join.addChild("subscribe").setAttribute("node","urn:xmpp:mix:nodes:participants");
+                    sendIqPacket(account, clientJoin, new OnIqPacketReceived() {
+                        @Override
+                        public void onIqPacketReceived(Account account, IqPacket packet) {
+                            conversation.getMucOptions().setOnline();
+                            //Log.d(Config.LOGTAG,packet.toString());
+                        }
+                    });
+                    fetchMixParticipants(conversation);
+                    if (conversation.getMucOptions().mamSupport()) {
+                        getMessageArchiveService().catchupMUC(conversation);
+                    }
+                }
+
+				private void join(Conversation conversation) {
+					if (conversation.getMucOptions().isMix()) {
+					    joinMix(conversation);
+                    } else {
+					    joinMuc(conversation);
+                    }
 				}
 
 				@Override
@@ -2359,6 +2389,29 @@ public class XmppConnectionService extends Service {
 			updateConversationUi();
 		}
 	}
+
+	private void fetchMixParticipants(final Conversation conversation) {
+	    IqPacket fetch = new IqPacket(IqPacket.TYPE.GET);
+	    fetch.setTo(conversation.getJid().asBareJid());
+	    fetch.addChild("pubsub",Namespace.PUBSUB).addChild("items").setAttribute("node","urn:xmpp:mix:nodes:participants");
+	    sendIqPacket(conversation.getAccount(), fetch, (account, response) -> {
+            if (response.getType() == IqPacket.TYPE.RESULT) {
+                Element pubsub = response.findChild("pubsub",Namespace.PUBSUB);
+                Element items = pubsub == null ? null : pubsub.findChild("items");
+                if (items != null) {
+                    final MucOptions mucOptions = conversation.getMucOptions();
+                    for(Element item : items.getChildren()) {
+                        if ("item".equals(item.getName())) {
+                            MucOptions.User user = AbstractParser.parseParticipant(conversation, item);
+                            Log.d(Config.LOGTAG,account.getJid().asBareJid()+": adding user with full jid="+user.getFullJid()+" after fetch");
+                            mucOptions.updateUser(user);
+                        }
+                    }
+                }
+                getAvatarService().clear(conversation);
+            }
+        });
+    }
 
 	private void fetchConferenceMembers(final Conversation conversation) {
 		final Account account = conversation.getAccount();
@@ -2527,6 +2580,14 @@ public class XmppConnectionService extends Service {
 		return true;
 	}
 
+	public void leaveMix(Conversation conversation) {
+        IqPacket request = new IqPacket(IqPacket.TYPE.SET);
+        Element clientLeave = request.addChild("client-leave",Namespace.MIX_PAM).setAttribute("channel",conversation.getJid().asBareJid().toEscapedString());
+        clientLeave.addChild("leave",Namespace.MIX_CORE);
+        sendIqPacket(conversation.getAccount(), request, (account, packet) -> Log.d(Config.LOGTAG,packet.toString()));
+
+    }
+
 	public void leaveMuc(Conversation conversation) {
 		leaveMuc(conversation, false);
 	}
@@ -2574,6 +2635,32 @@ public class XmppConnectionService extends Service {
 		Log.d(Config.LOGTAG, account.getJid().asBareJid().toString() + ": creating adhoc conference with " + jids.toString());
 		if (account.getStatus() == Account.State.ONLINE) {
 			try {
+
+			    List<String> mixServers = account.getXmppConnection().getMixServers();
+			    if (mixServers.size() > 0) {
+			        Log.d(Config.LOGTAG,"found mix servers: "+mixServers.get(0));
+			        IqPacket mixCreate = new IqPacket(IqPacket.TYPE.SET);
+			        mixCreate.setTo(Jid.of(mixServers.get(0)));
+			        mixCreate.addChild("create",Namespace.MIX_CORE);//.setAttribute("channel",CryptoHelper.pronounceable(getRNG()));
+                    Log.d(Config.LOGTAG,mixCreate.toString());
+			        sendIqPacket(account, mixCreate, new OnIqPacketReceived() {
+                        @Override
+                        public void onIqPacketReceived(Account account, IqPacket packet) {
+                            if (packet.getType() == IqPacket.TYPE.RESULT) {
+                                final Element create = packet.findChild("create",Namespace.MIX_CORE);
+                                final String channel = create == null ? null : create.getAttribute("channel");
+                                if (channel != null) {
+                                    Jid jid = Jid.of(channel,packet.getFrom(), null);
+                                    findOrCreateConversation(account, jid, true, false);
+                                }
+                            } else {
+                                Log.d(Config.LOGTAG, packet.toString());
+                            }
+                        }
+                    });
+			        return false;
+                }
+
 				String server = findConferenceServer(account);
 				if (server == null) {
 					if (callback != null) {

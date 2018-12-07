@@ -1360,6 +1360,7 @@ public class XmppConnection implements Runnable {
     }
 
     public void sendMessagePacket(final MessagePacket packet) {
+        Log.d(Config.LOGTAG,packet.toString());
         this.sendPacket(packet);
     }
 
@@ -1543,12 +1544,12 @@ public class XmppConnection implements Runnable {
         return servers;
     }
 
-    public List<String> getMucServers() {
+    private List<String> getGroupChatService(final String namespace) {
         List<String> servers = new ArrayList<>();
         synchronized (this.disco) {
             for (final Entry<Jid, ServiceDiscoveryResult> cursor : disco.entrySet()) {
                 final ServiceDiscoveryResult value = cursor.getValue();
-                if (value.getFeatures().contains("http://jabber.org/protocol/muc")
+                if (value.getFeatures().contains(namespace)
                         && value.hasIdentity("conference", "text")
                         && !value.getFeatures().contains("jabber:iq:gateway")
                         && !value.hasIdentity("conference", "irc")) {
@@ -1557,6 +1558,14 @@ public class XmppConnection implements Runnable {
             }
         }
         return servers;
+    }
+
+    public List<String> getMixServers() {
+        return getGroupChatService(Namespace.MIX_CORE);
+    }
+
+    public List<String> getMucServers() {
+        return getGroupChatService("http://jabber.org/protocol/muc");
     }
 
     public String getMucServer() {
@@ -1799,6 +1808,10 @@ public class XmppConnection implements Runnable {
 
         public boolean mam() {
             return MessageArchiveService.Version.has(getAccountFeatures());
+        }
+
+        public boolean mixPam() {
+            return hasDiscoFeature(account.getJid().asBareJid(), Namespace.MIX_PAM);
         }
 
         public List<String> getAccountFeatures() {

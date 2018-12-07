@@ -5,12 +5,14 @@ import java.text.SimpleDateFormat;
 
 import java.util.Locale;
 
+import eu.siacs.conversations.Config;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.MucOptions;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.xml.Element;
+import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.InvalidJid;
 import eu.siacs.conversations.xmpp.stanzas.AbstractStanza;
 import rocks.xmpp.addr.Jid;
@@ -95,6 +97,18 @@ public abstract class AbstractParser {
 			return null;
 		}
 		return item.findChildContent("data", "urn:xmpp:avatar:data");
+	}
+
+	public static MucOptions.User parseParticipant(Conversation conversation, Element item) {
+		Element participant = item.findChild("participant", Namespace.MIX_CORE);
+		final String id = item.getAttribute("id");
+		final Jid jid = participant == null ? null : participant.getAttributeAsJid("jid");
+		Jid fullJid = conversation.getJid().asBareJid().withResource(id);
+		MucOptions.User user = new MucOptions.User(conversation.getMucOptions(), fullJid);
+		user.setRealJid(jid);
+		user.setAffiliation(MucOptions.Affiliation.MEMBER);
+		user.setRole(MucOptions.Role.PARTICIPANT);
+		return user;
 	}
 
 	public static MucOptions.User parseItem(Conversation conference, Element item) {
