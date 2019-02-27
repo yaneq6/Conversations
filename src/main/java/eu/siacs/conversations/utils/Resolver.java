@@ -15,10 +15,12 @@ import java.util.Collections;
 import java.util.List;
 
 import de.measite.minidns.AbstractDNSClient;
+import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSClient;
 import de.measite.minidns.DNSName;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
+import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECResultNotAuthenticException;
 import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.hla.DnssecResolverApi;
@@ -81,6 +83,14 @@ public class Resolver {
         return Collections.singletonList(result);
     }
 
+
+    public static void clearCache() {
+        DNSCache cache = ResolverApi.INSTANCE.getClient().getCache();
+        if (cache instanceof LRUCache) {
+            Log.d(Config.LOGTAG,"clearing DNS cache");
+            ((LRUCache) cache).clear();
+        }
+    }
 
     public static List<Result> resolve(String domain) {
         final  List<Result> ipResults = fromIpAddress(domain);

@@ -576,6 +576,7 @@ public class XmppConnectionService extends Service {
             final String uuid = intent.getStringExtra("uuid");
             switch (action) {
                 case ConnectivityManager.CONNECTIVITY_ACTION:
+                    Resolver.clearCache();
                     if (hasInternetConnection()) {
                         if (Config.POST_CONNECTIVITY_CHANGE_PING_INTERVAL > 0) {
                             schedulePostConnectivityChange();
