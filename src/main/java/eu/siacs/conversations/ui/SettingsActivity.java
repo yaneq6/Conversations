@@ -1,25 +1,24 @@
 package eu.siacs.conversations.ui;
 
-import android.preference.CheckBoxPreference;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageManager;
-
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -34,29 +33,20 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.features.Settings;
 import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.ExportBackupService;
 import eu.siacs.conversations.services.MemorizingTrustManager;
 import eu.siacs.conversations.services.QuickConversationsService;
-import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.utils.GeoHelper;
+import eu.siacs.conversations.utils.StyledAttributes;
 import eu.siacs.conversations.utils.TimeframeUtils;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.features.Settings.*;
+
 public class SettingsActivity extends XmppActivity implements
 		OnSharedPreferenceChangeListener {
-
-	public static final String KEEP_FOREGROUND_SERVICE = "enable_foreground_service";
-	public static final String AWAY_WHEN_SCREEN_IS_OFF = "away_when_screen_off";
-	public static final String TREAT_VIBRATE_AS_SILENT = "treat_vibrate_as_silent";
-	public static final String DND_ON_SILENT_MODE = "dnd_on_silent_mode";
-	public static final String MANUALLY_CHANGE_PRESENCE = "manually_change_presence";
-	public static final String BLIND_TRUST_BEFORE_VERIFICATION = "btbv";
-	public static final String AUTOMATIC_MESSAGE_DELETION = "automatic_message_deletion";
-	public static final String BROADCAST_LAST_ACTIVITY = "last_activity";
-	public static final String THEME = "theme";
-	public static final String SHOW_DYNAMIC_TAGS = "show_dynamic_tags";
-	public static final String OMEMO_SETTING = "omemo";
 
 	public static final int REQUEST_CREATE_BACKUP = 0xbf8701;
 	private SettingsFragment mSettingsFragment;
@@ -125,7 +115,7 @@ public class SettingsActivity extends XmppActivity implements
 			}
 		}
 
-		ListPreference automaticMessageDeletionList = (ListPreference) mSettingsFragment.findPreference(AUTOMATIC_MESSAGE_DELETION);
+		ListPreference automaticMessageDeletionList = (ListPreference) mSettingsFragment.findPreference(Settings.AUTOMATIC_MESSAGE_DELETION);
 		if (automaticMessageDeletionList != null) {
 			final int[] choices = getResources().getIntArray(R.array.automatic_message_deletion_values);
 			CharSequence[] entries = new CharSequence[choices.length];

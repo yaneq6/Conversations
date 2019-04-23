@@ -16,6 +16,7 @@ import java.security.SecureRandom;
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.features.StartConversation;
 import eu.siacs.conversations.utils.CryptoHelper;
 import rocks.xmpp.addr.Jid;
 
@@ -77,7 +78,7 @@ public class MagicCreateActivity extends XmppActivity implements TextWatcher {
 					intent.putExtra("init", true);
 					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 					Toast.makeText(MagicCreateActivity.this, R.string.secure_password_generated, Toast.LENGTH_SHORT).show();
-					StartConversationActivity.addInviteUri(intent, getIntent());
+					StartConversation.addInviteUri(intent, getIntent());
 					startActivity(intent);
 				}
 			} catch (IllegalArgumentException e) {

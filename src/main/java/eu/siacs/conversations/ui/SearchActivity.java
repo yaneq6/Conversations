@@ -53,16 +53,16 @@ import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Conversational;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.services.MessageSearchTask;
+import eu.siacs.conversations.services.interfaces.OnSearchResultsAvailable;
 import eu.siacs.conversations.ui.adapter.MessageAdapter;
-import eu.siacs.conversations.ui.interfaces.OnSearchResultsAvailable;
 import eu.siacs.conversations.ui.util.ChangeWatcher;
 import eu.siacs.conversations.ui.util.DateSeparator;
-import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.ui.util.ListViewUtils;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.ui.util.ShareUtil;
 import eu.siacs.conversations.utils.FtsUtils;
 import eu.siacs.conversations.utils.MessageUtils;
+import eu.siacs.conversations.utils.StyledAttributes;
 
 import static eu.siacs.conversations.ui.util.SoftKeyboardUtils.hideSoftKeyboard;
 import static eu.siacs.conversations.ui.util.SoftKeyboardUtils.showKeyboard;

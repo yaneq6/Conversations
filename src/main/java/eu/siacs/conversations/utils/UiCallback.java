@@ -1,4 +1,4 @@
-package eu.siacs.conversations.ui;
+package eu.siacs.conversations.utils;
 
 import android.app.PendingIntent;
 

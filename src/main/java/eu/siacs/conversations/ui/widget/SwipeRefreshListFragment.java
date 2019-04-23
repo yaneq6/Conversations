@@ -19,7 +19,6 @@ package eu.siacs.conversations.ui.widget;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
-import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,7 +26,7 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 
 import eu.siacs.conversations.R;
-import eu.siacs.conversations.ui.util.StyledAttributes;
+import eu.siacs.conversations.utils.StyledAttributes;
 
 /**
  * Subclass of {@link android.support.v4.app.ListFragment} which provides automatic support for

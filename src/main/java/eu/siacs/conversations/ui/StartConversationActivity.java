@@ -74,14 +74,15 @@ import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
 import eu.siacs.conversations.ui.widget.SwipeRefreshListFragment;
 import eu.siacs.conversations.utils.AccountUtils;
+import eu.siacs.conversations.utils.UiCallback;
 import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist;
 import eu.siacs.conversations.xmpp.XmppConnection;
 import rocks.xmpp.addr.Jid;
 
-public class StartConversationActivity extends XmppActivity implements XmppConnectionService.OnConversationUpdate, OnRosterUpdate, OnUpdateBlocklist, CreatePrivateGroupChatDialog.CreateConferenceDialogListener, JoinConferenceDialog.JoinConferenceDialogListener, SwipeRefreshLayout.OnRefreshListener, CreatePublicChannelDialog.CreatePublicChannelDialogListener {
+import static eu.siacs.conversations.features.StartConversation.EXTRA_INVITE_URI;
 
-	public static final String EXTRA_INVITE_URI = "eu.siacs.conversations.invite_uri";
+public class StartConversationActivity extends XmppActivity implements XmppConnectionService.OnConversationUpdate, OnRosterUpdate, OnUpdateBlocklist, CreatePrivateGroupChatDialog.CreateConferenceDialogListener, JoinConferenceDialog.JoinConferenceDialogListener, SwipeRefreshLayout.OnRefreshListener, CreatePublicChannelDialog.CreatePublicChannelDialogListener {
 
 	private final int REQUEST_SYNC_CONTACTS = 0x28cf;
 	private final int REQUEST_CREATE_CONFERENCE = 0x39da;
@@ -1253,12 +1254,6 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 				fragments[position] = listFragment;
 			}
 			return fragments[position];
-		}
-	}
-
-	public static void addInviteUri(Intent to, Intent from) {
-		if (from != null && from.hasExtra(EXTRA_INVITE_URI)) {
-			to.putExtra(EXTRA_INVITE_URI, from.getStringExtra(EXTRA_INVITE_URI));
 		}
 	}
 

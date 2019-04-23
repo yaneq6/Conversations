@@ -56,7 +56,6 @@ import eu.siacs.conversations.ui.ConversationsActivity;
 import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.ui.service.AudioPlayer;
 import eu.siacs.conversations.ui.text.DividerSpan;
-import eu.siacs.conversations.ui.text.QuoteSpan;
 import eu.siacs.conversations.ui.util.AvatarWorkerTask;
 import eu.siacs.conversations.ui.util.MyLinkify;
 import eu.siacs.conversations.ui.util.ViewUtil;
@@ -69,11 +68,13 @@ import eu.siacs.conversations.utils.Emoticons;
 import eu.siacs.conversations.utils.GeoHelper;
 import eu.siacs.conversations.utils.StylingHelper;
 import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.utils.text.QuoteSpan;
 import eu.siacs.conversations.xmpp.mam.MamReference;
+
+import static eu.siacs.conversations.entities.IndividualMessage.DATE_SEPARATOR_BODY;
 
 public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextView.CopyHandler {
 
-	public static final String DATE_SEPARATOR_BODY = "DATE_SEPARATOR";
 	private static final int SENT = 0;
 	private static final int RECEIVED = 1;
 	private static final int STATUS = 2;

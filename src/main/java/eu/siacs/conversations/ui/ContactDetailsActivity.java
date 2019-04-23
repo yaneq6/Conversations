@@ -38,16 +38,17 @@ import eu.siacs.conversations.databinding.ActivityContactDetailsBinding;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.ListItem;
+import eu.siacs.conversations.features.Settings;
 import eu.siacs.conversations.services.XmppConnectionService.OnAccountUpdate;
 import eu.siacs.conversations.services.XmppConnectionService.OnRosterUpdate;
+import eu.siacs.conversations.services.interfaces.OnMediaLoaded;
 import eu.siacs.conversations.ui.adapter.MediaAdapter;
-import eu.siacs.conversations.ui.interfaces.OnMediaLoaded;
-import eu.siacs.conversations.ui.util.Attachment;
 import eu.siacs.conversations.ui.util.AvatarWorkerTask;
 import eu.siacs.conversations.ui.util.GridManager;
 import eu.siacs.conversations.ui.util.JidDialog;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.utils.AccountUtils;
+import eu.siacs.conversations.utils.Attachment;
 import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.IrregularUnicodeDetector;
 import eu.siacs.conversations.utils.UIHelper;
@@ -222,7 +223,7 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
             recreate();
         } else {
             final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-            this.showDynamicTags = preferences.getBoolean(SettingsActivity.SHOW_DYNAMIC_TAGS, false);
+            this.showDynamicTags = preferences.getBoolean(Settings.SHOW_DYNAMIC_TAGS, false);
             this.showLastSeen = preferences.getBoolean("last_activity", false);
         }
         binding.mediaWrapper.setVisibility(Compatibility.hasStoragePermission(this) ? View.VISIBLE : View.GONE);

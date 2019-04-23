@@ -18,9 +18,9 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Conversation;
+import eu.siacs.conversations.features.Conversations;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.adapter.ConversationAdapter;
-import eu.siacs.conversations.ui.service.EmojiService;
 import rocks.xmpp.addr.Jid;
 
 public class ShareWithActivity extends XmppActivity implements XmppConnectionService.OnConversationUpdate {
@@ -178,14 +178,14 @@ public class ShareWithActivity extends XmppActivity implements XmppConnectionSer
             mPendingConversation = conversation;
             return;
         }
-        Intent intent = new Intent(this, ConversationsActivity.class);
-        intent.putExtra(ConversationsActivity.EXTRA_CONVERSATION, conversation.getUuid());
+        Intent intent = new Intent(this, Conversations.ACTIVITY_CLASS);
+        intent.putExtra(Conversations.EXTRA_CONVERSATION, conversation.getUuid());
         if (share.uris.size() > 0) {
             intent.setAction(Intent.ACTION_SEND_MULTIPLE);
             intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, share.uris);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         } else if (share.text != null) {
-            intent.setAction(ConversationsActivity.ACTION_VIEW_CONVERSATION);
+            intent.setAction(Conversations.ACTION_VIEW_CONVERSATION);
             intent.putExtra(Intent.EXTRA_TEXT, share.text);
         }
         startActivity(intent);

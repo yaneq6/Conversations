@@ -41,12 +41,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
@@ -73,7 +71,6 @@ import eu.siacs.conversations.ui.interfaces.OnConversationArchived;
 import eu.siacs.conversations.ui.interfaces.OnConversationRead;
 import eu.siacs.conversations.ui.interfaces.OnConversationSelected;
 import eu.siacs.conversations.ui.interfaces.OnConversationsListItemUpdated;
-import eu.siacs.conversations.ui.service.EmojiService;
 import eu.siacs.conversations.ui.util.ActivityResult;
 import eu.siacs.conversations.ui.util.ConversationMenuConfigurator;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
@@ -86,17 +83,11 @@ import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.features.Conversations.ACTION_VIEW_CONVERSATION;
+import static eu.siacs.conversations.features.Conversations.EXTRA_CONVERSATION;
 import static eu.siacs.conversations.ui.ConversationFragment.REQUEST_DECRYPT_PGP;
 
 public class ConversationsActivity extends XmppActivity implements OnConversationSelected, OnConversationArchived, OnConversationsListItemUpdated, OnConversationRead, XmppConnectionService.OnAccountUpdate, XmppConnectionService.OnConversationUpdate, XmppConnectionService.OnRosterUpdate, OnUpdateBlocklist, XmppConnectionService.OnShowErrorToast, XmppConnectionService.OnAffiliationChanged {
-
-    public static final String ACTION_VIEW_CONVERSATION = "eu.siacs.conversations.action.VIEW";
-    public static final String EXTRA_CONVERSATION = "conversationUuid";
-    public static final String EXTRA_DOWNLOAD_UUID = "eu.siacs.conversations.download_uuid";
-    public static final String EXTRA_AS_QUOTE = "as_quote";
-    public static final String EXTRA_NICK = "nick";
-    public static final String EXTRA_IS_PRIVATE_MESSAGE = "pm";
-    public static final String EXTRA_DO_NOT_APPEND = "do_not_append";
 
     private static List<String> VIEW_AND_SHARE_ACTIONS = Arrays.asList(
             ACTION_VIEW_CONVERSATION,

@@ -15,6 +15,7 @@ import java.util.List;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.features.StartConversation;
 
 import static eu.siacs.conversations.utils.PermissionUtils.allGranted;
 import static eu.siacs.conversations.utils.PermissionUtils.writeGranted;
@@ -123,7 +124,7 @@ public class WelcomeActivity extends XmppActivity {
     }
 
     public void addInviteUri(Intent intent) {
-        StartConversationActivity.addInviteUri(intent, getIntent());
+        StartConversation.addInviteUri(intent, getIntent());
     }
 
     public static void launch(AppCompatActivity activity) {

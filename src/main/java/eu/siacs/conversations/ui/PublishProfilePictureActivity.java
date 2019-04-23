@@ -20,8 +20,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.features.StartConversation;
 import eu.siacs.conversations.services.XmppConnectionService;
-import eu.siacs.conversations.ui.interfaces.OnAvatarPublication;
+import eu.siacs.conversations.services.interfaces.OnAvatarPublication;
 import eu.siacs.conversations.utils.PhoneHelper;
 
 public class PublishProfilePictureActivity extends XmppActivity implements XmppConnectionService.OnAccountUpdate, OnAvatarPublication {
@@ -53,7 +54,7 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
         runOnUiThread(() -> {
             if (mInitialAccountSetup) {
                 Intent intent = new Intent(getApplicationContext(), StartConversationActivity.class);
-                StartConversationActivity.addInviteUri(intent, getIntent());
+                StartConversation.addInviteUri(intent, getIntent());
                 intent.putExtra("init", true);
                 startActivity(intent);
             }
@@ -97,7 +98,7 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
             if (mInitialAccountSetup) {
                 Intent intent = new Intent(getApplicationContext(), StartConversationActivity.class);
                 if (xmppConnectionService != null && xmppConnectionService.getAccounts().size() == 1) {
-                    StartConversationActivity.addInviteUri(intent, getIntent());
+                    StartConversation.addInviteUri(intent, getIntent());
                     intent.putExtra("init", true);
                 }
                 startActivity(intent);

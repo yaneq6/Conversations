@@ -37,10 +37,9 @@ import eu.siacs.conversations.R;
 import eu.siacs.conversations.http.HttpConnectionManager;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.ui.util.LocationHelper;
+import eu.siacs.conversations.ui.util.ThemeHelper;
 import eu.siacs.conversations.ui.widget.Marker;
 import eu.siacs.conversations.ui.widget.MyLocation;
-import eu.siacs.conversations.utils.LocationProvider;
-import eu.siacs.conversations.utils.ThemeHelper;
 
 public abstract class LocationActivity extends ActionBarActivity implements LocationListener {
 	protected LocationManager locationManager;

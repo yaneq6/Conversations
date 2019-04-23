@@ -1,6 +1,5 @@
 package eu.siacs.conversations.utils;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,11 +16,10 @@ import java.util.regex.Pattern;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Contact;
-import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Conversational;
 import eu.siacs.conversations.entities.Message;
-import eu.siacs.conversations.ui.ShareLocationActivity;
-import eu.siacs.conversations.ui.ShowLocationActivity;
+import eu.siacs.conversations.features.ShareLocation;
+import eu.siacs.conversations.features.ShowLocation;
 
 public class GeoHelper {
 
@@ -44,7 +42,7 @@ public class GeoHelper {
 		if (isLocationPluginInstalledAndDesired(context)) {
 			return new Intent(SHARE_LOCATION_PACKAGE_NAME);
 		} else {
-			return new Intent(context, ShareLocationActivity.class);
+			return new Intent(context, ShareLocation.ACTIVITY_CLASS);
 		}
 	}
 
@@ -99,7 +97,7 @@ public class GeoHelper {
 			}
 			intents.add(locationPluginIntent);
 		} else {
-			Intent intent = new Intent(context, ShowLocationActivity.class);
+			Intent intent = new Intent(context, ShowLocation.ACTIVITY_CLASS);
 			intent.setAction(SHOW_LOCATION_PACKAGE_NAME);
 			intent.putExtra("latitude", geoPoint.getLatitude());
 			intent.putExtra("longitude", geoPoint.getLongitude());

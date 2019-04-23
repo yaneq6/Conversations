@@ -39,7 +39,6 @@ import android.preference.PreferenceManager;
 import android.support.annotation.BoolRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AlertDialog.Builder;
 import android.support.v7.app.AppCompatDelegate;
@@ -67,6 +66,9 @@ import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.entities.Presences;
+import eu.siacs.conversations.features.Conversations;
+import eu.siacs.conversations.features.Settings;
+import eu.siacs.conversations.features.XmppAccountManager;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.BarcodeProvider;
 import eu.siacs.conversations.services.XmppConnectionService;
@@ -75,14 +77,15 @@ import eu.siacs.conversations.ui.service.EmojiService;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.ui.util.PresenceSelector;
 import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
+import eu.siacs.conversations.ui.util.ThemeHelper;
 import eu.siacs.conversations.utils.AccountUtils;
 import eu.siacs.conversations.utils.ExceptionHelper;
-import eu.siacs.conversations.utils.ThemeHelper;
+import eu.siacs.conversations.utils.UiCallback;
 import eu.siacs.conversations.xmpp.OnKeyStatusUpdated;
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist;
 import rocks.xmpp.addr.Jid;
 
-public abstract class XmppActivity extends ActionBarActivity {
+public abstract class XmppActivity extends ActionBarActivity implements XmppAccountManager {
 
 	public static final String EXTRA_ACCOUNT = "account";
 	protected static final int REQUEST_ANNOUNCE_PGP = 0x0101;
@@ -481,20 +484,20 @@ public abstract class XmppActivity extends ActionBarActivity {
 
 	private void switchToConversation(Conversation conversation, String text, boolean asQuote, String nick, boolean pm, boolean doNotAppend) {
 		Intent intent = new Intent(this, ConversationsActivity.class);
-		intent.setAction(ConversationsActivity.ACTION_VIEW_CONVERSATION);
-		intent.putExtra(ConversationsActivity.EXTRA_CONVERSATION, conversation.getUuid());
+		intent.setAction(Conversations.ACTION_VIEW_CONVERSATION);
+		intent.putExtra(Conversations.EXTRA_CONVERSATION, conversation.getUuid());
 		if (text != null) {
 			intent.putExtra(Intent.EXTRA_TEXT, text);
 			if (asQuote) {
-				intent.putExtra(ConversationsActivity.EXTRA_AS_QUOTE, true);
+				intent.putExtra(Conversations.EXTRA_AS_QUOTE, true);
 			}
 		}
 		if (nick != null) {
-			intent.putExtra(ConversationsActivity.EXTRA_NICK, nick);
-			intent.putExtra(ConversationsActivity.EXTRA_IS_PRIVATE_MESSAGE, pm);
+			intent.putExtra(Conversations.EXTRA_NICK, nick);
+			intent.putExtra(Conversations.EXTRA_IS_PRIVATE_MESSAGE, pm);
 		}
 		if (doNotAppend) {
-			intent.putExtra(ConversationsActivity.EXTRA_DO_NOT_APPEND, true);
+			intent.putExtra(Conversations.EXTRA_DO_NOT_APPEND, true);
 		}
 		intent.setFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(intent);
@@ -514,14 +517,17 @@ public abstract class XmppActivity extends ActionBarActivity {
 		startActivity(intent);
 	}
 
+	@Override
 	public void switchToAccount(Account account, String fingerprint) {
 		switchToAccount(account, false, fingerprint);
 	}
 
+	@Override
 	public void switchToAccount(Account account) {
 		switchToAccount(account, false, null);
 	}
 
+	@Override
 	public void switchToAccount(Account account, boolean init, String fingerprint) {
 		Intent intent = new Intent(this, EditAccountActivity.class);
 		intent.putExtra("jid", account.getJid().asBareJid().toString());
@@ -538,7 +544,12 @@ public abstract class XmppActivity extends ActionBarActivity {
 		}
 	}
 
-	protected void delegateUriPermissionsToService(Uri uri) {
+    @Override
+    public XmppConnectionService getXmppConnectionService() {
+        return xmppConnectionService;
+    }
+
+    protected void delegateUriPermissionsToService(Uri uri) {
 		Intent intent = new Intent(this, XmppConnectionService.class);
 		intent.setAction(Intent.ACTION_SEND);
 		intent.setData(uri);
@@ -774,7 +785,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 	}
 
 	protected boolean manuallyChangePresence() {
-		return getBooleanPreference(SettingsActivity.MANUALLY_CHANGE_PRESENCE, R.bool.manually_change_presence);
+		return getBooleanPreference(Settings.MANUALLY_CHANGE_PRESENCE, R.bool.manually_change_presence);
 	}
 
 	protected String getShareableUri() {

@@ -21,7 +21,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,17 +36,15 @@ import javax.crypto.spec.SecretKeySpec;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
+import eu.siacs.conversations.features.ManageAccount;
 import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.persistance.FileBackend;
-import eu.siacs.conversations.ui.ManageAccountActivity;
 import eu.siacs.conversations.utils.BackupFileHeader;
 import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.SerialSingleThreadExecutor;
 import rocks.xmpp.addr.Jid;
 
-import static eu.siacs.conversations.services.ExportBackupService.CIPHERMODE;
-import static eu.siacs.conversations.services.ExportBackupService.KEYTYPE;
-import static eu.siacs.conversations.services.ExportBackupService.PROVIDER;
+import static eu.siacs.conversations.services.ExportBackupService.*;
 
 public class ImportBackupService extends Service {
 
@@ -222,7 +219,7 @@ public class ImportBackupService extends Service {
         mBuilder.setContentTitle(getString(R.string.notification_restored_backup_title))
                 .setContentText(getString(R.string.notification_restored_backup_subtitle))
                 .setAutoCancel(true)
-                .setContentIntent(PendingIntent.getActivity(this, 145, new Intent(this, ManageAccountActivity.class), PendingIntent.FLAG_UPDATE_CURRENT))
+                .setContentIntent(PendingIntent.getActivity(this, 145, new Intent(this, ManageAccount.ACTIVITY_CLASS), PendingIntent.FLAG_UPDATE_CURRENT))
                 .setSmallIcon(R.drawable.ic_unarchive_white_24dp);
         notificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }

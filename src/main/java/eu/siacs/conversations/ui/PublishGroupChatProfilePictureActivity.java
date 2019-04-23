@@ -46,7 +46,7 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.ActivityPublishProfilePictureBinding;
 import eu.siacs.conversations.entities.Conversation;
-import eu.siacs.conversations.ui.interfaces.OnAvatarPublication;
+import eu.siacs.conversations.services.interfaces.OnAvatarPublication;
 import eu.siacs.conversations.ui.util.PendingItem;
 
 public class PublishGroupChatProfilePictureActivity extends XmppActivity implements OnAvatarPublication {

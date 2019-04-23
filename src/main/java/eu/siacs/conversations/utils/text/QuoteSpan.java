@@ -1,4 +1,4 @@
-package eu.siacs.conversations.ui.text;
+package eu.siacs.conversations.utils.text;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;

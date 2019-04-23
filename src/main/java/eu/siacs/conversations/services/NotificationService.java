@@ -11,7 +11,6 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
-import android.graphics.drawable.Icon;
 import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -22,8 +21,8 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.BigPictureStyle;
 import android.support.v4.app.NotificationCompat.Builder;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.NotificationCompat.CarExtender.UnreadConversation;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.Person;
 import android.support.v4.app.RemoteInput;
 import android.support.v4.content.ContextCompat;
@@ -55,16 +54,15 @@ import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Conversational;
 import eu.siacs.conversations.entities.Message;
+import eu.siacs.conversations.features.Conversations;
+import eu.siacs.conversations.features.EditAccount;
 import eu.siacs.conversations.persistance.FileBackend;
-import eu.siacs.conversations.ui.ConversationsActivity;
-import eu.siacs.conversations.ui.EditAccountActivity;
-import eu.siacs.conversations.ui.TimePreference;
 import eu.siacs.conversations.utils.AccountUtils;
 import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.GeoHelper;
+import eu.siacs.conversations.utils.TimeUtils;
 import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xmpp.XmppConnection;
-import rocks.xmpp.addr.Jid;
 
 public class NotificationService {
 
@@ -201,8 +199,8 @@ public class NotificationService {
             return false;
         }
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(mXmppConnectionService);
-        final long startTime = TimePreference.minutesToTimestamp(preferences.getLong("quiet_hours_start", TimePreference.DEFAULT_VALUE));
-        final long endTime = TimePreference.minutesToTimestamp(preferences.getLong("quiet_hours_end", TimePreference.DEFAULT_VALUE));
+        final long startTime = TimeUtils.minutesToTimestamp(preferences.getLong("quiet_hours_start", TimeUtils.DEFAULT_VALUE));
+        final long endTime = TimeUtils.minutesToTimestamp(preferences.getLong("quiet_hours_end", TimeUtils.DEFAULT_VALUE));
         final long nowTime = Calendar.getInstance().getTimeInMillis();
 
         if (endTime < startTime) {
@@ -779,11 +777,11 @@ public class NotificationService {
     }
 
     private PendingIntent createContentIntent(final String conversationUuid, final String downloadMessageUuid) {
-        final Intent viewConversationIntent = new Intent(mXmppConnectionService, ConversationsActivity.class);
-        viewConversationIntent.setAction(ConversationsActivity.ACTION_VIEW_CONVERSATION);
-        viewConversationIntent.putExtra(ConversationsActivity.EXTRA_CONVERSATION, conversationUuid);
+        final Intent viewConversationIntent = new Intent(mXmppConnectionService, Conversations.ACTIVITY_CLASS);
+        viewConversationIntent.setAction(Conversations.ACTION_VIEW_CONVERSATION);
+        viewConversationIntent.putExtra(Conversations.EXTRA_CONVERSATION, conversationUuid);
         if (downloadMessageUuid != null) {
-            viewConversationIntent.putExtra(ConversationsActivity.EXTRA_DOWNLOAD_UUID, downloadMessageUuid);
+            viewConversationIntent.putExtra(Conversations.EXTRA_DOWNLOAD_UUID, downloadMessageUuid);
             return PendingIntent.getActivity(mXmppConnectionService,
                     generateRequestCode(conversationUuid, 8),
                     viewConversationIntent,
@@ -929,7 +927,7 @@ public class NotificationService {
     }
 
     private PendingIntent createOpenConversationsIntent() {
-        return PendingIntent.getActivity(mXmppConnectionService, 0, new Intent(mXmppConnectionService, ConversationsActivity.class), 0);
+        return PendingIntent.getActivity(mXmppConnectionService, 0, new Intent(mXmppConnectionService, Conversations.ACTIVITY_CLASS), 0);
     }
 
     void updateErrorNotification() {
@@ -976,9 +974,9 @@ public class NotificationService {
         if (AccountUtils.MANAGE_ACCOUNT_ACTIVITY != null) {
             intent = new Intent(mXmppConnectionService, AccountUtils.MANAGE_ACCOUNT_ACTIVITY);
         } else {
-            intent = new Intent(mXmppConnectionService, EditAccountActivity.class);
+            intent = new Intent(mXmppConnectionService, EditAccount.ACTIVITY_CLASS);
             intent.putExtra("jid", errors.get(0).getJid().asBareJid().toEscapedString());
-            intent.putExtra(EditAccountActivity.EXTRA_OPENED_FROM_NOTIFICATION, true);
+            intent.putExtra(EditAccount.EXTRA_OPENED_FROM_NOTIFICATION, true);
         }
         mBuilder.setContentIntent(PendingIntent.getActivity(mXmppConnectionService, 145, intent, PendingIntent.FLAG_UPDATE_CURRENT));
         if (Compatibility.runsTwentySix()) {

@@ -68,12 +68,9 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -97,12 +94,14 @@ import eu.siacs.conversations.entities.Presence;
 import eu.siacs.conversations.entities.PresenceTemplate;
 import eu.siacs.conversations.entities.Roster;
 import eu.siacs.conversations.entities.ServiceDiscoveryResult;
+import eu.siacs.conversations.features.ChooseAccountForProfilePicture;
+import eu.siacs.conversations.features.Settings;
 import eu.siacs.conversations.generator.AbstractGenerator;
 import eu.siacs.conversations.generator.IqGenerator;
 import eu.siacs.conversations.generator.MessageGenerator;
 import eu.siacs.conversations.generator.PresenceGenerator;
-import eu.siacs.conversations.http.HttpConnectionManager;
 import eu.siacs.conversations.http.CustomURLStreamHandlerFactory;
+import eu.siacs.conversations.http.HttpConnectionManager;
 import eu.siacs.conversations.http.services.MuclumbusService;
 import eu.siacs.conversations.parser.AbstractParser;
 import eu.siacs.conversations.parser.IqParser;
@@ -110,12 +109,9 @@ import eu.siacs.conversations.parser.MessageParser;
 import eu.siacs.conversations.parser.PresenceParser;
 import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.persistance.FileBackend;
-import eu.siacs.conversations.ui.ChooseAccountForProfilePictureActivity;
-import eu.siacs.conversations.ui.SettingsActivity;
-import eu.siacs.conversations.ui.UiCallback;
-import eu.siacs.conversations.ui.interfaces.OnAvatarPublication;
-import eu.siacs.conversations.ui.interfaces.OnMediaLoaded;
-import eu.siacs.conversations.ui.interfaces.OnSearchResultsAvailable;
+import eu.siacs.conversations.services.interfaces.OnAvatarPublication;
+import eu.siacs.conversations.services.interfaces.OnMediaLoaded;
+import eu.siacs.conversations.services.interfaces.OnSearchResultsAvailable;
 import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.ConversationsFileObserver;
 import eu.siacs.conversations.utils.CryptoHelper;
@@ -128,10 +124,11 @@ import eu.siacs.conversations.utils.ReplacingTaskManager;
 import eu.siacs.conversations.utils.Resolver;
 import eu.siacs.conversations.utils.SerialSingleThreadExecutor;
 import eu.siacs.conversations.utils.StringUtils;
+import eu.siacs.conversations.utils.UiCallback;
 import eu.siacs.conversations.utils.WakeLockHelper;
-import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xml.Element;
+import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.OnBindListener;
 import eu.siacs.conversations.xmpp.OnContactStatusChanged;
 import eu.siacs.conversations.xmpp.OnIqPacketReceived;
@@ -907,19 +904,19 @@ public class XmppConnectionService extends Service {
     }
 
     private boolean dndOnSilentMode() {
-        return getBooleanPreference(SettingsActivity.DND_ON_SILENT_MODE, R.bool.dnd_on_silent_mode);
+        return getBooleanPreference(Settings.DND_ON_SILENT_MODE, R.bool.dnd_on_silent_mode);
     }
 
     private boolean manuallyChangePresence() {
-        return getBooleanPreference(SettingsActivity.MANUALLY_CHANGE_PRESENCE, R.bool.manually_change_presence);
+        return getBooleanPreference(Settings.MANUALLY_CHANGE_PRESENCE, R.bool.manually_change_presence);
     }
 
     private boolean treatVibrateAsSilent() {
-        return getBooleanPreference(SettingsActivity.TREAT_VIBRATE_AS_SILENT, R.bool.treat_vibrate_as_silent);
+        return getBooleanPreference(Settings.TREAT_VIBRATE_AS_SILENT, R.bool.treat_vibrate_as_silent);
     }
 
     private boolean awayWhenScreenOff() {
-        return getBooleanPreference(SettingsActivity.AWAY_WHEN_SCREEN_IS_OFF, R.bool.away_when_screen_off);
+        return getBooleanPreference(Settings.AWAY_WHEN_SCREEN_IS_OFF, R.bool.away_when_screen_off);
     }
 
     private String getCompressPicturesPreference() {
@@ -1076,7 +1073,7 @@ public class XmppConnectionService extends Service {
         this.accounts = databaseBackend.getAccounts();
         final SharedPreferences.Editor editor = getPreferences().edit();
         if (this.accounts.size() == 0 && Arrays.asList("Sony", "Sony Ericsson").contains(Build.MANUFACTURER)) {
-            editor.putBoolean(SettingsActivity.KEEP_FOREGROUND_SERVICE, true);
+            editor.putBoolean(Settings.KEEP_FOREGROUND_SERVICE, true);
             Log.d(Config.LOGTAG, Build.MANUFACTURER + " is on blacklist. enabling foreground service");
         }
         final boolean hasEnabledAccounts = hasEnabledAccounts();
@@ -2079,7 +2076,7 @@ public class XmppConnectionService extends Service {
 
 	private void toggleSetProfilePictureActivity(final boolean enabled) {
 	    try {
-	        final ComponentName name = new ComponentName(this, ChooseAccountForProfilePictureActivity.class);
+	        final ComponentName name = new ComponentName(this, ChooseAccountForProfilePicture.ACTIVITY_CLASS);
 	        final int targetState =  enabled ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
             getPackageManager().setComponentEnabledSetting(name, targetState, PackageManager.DONT_KILL_APP);
         } catch (IllegalStateException e) {
@@ -3677,7 +3674,7 @@ public class XmppConnectionService extends Service {
 	}
 
 	public long getAutomaticMessageDeletionDate() {
-		final long timeout = getLongPreference(SettingsActivity.AUTOMATIC_MESSAGE_DELETION, R.integer.automatic_message_deletion);
+		final long timeout = getLongPreference(Settings.AUTOMATIC_MESSAGE_DELETION, R.integer.automatic_message_deletion);
 		return timeout == 0 ? timeout : (System.currentTimeMillis() - (timeout * 1000));
 	}
 
@@ -3723,7 +3720,7 @@ public class XmppConnectionService extends Service {
 	}
 
 	public boolean broadcastLastActivity() {
-		return getBooleanPreference(SettingsActivity.BROADCAST_LAST_ACTIVITY, R.bool.last_activity);
+		return getBooleanPreference(Settings.BROADCAST_LAST_ACTIVITY, R.bool.last_activity);
 	}
 
 	public int unreadCount() {
@@ -4376,7 +4373,7 @@ public class XmppConnectionService extends Service {
 	}
 
 	public boolean blindTrustBeforeVerification() {
-		return getBooleanPreference(SettingsActivity.BLIND_TRUST_BEFORE_VERIFICATION, R.bool.btbv);
+		return getBooleanPreference(Settings.BLIND_TRUST_BEFORE_VERIFICATION, R.bool.btbv);
 	}
 
 	public ShortcutService getShortcutService() {

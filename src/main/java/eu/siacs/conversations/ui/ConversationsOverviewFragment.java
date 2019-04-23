@@ -63,8 +63,8 @@ import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.ui.util.PendingActionHelper;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.ui.util.ScrollState;
-import eu.siacs.conversations.ui.util.StyledAttributes;
-import eu.siacs.conversations.utils.ThemeHelper;
+import eu.siacs.conversations.ui.util.ThemeHelper;
+import eu.siacs.conversations.utils.StyledAttributes;
 
 import static android.support.v7.widget.helper.ItemTouchHelper.LEFT;
 import static android.support.v7.widget.helper.ItemTouchHelper.RIGHT;

@@ -5,39 +5,39 @@ import android.content.Intent;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.features.EditAccount;
+import eu.siacs.conversations.features.ManageAccount;
+import eu.siacs.conversations.features.StartConversation;
+import eu.siacs.conversations.features.Welcome;
+import eu.siacs.conversations.features.XmppAccountManager;
 import eu.siacs.conversations.services.XmppConnectionService;
-import eu.siacs.conversations.ui.ConversationsActivity;
-import eu.siacs.conversations.ui.EditAccountActivity;
-import eu.siacs.conversations.ui.ManageAccountActivity;
-import eu.siacs.conversations.ui.StartConversationActivity;
-import eu.siacs.conversations.ui.WelcomeActivity;
 
 public class SignupUtils {
 
     public static Intent getSignUpIntent(final Activity activity) {
-        Intent intent = new Intent(activity, WelcomeActivity.class);
-        StartConversationActivity.addInviteUri(intent, activity.getIntent());
+        Intent intent = new Intent(activity, Welcome.ACTIVITY_CLASS);
+        StartConversation.addInviteUri(intent, activity.getIntent());
         return intent;
     }
 
-    public static Intent getRedirectionIntent(final ConversationsActivity activity) {
-        final XmppConnectionService service = activity.xmppConnectionService;
+    public static <T extends Activity & XmppAccountManager>Intent getRedirectionIntent(final T activity) {
+        final XmppConnectionService service = activity.getXmppConnectionService();
         Account pendingAccount = AccountUtils.getPendingAccount(service);
         Intent intent;
         if (pendingAccount != null) {
-            intent = new Intent(activity, EditAccountActivity.class);
+            intent = new Intent(activity, EditAccount.ACTIVITY_CLASS);
             intent.putExtra("jid", pendingAccount.getJid().asBareJid().toString());
         } else {
             if (service.getAccounts().size() == 0) {
                 if (Config.X509_VERIFICATION) {
-                    intent = new Intent(activity, ManageAccountActivity.class);
+                    intent = new Intent(activity, ManageAccount.ACTIVITY_CLASS);
                 } else if (Config.MAGIC_CREATE_DOMAIN != null) {
                     intent = getSignUpIntent(activity);
                 } else {
-                    intent = new Intent(activity, EditAccountActivity.class);
+                    intent = new Intent(activity, EditAccount.ACTIVITY_CLASS);
                 }
             } else {
-                intent = new Intent(activity, StartConversationActivity.class);
+                intent = new Intent(activity, StartConversation.ACTIVITY_CLASS);
             }
         }
         intent.putExtra("init", true);

@@ -24,9 +24,9 @@ import java.util.concurrent.RejectedExecutionException;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.MediaBinding;
 import eu.siacs.conversations.ui.XmppActivity;
-import eu.siacs.conversations.ui.util.Attachment;
-import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.ui.util.ViewUtil;
+import eu.siacs.conversations.utils.Attachment;
+import eu.siacs.conversations.utils.StyledAttributes;
 
 public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaViewHolder> {
 

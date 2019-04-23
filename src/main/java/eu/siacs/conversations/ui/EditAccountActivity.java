@@ -3,7 +3,6 @@ package eu.siacs.conversations.ui;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
@@ -52,6 +51,7 @@ import eu.siacs.conversations.databinding.DialogPresenceBinding;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Presence;
 import eu.siacs.conversations.entities.PresenceTemplate;
+import eu.siacs.conversations.features.StartConversation;
 import eu.siacs.conversations.services.BarcodeProvider;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.services.XmppConnectionService;
@@ -63,12 +63,12 @@ import eu.siacs.conversations.ui.util.AvatarWorkerTask;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
-import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.Resolver;
 import eu.siacs.conversations.utils.SignupUtils;
 import eu.siacs.conversations.utils.TorServiceUtils;
 import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.utils.UiCallback;
 import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xmpp.OnKeyStatusUpdated;
@@ -79,10 +79,11 @@ import eu.siacs.conversations.xmpp.forms.Data;
 import eu.siacs.conversations.xmpp.pep.Avatar;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.features.EditAccount.EXTRA_OPENED_FROM_NOTIFICATION;
+import static eu.siacs.conversations.features.Settings.MANUALLY_CHANGE_PRESENCE;
+
 public class EditAccountActivity extends OmemoActivity implements OnAccountUpdate, OnUpdateBlocklist,
         OnKeyStatusUpdated, OnCaptchaRequested, KeyChainAliasCallback, XmppConnectionService.OnShowErrorToast, XmppConnectionService.OnMamPreferencesFetched {
-
-    public static final String EXTRA_OPENED_FROM_NOTIFICATION = "opened_from_notification";
 
     private static final int REQUEST_DATA_SAVER = 0xf244;
     private static final int REQUEST_CHANGE_STATUS = 0xee11;
@@ -362,7 +363,7 @@ public class EditAccountActivity extends OmemoActivity implements OnAccountUpdat
                 && mAccount.getStatus() != Account.State.ONLINE
                 && mFetchingAvatar) {
             Intent intent = new Intent(this, StartConversationActivity.class);
-            StartConversationActivity.addInviteUri(intent, getIntent());
+            StartConversation.addInviteUri(intent, getIntent());
             startActivity(intent);
             finish();
         } else if (mInitMode && mAccount != null && mAccount.getStatus() == Account.State.ONLINE) {
@@ -424,7 +425,7 @@ public class EditAccountActivity extends OmemoActivity implements OnAccountUpdat
             if (wasFirstAccount) {
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             }
-            StartConversationActivity.addInviteUri(intent, getIntent());
+            StartConversation.addInviteUri(intent, getIntent());
             startActivity(intent);
             finish();
         });
@@ -853,7 +854,7 @@ public class EditAccountActivity extends OmemoActivity implements OnAccountUpdat
 
     private void changePresence() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean manualStatus = sharedPreferences.getBoolean(SettingsActivity.MANUALLY_CHANGE_PRESENCE, getResources().getBoolean(R.bool.manually_change_presence));
+        boolean manualStatus = sharedPreferences.getBoolean(MANUALLY_CHANGE_PRESENCE, getResources().getBoolean(R.bool.manually_change_presence));
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         final DialogPresenceBinding binding = DataBindingUtil.inflate(getLayoutInflater(), R.layout.dialog_presence, null, false);
         String current = mAccount.getPresenceStatusMessage();

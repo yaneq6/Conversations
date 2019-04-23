@@ -18,7 +18,7 @@ import java.util.List;
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Contact;
-import eu.siacs.conversations.ui.StartConversationActivity;
+import eu.siacs.conversations.features.StartConversation;
 import eu.siacs.conversations.utils.ReplacingSerialSingleThreadExecutor;
 import rocks.xmpp.addr.Jid;
 
@@ -120,7 +120,7 @@ public class ShortcutService {
     }
 
     private Intent getShortcutIntent(Contact contact) {
-        Intent intent = new Intent(xmppConnectionService, StartConversationActivity.class);
+        Intent intent = new Intent(xmppConnectionService, StartConversation.ACTIVITY_CLASS);
         intent.setAction(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("xmpp:"+contact.getJid().asBareJid().toString()));
         intent.putExtra("account",contact.getAccount().getJid().asBareJid().toString());

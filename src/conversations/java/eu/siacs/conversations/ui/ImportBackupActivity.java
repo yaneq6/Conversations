@@ -23,7 +23,7 @@ import eu.siacs.conversations.databinding.ActivityImportBackupBinding;
 import eu.siacs.conversations.databinding.DialogEnterPasswordBinding;
 import eu.siacs.conversations.services.ImportBackupService;
 import eu.siacs.conversations.ui.adapter.BackupFileAdapter;
-import eu.siacs.conversations.utils.ThemeHelper;
+import eu.siacs.conversations.ui.util.ThemeHelper;
 
 public class ImportBackupActivity extends ActionBarActivity implements ServiceConnection, ImportBackupService.OnBackupFilesLoaded, BackupFileAdapter.OnItemClickedListener, ImportBackupService.OnBackupProcessed {
 

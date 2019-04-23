@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
+import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.annotation.BoolRes;
 import android.support.v4.content.ContextCompat;
@@ -19,8 +20,7 @@ import java.util.List;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
-import eu.siacs.conversations.ui.SettingsActivity;
-import eu.siacs.conversations.ui.SettingsFragment;
+import eu.siacs.conversations.features.Settings;
 
 import static eu.siacs.conversations.services.EventReceiver.EXTRA_NEEDS_FOREGROUND_SERVICE;
 
@@ -87,10 +87,10 @@ public class Compatibility {
     }
 
     public static boolean keepForegroundService(Context context) {
-        return runsAndTargetsTwentySix(context) || getBooleanPreference(context, SettingsActivity.KEEP_FOREGROUND_SERVICE, R.bool.enable_foreground_service);
+        return runsAndTargetsTwentySix(context) || getBooleanPreference(context, Settings.KEEP_FOREGROUND_SERVICE, R.bool.enable_foreground_service);
     }
 
-    public static void removeUnusedPreferences(SettingsFragment settingsFragment) {
+    public static void removeUnusedPreferences(PreferenceFragment settingsFragment) {
         List<PreferenceCategory> categories = Arrays.asList(
                 (PreferenceCategory) settingsFragment.findPreference("notification_category"),
                 (PreferenceCategory) settingsFragment.findPreference("other_expert_category"));
@@ -106,7 +106,7 @@ public class Compatibility {
         }
         if (Compatibility.runsTwentySix()) {
             if (targetsTwentySix(settingsFragment.getContext())) {
-                Preference preference = settingsFragment.findPreference(SettingsActivity.KEEP_FOREGROUND_SERVICE);
+                Preference preference = settingsFragment.findPreference(Settings.KEEP_FOREGROUND_SERVICE);
                 if (preference != null) {
                     for (PreferenceCategory category : categories) {
                         if (category != null) {

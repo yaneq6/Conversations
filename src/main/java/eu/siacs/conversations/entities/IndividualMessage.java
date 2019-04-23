@@ -33,11 +33,11 @@ import android.database.Cursor;
 
 import java.util.Set;
 
-import eu.siacs.conversations.ui.adapter.MessageAdapter;
 import rocks.xmpp.addr.Jid;
 
 public class IndividualMessage extends Message {
 
+	public static final String DATE_SEPARATOR_BODY = "DATE_SEPARATOR";
 
 	private IndividualMessage(Conversational conversation) {
 		super(conversation);
@@ -65,7 +65,7 @@ public class IndividualMessage extends Message {
 	public static Message createDateSeparator(Message message) {
 		final Message separator = new IndividualMessage(message.getConversation());
 		separator.setType(Message.TYPE_STATUS);
-		separator.body = MessageAdapter.DATE_SEPARATOR_BODY;
+		separator.body = DATE_SEPARATOR_BODY;
 		separator.setTime(message.getTimeSent());
 		return separator;
 	}

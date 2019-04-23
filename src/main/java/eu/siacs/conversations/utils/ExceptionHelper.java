@@ -1,12 +1,13 @@
 package eu.siacs.conversations.utils;
 
-import android.support.v7.app.AlertDialog;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -16,7 +17,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 import eu.siacs.conversations.Config;
@@ -24,8 +24,8 @@ import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Message;
+import eu.siacs.conversations.features.XmppAccountManager;
 import eu.siacs.conversations.services.XmppConnectionService;
-import eu.siacs.conversations.ui.XmppActivity;
 
 public class ExceptionHelper {
 
@@ -39,9 +39,9 @@ public class ExceptionHelper {
 		}
 	}
 
-	public static boolean checkForCrash(XmppActivity activity) {
+	public static <T extends Activity & XmppAccountManager> boolean checkForCrash(T activity) {
 		try {
-			final XmppConnectionService service = activity == null ? null : activity.xmppConnectionService;
+			final XmppConnectionService service = activity == null ? null : activity.getXmppConnectionService();
 			if (service == null) {
 				return false;
 			}

@@ -27,7 +27,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package eu.siacs.conversations.utils;
+package eu.siacs.conversations.ui.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -41,14 +41,14 @@ import android.util.TypedValue;
 import android.widget.TextView;
 
 import eu.siacs.conversations.R;
-import eu.siacs.conversations.ui.SettingsActivity;
+import eu.siacs.conversations.features.Settings;
 
 public class ThemeHelper {
 
 	public static int find(Context context) {
 		final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 		final Resources resources = context.getResources();
-		final boolean dark = sharedPreferences.getString(SettingsActivity.THEME, resources.getString(R.string.theme)).equals("dark");
+		final boolean dark = sharedPreferences.getString(Settings.THEME, resources.getString(R.string.theme)).equals("dark");
 		final String fontSize = sharedPreferences.getString("font_size", resources.getString(R.string.default_font_size));
 		switch (fontSize) {
 			case "medium":
@@ -63,7 +63,7 @@ public class ThemeHelper {
 	public static int findDialog(Context context) {
 		final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 		final Resources resources = context.getResources();
-		final boolean dark = sharedPreferences.getString(SettingsActivity.THEME, resources.getString(R.string.theme)).equals("dark");
+		final boolean dark = sharedPreferences.getString(Settings.THEME, resources.getString(R.string.theme)).equals("dark");
 		final String fontSize = sharedPreferences.getString("font_size", resources.getString(R.string.default_font_size));
 		switch (fontSize) {
 			case "medium":

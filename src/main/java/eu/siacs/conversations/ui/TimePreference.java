@@ -9,13 +9,14 @@ import android.view.View;
 import android.widget.TimePicker;
 
 import java.text.DateFormat;
-import java.util.Calendar;
 import java.util.Date;
+
+import static eu.siacs.conversations.utils.TimeUtils.DEFAULT_VALUE;
+import static eu.siacs.conversations.utils.TimeUtils.minutesToCalender;
 
 
 public class TimePreference extends DialogPreference implements Preference.OnPreferenceChangeListener {
 	private TimePicker picker = null;
-	public final static long DEFAULT_VALUE = 0;
 
 	public TimePreference(final Context context, final AttributeSet attrs) {
 		super(context, attrs, 0);
@@ -59,17 +60,6 @@ public class TimePreference extends DialogPreference implements Preference.OnPre
 		if (positiveResult) {
 			setTime(picker.getCurrentHour() * 60 + picker.getCurrentMinute());
 		}
-	}
-
-	private static Calendar minutesToCalender(long time) {
-		final Calendar c = Calendar.getInstance();
-		c.set(Calendar.HOUR_OF_DAY, (int) ((time % (24 * 60)) / 60));
-		c.set(Calendar.MINUTE, (int) ((time % (24 * 60)) % 60));
-		return c;
-	}
-
-	public static long minutesToTimestamp(long time) {
-		return minutesToCalender(time).getTimeInMillis();
 	}
 
 	@Override

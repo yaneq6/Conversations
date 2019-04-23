@@ -50,7 +50,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import eu.siacs.conversations.R;
-import eu.siacs.conversations.ui.util.StyledAttributes;
 import rocks.xmpp.addr.Jid;
 
 public class IrregularUnicodeDetector {

@@ -26,11 +26,11 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.ActivityRecordingBinding;
 import eu.siacs.conversations.persistance.FileBackend;
-import eu.siacs.conversations.utils.ThemeHelper;
+import eu.siacs.conversations.ui.util.ThemeHelper;
+
+import static eu.siacs.conversations.features.Recording.STORAGE_DIRECTORY_TYPE_NAME;
 
 public class RecordingActivity extends Activity implements View.OnClickListener {
-
-	public static String STORAGE_DIRECTORY_TYPE_NAME = "Recordings";
 
 	private ActivityRecordingBinding binding;
 

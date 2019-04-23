@@ -6,17 +6,13 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.widget.Button;
 import android.widget.TextView;
 
-import java.util.List;
-
 import eu.siacs.conversations.R;
-import eu.siacs.conversations.entities.Account;
-import eu.siacs.conversations.utils.XmppUri;
+import eu.siacs.conversations.features.StartConversation;
 
 public class TosActivity extends XmppActivity {
 
@@ -75,6 +71,7 @@ public class TosActivity extends XmppActivity {
     }
 
     public void addInviteUri(Intent intent) {
-        StartConversationActivity.addInviteUri(intent, getIntent());
+
+        StartConversation.addInviteUri(intent, getIntent());
     }
 }

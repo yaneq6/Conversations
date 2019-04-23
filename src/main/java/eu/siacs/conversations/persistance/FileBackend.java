@@ -3,7 +3,6 @@ package eu.siacs.conversations.persistance;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -55,9 +54,9 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.DownloadableFile;
 import eu.siacs.conversations.entities.Message;
+import eu.siacs.conversations.features.Recording;
 import eu.siacs.conversations.services.XmppConnectionService;
-import eu.siacs.conversations.ui.RecordingActivity;
-import eu.siacs.conversations.ui.util.Attachment;
+import eu.siacs.conversations.utils.Attachment;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.ExifHelper;
 import eu.siacs.conversations.utils.FileUtils;
@@ -86,7 +85,7 @@ public class FileBackend {
     }
 
     public static boolean isInDirectoryThatShouldNotBeScanned(Context context, String path) {
-        for (String type : new String[]{RecordingActivity.STORAGE_DIRECTORY_TYPE_NAME, "Files"}) {
+        for (String type : new String[]{Recording.STORAGE_DIRECTORY_TYPE_NAME, "Files"}) {
             if (path.startsWith(getConversationsDirectory(context, type))) {
                 return true;
             }

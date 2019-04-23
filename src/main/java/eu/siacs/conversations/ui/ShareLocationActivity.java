@@ -20,10 +20,10 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.ActivityShareLocationBinding;
 import eu.siacs.conversations.ui.util.LocationHelper;
+import eu.siacs.conversations.ui.util.ThemeHelper;
 import eu.siacs.conversations.ui.widget.Marker;
 import eu.siacs.conversations.ui.widget.MyLocation;
 import eu.siacs.conversations.utils.LocationProvider;
-import eu.siacs.conversations.utils.ThemeHelper;
 
 public class ShareLocationActivity extends LocationActivity implements LocationListener {
 

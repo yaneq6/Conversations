@@ -28,9 +28,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 
@@ -40,7 +38,7 @@ import java.util.logging.Logger;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.MTMDecision;
 import eu.siacs.conversations.services.MemorizingTrustManager;
-import eu.siacs.conversations.utils.ThemeHelper;
+import eu.siacs.conversations.ui.util.ThemeHelper;
 
 public class MemorizingActivity extends AppCompatActivity implements OnClickListener, OnCancelListener {
 

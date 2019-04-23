@@ -18,9 +18,9 @@ import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.ui.ConversationFragment;
 import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.ui.util.AvatarWorkerTask;
-import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.utils.EmojiWrapper;
 import eu.siacs.conversations.utils.IrregularUnicodeDetector;
+import eu.siacs.conversations.utils.StyledAttributes;
 import eu.siacs.conversations.utils.UIHelper;
 import rocks.xmpp.addr.Jid;
 

@@ -2,7 +2,6 @@ package eu.siacs.conversations.crypto;
 
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.os.Parcelable;
 import android.support.annotation.StringRes;
 import android.util.Log;
 
@@ -28,7 +27,7 @@ import eu.siacs.conversations.entities.DownloadableFile;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.XmppConnectionService;
-import eu.siacs.conversations.ui.UiCallback;
+import eu.siacs.conversations.utils.UiCallback;
 
 public class PgpEngine {
 	private OpenPgpApi api;

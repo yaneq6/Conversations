@@ -27,7 +27,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package eu.siacs.conversations.ui.util;
+package eu.siacs.conversations.utils;
 
 import android.content.ClipData;
 import android.content.Context;
@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.UUID;
 
 import eu.siacs.conversations.Config;
-import eu.siacs.conversations.utils.MimeUtils;
 
 public class Attachment implements Parcelable {
 

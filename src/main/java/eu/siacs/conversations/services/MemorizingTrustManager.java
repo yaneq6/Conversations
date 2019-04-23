@@ -26,18 +26,18 @@
  */
 package eu.siacs.conversations.services;
 
-import android.support.v7.app.AppCompatActivity ;
 import android.app.Application;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
 import android.util.SparseArray;
-import android.os.Handler;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,19 +52,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateParsingException;
+import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.HostnameVerifier;
@@ -77,7 +82,7 @@ import javax.net.ssl.X509TrustManager;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.crypto.DomainHostnameVerifier;
 import eu.siacs.conversations.entities.MTMDecision;
-import eu.siacs.conversations.ui.MemorizingActivity;
+import eu.siacs.conversations.features.Memorizing;
 
 /**
  * A X509 trust manager implementation which asks the user about invalid
@@ -711,7 +716,7 @@ public class MemorizingTrustManager {
 
 		masterHandler.post(new Runnable() {
 			public void run() {
-				Intent ni = new Intent(master, MemorizingActivity.class);
+				Intent ni = new Intent(master, Memorizing.ACTIVITY_CLASS);
 				ni.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				ni.setData(Uri.parse(MemorizingTrustManager.class.getName() + "/" + myId));
 				ni.putExtra(DECISION_INTENT_ID, myId);

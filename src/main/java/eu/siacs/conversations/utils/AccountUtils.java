@@ -12,8 +12,8 @@ import java.util.List;
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.features.XmppAccountManager;
 import eu.siacs.conversations.services.XmppConnectionService;
-import eu.siacs.conversations.ui.XmppActivity;
 
 public class AccountUtils {
 
@@ -76,9 +76,9 @@ public class AccountUtils {
         }
     }
 
-    public static void launchManageAccount(XmppActivity xmppActivity) {
-        Account account = getFirst(xmppActivity.xmppConnectionService);
-        xmppActivity.switchToAccount(account);
+    public static void launchManageAccount(XmppAccountManager xmppManager) {
+        Account account = getFirst(xmppManager.getXmppConnectionService());
+        xmppManager.switchToAccount(account);
     }
 
     private static Class getManageAccountActivityClass() {

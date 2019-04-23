@@ -36,7 +36,7 @@ import android.preference.PreferenceManager;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Message;
-import eu.siacs.conversations.ui.SettingsActivity;
+import eu.siacs.conversations.features.Settings;
 
 public class OmemoSetting {
 
@@ -52,7 +52,7 @@ public class OmemoSetting {
 	}
 
 	public static void load(final Context context, final SharedPreferences sharedPreferences) {
-		final String value = sharedPreferences.getString(SettingsActivity.OMEMO_SETTING, context.getResources().getString(R.string.omemo_setting_default));
+		final String value = sharedPreferences.getString(Settings.OMEMO_SETTING, context.getResources().getString(R.string.omemo_setting_default));
 		switch (value) {
 			case "always":
 				always = true;

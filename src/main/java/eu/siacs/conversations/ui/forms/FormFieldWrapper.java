@@ -10,7 +10,7 @@ import android.view.View;
 import java.util.List;
 
 import eu.siacs.conversations.R;
-import eu.siacs.conversations.ui.util.StyledAttributes;
+import eu.siacs.conversations.utils.StyledAttributes;
 import eu.siacs.conversations.xmpp.forms.Field;
 
 public abstract class FormFieldWrapper {

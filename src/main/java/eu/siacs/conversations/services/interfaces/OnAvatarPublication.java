@@ -27,7 +27,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package eu.siacs.conversations.ui.interfaces;
+package eu.siacs.conversations.services.interfaces;
 
 import android.support.annotation.StringRes;
 

@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import eu.siacs.conversations.entities.Conversation;
-import eu.siacs.conversations.ui.ConversationsActivity;
+import eu.siacs.conversations.features.Conversations;
 import eu.siacs.conversations.utils.Compatibility;
 
 @TargetApi(Build.VERSION_CODES.M)
@@ -54,7 +54,7 @@ public class ContactChooserTargetService extends ChooserTargetService implements
             }
             
             mXmppConnectionService.populateWithOrderedConversations(conversations, textOnly(matchedFilter));
-            final ComponentName componentName = new ComponentName(this, ConversationsActivity.class);
+            final ComponentName componentName = new ComponentName(this, Conversations.ACTIVITY_CLASS_NAME);
             final int pixel = AvatarService.getSystemUiAvatarSize(this);
             for (Conversation conversation : conversations) {
                 if (conversation.sentMessagesCount() == 0) {
@@ -64,7 +64,7 @@ public class ContactChooserTargetService extends ChooserTargetService implements
                 final Icon icon = Icon.createWithBitmap(mXmppConnectionService.getAvatarService().get(conversation, pixel));
                 final float score = 1 - (1.0f / MAX_TARGETS) * chooserTargets.size();
                 final Bundle extras = new Bundle();
-                extras.putString(ConversationsActivity.EXTRA_CONVERSATION, conversation.getUuid());
+                extras.putString(Conversations.EXTRA_CONVERSATION, conversation.getUuid());
                 chooserTargets.add(new ChooserTarget(name, icon, score, componentName, extras));
                 if (chooserTargets.size() >= MAX_TARGETS) {
                     break;

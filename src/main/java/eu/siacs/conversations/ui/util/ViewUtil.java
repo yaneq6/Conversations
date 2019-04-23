@@ -16,6 +16,7 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.DownloadableFile;
 import eu.siacs.conversations.persistance.FileBackend;
+import eu.siacs.conversations.utils.Attachment;
 
 public class ViewUtil {
 

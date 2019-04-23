@@ -34,7 +34,6 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -45,7 +44,7 @@ import eu.siacs.conversations.entities.Conversational;
 import eu.siacs.conversations.entities.IndividualMessage;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.entities.StubConversation;
-import eu.siacs.conversations.ui.interfaces.OnSearchResultsAvailable;
+import eu.siacs.conversations.services.interfaces.OnSearchResultsAvailable;
 import eu.siacs.conversations.utils.Cancellable;
 import eu.siacs.conversations.utils.MessageUtils;
 import eu.siacs.conversations.utils.ReplacingSerialSingleThreadExecutor;

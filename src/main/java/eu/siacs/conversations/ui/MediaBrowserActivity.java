@@ -9,15 +9,14 @@ import android.support.v7.widget.Toolbar;
 import java.util.List;
 
 import eu.siacs.conversations.R;
+import eu.siacs.conversations.databinding.ActivityMediaBrowserBinding;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
-
-import eu.siacs.conversations.databinding.ActivityMediaBrowserBinding;
+import eu.siacs.conversations.services.interfaces.OnMediaLoaded;
 import eu.siacs.conversations.ui.adapter.MediaAdapter;
-import eu.siacs.conversations.ui.interfaces.OnMediaLoaded;
-import eu.siacs.conversations.ui.util.Attachment;
 import eu.siacs.conversations.ui.util.GridManager;
+import eu.siacs.conversations.utils.Attachment;
 import rocks.xmpp.addr.Jid;
 
 public class MediaBrowserActivity extends XmppActivity implements OnMediaLoaded {

@@ -54,7 +54,7 @@ import java.util.List;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Message;
-import eu.siacs.conversations.ui.text.QuoteSpan;
+import eu.siacs.conversations.utils.text.QuoteSpan;
 
 public class StylingHelper {
 
