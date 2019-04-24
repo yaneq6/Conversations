@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.persistance.DatabaseBackend;
-import eu.siacs.conversations.utils.SignupUtils;
+import eu.siacs.conversations.ui.util.SignupUtils;
 import eu.siacs.conversations.utils.XmppUri;
 import rocks.xmpp.addr.Jid;
 

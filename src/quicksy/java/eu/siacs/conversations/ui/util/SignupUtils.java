@@ -1,18 +1,17 @@
-package eu.siacs.conversations.utils;
+package eu.siacs.conversations.ui.util;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
-import eu.siacs.conversations.Config;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.ui.ConversationsActivity;
 import eu.siacs.conversations.ui.EnterPhoneNumberActivity;
 import eu.siacs.conversations.ui.StartConversationActivity;
 import eu.siacs.conversations.ui.TosActivity;
 import eu.siacs.conversations.ui.VerifyActivity;
+import eu.siacs.conversations.utils.AccountUtils;
 
 public class SignupUtils {
 
