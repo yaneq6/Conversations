@@ -1,13 +1,13 @@
 package eu.siacs.conversations
 
 import android.app.Activity
-import eu.siacs.conversations.ui.ConversationActivity
+import eu.siacs.conversations.ui.ConversationsActivity
 import io.aakit.BaseNavigator
 import io.aakit.Navigator
 import io.aakit.startActivity
 
 interface ActivityNavigator : Navigator {
-    fun conversationsActivity() = startActivity<ConversationActivity>()
+    fun conversationsActivity() = startActivity<ConversationsActivity>()
 }
 
 fun activityNavigator(activity: Activity): ActivityNavigator = object : ActivityNavigator, Navigator by BaseNavigator(activity) {}
