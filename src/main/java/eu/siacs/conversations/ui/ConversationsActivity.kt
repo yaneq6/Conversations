@@ -31,8 +31,6 @@ package eu.siacs.conversations.ui
 
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.FragmentManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -54,8 +52,9 @@ import eu.siacs.conversations.crypto.OmemoSetting
 import eu.siacs.conversations.databinding.ActivityConversationsBinding
 import eu.siacs.conversations.entities.Account
 import eu.siacs.conversations.entities.Conversation
+import eu.siacs.conversations.feature.conversations.HandleActivityResultInteractor
+import eu.siacs.conversations.feature.conversations.XmppFragmentsInteractor
 import eu.siacs.conversations.services.XmppConnectionService
-import eu.siacs.conversations.ui.ConversationFragment.REQUEST_DECRYPT_PGP
 import eu.siacs.conversations.ui.interfaces.*
 import eu.siacs.conversations.ui.util.ActivityResult
 import eu.siacs.conversations.ui.util.ConversationMenuConfigurator
@@ -63,20 +62,31 @@ import eu.siacs.conversations.ui.util.MenuDoubleTabUtil
 import eu.siacs.conversations.ui.util.PendingItem
 import eu.siacs.conversations.utils.*
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist
-import org.openintents.openpgp.util.OpenPgpApi
 import rocks.xmpp.addr.Jid
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversationArchived,
-    OnConversationsListItemUpdated, OnConversationRead, XmppConnectionService.OnAccountUpdate,
-    XmppConnectionService.OnConversationUpdate, XmppConnectionService.OnRosterUpdate, OnUpdateBlocklist,
-    XmppConnectionService.OnShowErrorToast, XmppConnectionService.OnAffiliationChanged {
+class ConversationsActivity :
+    XmppActivity(),
+    OnConversationSelected,
+    OnConversationArchived,
+    OnConversationsListItemUpdated,
+    OnConversationRead,
+    OnUpdateBlocklist,
+    XmppConnectionService.OnAccountUpdate,
+    XmppConnectionService.OnConversationUpdate,
+    XmppConnectionService.OnRosterUpdate,
+    XmppConnectionService.OnShowErrorToast,
+    XmppConnectionService.OnAffiliationChanged {
+
     private val pendingViewIntent = PendingItem<Intent>()
     private val postponedActivityResult = PendingItem<ActivityResult>()
     private var binding: ActivityConversationsBinding? = null
-    private var mActivityPaused = true
-    private val mRedirectInProcess = AtomicBoolean(false)
+    private var activityPaused = true
+    private val redirectInProcess = AtomicBoolean(false)
+
+    private val fragments by lazy { XmppFragmentsInteractor(fragmentManager = fragmentManager) }
+    private val handleActivityResult by lazy { HandleActivityResultInteractor(this) }
 
     private val batteryOptimizationPreferenceKey: String
         get() {
@@ -85,11 +95,7 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
             return "show_battery_optimization" + (device ?: "")
         }
 
-    override fun refreshUiReal() {
-        for (id in FRAGMENT_ID_NOTIFICATION_ORDER) {
-            refreshFragment(id)
-        }
-    }
+    override fun refreshUiReal() = fragments.refresh()
 
     internal override fun onBackendConnected() {
         if (performRedirectIfNecessary(true)) {
@@ -110,10 +116,7 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
             notifyFragmentOfBackendConnected(id)
         }
 
-        val activityResult = postponedActivityResult.pop()
-        if (activityResult != null) {
-            handleActivityResult(activityResult)
-        }
+        postponedActivityResult.pop()?.let(handleActivityResult)
 
         invalidateActionBarTitle()
         if (binding!!.secondaryFragment != null && ConversationFragment.getConversation(this) == null) {
@@ -125,16 +128,12 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
         showDialogsIfMainIsOverview()
     }
 
-    private fun performRedirectIfNecessary(noAnimation: Boolean): Boolean {
-        return performRedirectIfNecessary(null, noAnimation)
-    }
-
-    private fun performRedirectIfNecessary(ignore: Conversation?, noAnimation: Boolean): Boolean {
+    private fun performRedirectIfNecessary(noAnimation: Boolean, ignore: Conversation? = null): Boolean {
         if (xmppConnectionService == null) {
             return false
         }
         val isConversationsListEmpty = xmppConnectionService.isConversationsListEmpty(ignore)
-        if (isConversationsListEmpty && mRedirectInProcess.compareAndSet(false, true)) {
+        if (isConversationsListEmpty && redirectInProcess.compareAndSet(false, true)) {
             val intent = SignupUtils.getRedirectionIntent(this)
             if (noAnimation) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
@@ -146,7 +145,7 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
                 }
             }
         }
-        return mRedirectInProcess.get()
+        return redirectInProcess.get()
     }
 
     private fun showDialogsIfMainIsOverview() {
@@ -162,7 +161,7 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
         }
     }
 
-    private fun setNeverAskForBatteryOptimizationsAgain() {
+    internal fun setNeverAskForBatteryOptimizationsAgain() {
         preferences.edit().putBoolean(batteryOptimizationPreferenceKey, false).apply()
     }
 
@@ -228,7 +227,7 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         UriHandlerActivity.onRequestPermissionResult(this, requestCode, grantResults)
-        if (grantResults.size > 0) {
+        if (grantResults.isNotEmpty()) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 when (requestCode) {
                     REQUEST_OPEN_MESSAGE -> {
@@ -243,53 +242,11 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
 
     public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        val activityResult = ActivityResult.of(requestCode, resultCode, data)
-        if (xmppConnectionService != null) {
-            handleActivityResult(activityResult)
-        } else {
-            this.postponedActivityResult.push(activityResult)
-        }
-    }
-
-    private fun handleActivityResult(activityResult: ActivityResult) {
-        if (activityResult.resultCode == Activity.RESULT_OK) {
-            handlePositiveActivityResult(activityResult.requestCode, activityResult.data)
-        } else {
-            handleNegativeActivityResult(activityResult.requestCode)
-        }
-    }
-
-    private fun handleNegativeActivityResult(requestCode: Int) {
-        val conversation = ConversationFragment.getConversationReliable(this)
-        when (requestCode) {
-            REQUEST_DECRYPT_PGP -> conversation?.account?.pgpDecryptionService?.giveUpCurrentDecryption()
-            REQUEST_BATTERY_OP -> setNeverAskForBatteryOptimizationsAgain()
-        }
-    }
-
-    private fun handlePositiveActivityResult(requestCode: Int, data: Intent) {
-        val conversation = ConversationFragment.getConversationReliable(this)
-        if (conversation == null) {
-            Log.d(Config.LOGTAG, "conversation not found")
-            return
-        }
-        when (requestCode) {
-            REQUEST_DECRYPT_PGP -> conversation.account.pgpDecryptionService.continueDecryption(data)
-            XmppActivity.REQUEST_CHOOSE_PGP_ID -> {
-                val id = data.getLongExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, 0)
-                if (id != 0L) {
-                    conversation.account.setPgpSignId(id)
-                    announcePgp(conversation.account, null, null, onOpenPGPKeyPublished)
-                } else {
-                    choosePgpSignId(conversation.account)
-                }
-            }
-            XmppActivity.REQUEST_ANNOUNCE_PGP -> announcePgp(
-                conversation.account,
-                conversation,
-                data,
-                onOpenPGPKeyPublished
-            )
+        ActivityResult.of(requestCode, resultCode, data).let { activityResult ->
+            if (xmppConnectionService != null)
+                handleActivityResult(activityResult)
+            else
+                postponedActivityResult.push(activityResult)
         }
     }
 
@@ -297,23 +254,20 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
         super.onCreate(savedInstanceState)
         ConversationMenuConfigurator.reloadFeatures(this)
         OmemoSetting.load(this)
-        this.binding = DataBindingUtil.setContentView(this, R.layout.activity_conversations)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_conversations)
         setSupportActionBar(binding!!.toolbar as Toolbar)
         ActionBarActivity.configureActionBar(supportActionBar)
-        this.fragmentManager.addOnBackStackChangedListener(FragmentManager.OnBackStackChangedListener { this.invalidateActionBarTitle() })
-        this.fragmentManager.addOnBackStackChangedListener(FragmentManager.OnBackStackChangedListener { this.showDialogsIfMainIsOverview() })
-        this.initializeFragments()
-        this.invalidateActionBarTitle()
-        val intent: Intent?
-        if (savedInstanceState == null) {
-            intent = getIntent()
-        } else {
-            intent = savedInstanceState.getParcelable("intent")
+        fragmentManager.addOnBackStackChangedListener {
+            invalidateActionBarTitle()
+            showDialogsIfMainIsOverview()
         }
-        if (isViewOrShareIntent(intent)) {
-            pendingViewIntent.push(intent)
-            setIntent(createLauncherIntent(this))
-        }
+        fragments.initialize(binding!!)
+
+        invalidateActionBarTitle()
+
+        (savedInstanceState?.getParcelable("Intent") ?: intent).takeIf(::isViewOrShareIntent)
+            ?.also(pendingViewIntent::push)
+            ?.let { intent = createLauncherIntent(this) }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -446,7 +400,7 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
         } else {
             this.mSkipBackgroundBinding = false
         }
-        mRedirectInProcess.set(false)
+        redirectInProcess.set(false)
         super.onStart()
     }
 
@@ -463,51 +417,13 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
     }
 
     override fun onPause() {
-        this.mActivityPaused = true
+        activityPaused = true
         super.onPause()
     }
 
     override fun onResume() {
         super.onResume()
-        this.mActivityPaused = false
-    }
-
-    private fun initializeFragments() {
-        var transaction = fragmentManager.beginTransaction()
-        val mainFragment = fragmentManager.findFragmentById(R.id.main_fragment)
-        val secondaryFragment = fragmentManager.findFragmentById(R.id.secondary_fragment)
-        if (mainFragment != null) {
-            if (binding!!.secondaryFragment != null) {
-                if (mainFragment is ConversationFragment) {
-                    fragmentManager.popBackStack()
-                    transaction.remove(mainFragment)
-                    transaction.commit()
-                    fragmentManager.executePendingTransactions()
-                    transaction = fragmentManager.beginTransaction()
-                    transaction.replace(R.id.secondary_fragment, mainFragment)
-                    transaction.replace(R.id.main_fragment, ConversationsOverviewFragment())
-                    transaction.commit()
-                    return
-                }
-            } else {
-                if (secondaryFragment is ConversationFragment) {
-                    transaction.remove(secondaryFragment)
-                    transaction.commit()
-                    fragmentManager.executePendingTransactions()
-                    transaction = fragmentManager.beginTransaction()
-                    transaction.replace(R.id.main_fragment, secondaryFragment)
-                    transaction.addToBackStack(null)
-                    transaction.commit()
-                    return
-                }
-            }
-        } else {
-            transaction.replace(R.id.main_fragment, ConversationsOverviewFragment())
-        }
-        if (binding!!.secondaryFragment != null && secondaryFragment == null) {
-            transaction.replace(R.id.secondary_fragment, ConversationFragment())
-        }
-        transaction.commit()
+        activityPaused = false
     }
 
     private fun invalidateActionBarTitle() {
@@ -528,7 +444,7 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
     }
 
     override fun onConversationArchived(conversation: Conversation) {
-        if (performRedirectIfNecessary(conversation, false)) {
+        if (performRedirectIfNecessary(false, conversation)) {
             return
         }
         val mainFragment = fragmentManager.findFragmentById(R.id.main_fragment)
@@ -554,10 +470,9 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
     }
 
     override fun onConversationsListItemUpdated() {
-        val fragment = fragmentManager.findFragmentById(R.id.main_fragment)
-        if (fragment is ConversationsOverviewFragment) {
-            fragment.refresh()
-        }
+        fragmentManager.findFragmentById(R.id.main_fragment)
+            ?.let { it as? ConversationsOverviewFragment }
+            ?.refresh()
     }
 
     override fun switchToConversation(conversation: Conversation) {
@@ -566,37 +481,26 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
     }
 
     override fun onConversationRead(conversation: Conversation, upToUuid: String) {
-        if (!mActivityPaused && pendingViewIntent.peek() == null) {
+        if (!activityPaused && pendingViewIntent.peek() == null) {
             xmppConnectionService.sendReadMarker(conversation, upToUuid)
         } else {
             Log.d(
                 Config.LOGTAG,
-                "ignoring read callback. mActivityPaused=" + java.lang.Boolean.toString(mActivityPaused)
+                "ignoring read callback. activityPaused=" + java.lang.Boolean.toString(activityPaused)
             )
         }
     }
 
-    override fun onAccountUpdate() {
-        this.refreshUi()
-    }
+    override fun onAccountUpdate() = refreshUi()
+
+    override fun onRosterUpdate() = refreshUi()
+
+    override fun OnUpdateBlocklist(status: OnUpdateBlocklist.Status) = refreshUi()
+
+    override fun onShowErrorToast(resId: Int) = runOnUiThread { Toast.makeText(this, resId, Toast.LENGTH_SHORT).show() }
 
     override fun onConversationUpdate() {
-        if (performRedirectIfNecessary(false)) {
-            return
-        }
-        this.refreshUi()
-    }
-
-    override fun onRosterUpdate() {
-        this.refreshUi()
-    }
-
-    override fun OnUpdateBlocklist(status: OnUpdateBlocklist.Status) {
-        this.refreshUi()
-    }
-
-    override fun onShowErrorToast(resId: Int) {
-        runOnUiThread { Toast.makeText(this, resId, Toast.LENGTH_SHORT).show() }
+        if (!performRedirectIfNecessary(false)) refreshUi()
     }
 
     companion object {
@@ -636,3 +540,4 @@ class ConversationsActivity : XmppActivity(), OnConversationSelected, OnConversa
         }
     }
 }
+

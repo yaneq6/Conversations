@@ -85,10 +85,10 @@ import rocks.xmpp.addr.Jid;
 public abstract class XmppActivity extends ActionBarActivity {
 
 	public static final String EXTRA_ACCOUNT = "account";
-	protected static final int REQUEST_ANNOUNCE_PGP = 0x0101;
-	protected static final int REQUEST_INVITE_TO_CONVERSATION = 0x0102;
-	protected static final int REQUEST_CHOOSE_PGP_ID = 0x0103;
-	protected static final int REQUEST_BATTERY_OP = 0x49ff;
+	public static final int REQUEST_ANNOUNCE_PGP = 0x0101;
+	public static final int REQUEST_INVITE_TO_CONVERSATION = 0x0102;
+	public static final int REQUEST_CHOOSE_PGP_ID = 0x0103;
+	public static final int REQUEST_BATTERY_OP = 0x49ff;
 	public XmppConnectionService xmppConnectionService;
 	public boolean xmppConnectionServiceBound = false;
 
@@ -554,7 +554,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 		startActivityForResult(ChooseContactActivity.create(this,conversation), REQUEST_INVITE_TO_CONVERSATION);
 	}
 
-	protected void announcePgp(final Account account, final Conversation conversation, Intent intent, final Runnable onSuccess) {
+	public void announcePgp(final Account account, final Conversation conversation, Intent intent, final Runnable onSuccess) {
 		if (account.getPgpId() == 0) {
 			choosePgpSignId(account);
 		} else {
@@ -616,7 +616,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 		}
 	}
 
-	protected void choosePgpSignId(Account account) {
+	public void choosePgpSignId(Account account) {
 		xmppConnectionService.getPgpEngine().chooseKey(account, new UiCallback<Account>() {
 			@Override
 			public void success(Account account1) {

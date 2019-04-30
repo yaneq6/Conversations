@@ -6,11 +6,7 @@ import android.content.Intent;
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.services.XmppConnectionService;
-import eu.siacs.conversations.ui.ConversationsActivity;
-import eu.siacs.conversations.ui.EditAccountActivity;
-import eu.siacs.conversations.ui.ManageAccountActivity;
-import eu.siacs.conversations.ui.StartConversationActivity;
-import eu.siacs.conversations.ui.WelcomeActivity;
+import eu.siacs.conversations.ui.*;
 
 public class SignupUtils {
 
@@ -20,7 +16,7 @@ public class SignupUtils {
         return intent;
     }
 
-    public static Intent getRedirectionIntent(final ConversationsActivity activity) {
+    public static Intent getRedirectionIntent(final XmppActivity activity) {
         final XmppConnectionService service = activity.xmppConnectionService;
         Account pendingAccount = AccountUtils.getPendingAccount(service);
         Intent intent;
