@@ -53,7 +53,6 @@ import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.ui.interfaces.*
 import eu.siacs.conversations.ui.util.ActivityResult
 import eu.siacs.conversations.ui.util.ConversationMenuConfigurator
-import eu.siacs.conversations.ui.util.MenuDoubleTabUtil
 import eu.siacs.conversations.ui.util.PendingItem
 import eu.siacs.conversations.utils.XmppUri
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist
@@ -147,6 +146,13 @@ class ConversationsActivity :
             activity = this,
             pendingViewIntent = pendingViewIntent,
             processViewIntent = processViewIntent
+        )
+    }
+
+    val handleOptionsItemSelected by lazy {
+        HandleOptionsItemSelected(
+            activity = this,
+            fragmentManager = fragmentManager
         )
     }
 
@@ -271,30 +277,8 @@ class ConversationsActivity :
         return false
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (MenuDoubleTabUtil.shouldIgnoreTap()) {
-            return false
-        }
-        when (item.itemId) {
-            android.R.id.home -> {
-                val fm = fragmentManager
-                if (fm.backStackEntryCount > 0) {
-                    try {
-                        fm.popBackStack()
-                    } catch (e: IllegalStateException) {
-                        Log.w(Config.LOGTAG, "Unable to pop back stack after pressing home button")
-                    }
-
-                    return true
-                }
-            }
-            R.id.action_scan_qr_code -> {
-                UriHandlerActivity.scan(this)
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
-    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean =
+        handleOptionsItemSelected(item) ?: super.onOptionsItemSelected(item)
 
     override fun onSaveInstanceState(savedInstanceState: Bundle) {
         val pendingIntent = pendingViewIntent.peek()
