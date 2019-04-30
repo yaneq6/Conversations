@@ -121,6 +121,13 @@ class ConversationsActivity :
         )
     }
 
+    private val processViewIntent by lazy {
+        ProcessViewIntentCommand(
+            activity = this,
+            openConversation = openConversation
+        )
+    }
+
     val batteryOptimizationPreferenceKey: String
         get() {
             @SuppressLint("HardwareIds") val device =
@@ -163,20 +170,6 @@ class ConversationsActivity :
 
     internal fun setNeverAskForBatteryOptimizationsAgain() {
         preferences.edit().putBoolean(batteryOptimizationPreferenceKey, false).apply()
-    }
-
-    private fun processViewIntent(intent: Intent): Boolean {
-        val uuid = intent.getStringExtra(EXTRA_CONVERSATION)
-        val conversation = if (uuid != null) xmppConnectionService.findConversationByUuid(uuid) else null
-        if (conversation == null) {
-            Log.d(Config.LOGTAG, "unable to view conversation with uuid:" + uuid!!)
-            return false
-        }
-        openConversation(
-            conversation = conversation,
-            extras = intent.extras ?: Bundle()
-        )
-        return true
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
