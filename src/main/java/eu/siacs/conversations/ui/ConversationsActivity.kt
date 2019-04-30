@@ -34,7 +34,6 @@ import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Bundle
@@ -50,10 +49,10 @@ import eu.siacs.conversations.Config
 import eu.siacs.conversations.R
 import eu.siacs.conversations.crypto.OmemoSetting
 import eu.siacs.conversations.databinding.ActivityConversationsBinding
-import eu.siacs.conversations.entities.Account
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.feature.conversations.HandleActivityResultInteractor
 import eu.siacs.conversations.feature.conversations.HasAccountWithoutPushQuery
+import eu.siacs.conversations.feature.conversations.HandlePermissionsResultCommand
 import eu.siacs.conversations.feature.conversations.XmppFragmentsInteractor
 import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.ui.interfaces.*
@@ -86,9 +85,10 @@ class ConversationsActivity :
     private var activityPaused = true
     private val redirectInProcess = AtomicBoolean(false)
 
-    private val fragments by lazy { XmppFragmentsInteractor(fragmentManager = fragmentManager) }
+    private val fragments by lazy { XmppFragmentsInteractor(fragmentManager) }
     private val handleActivityResult by lazy { HandleActivityResultInteractor(this) }
     private val hasAccountWithoutPush by lazy { HasAccountWithoutPushQuery(xmppConnectionService) }
+    private val handlePermissionsResult by lazy { HandlePermissionsResultCommand(this) }
 
     private val batteryOptimizationPreferenceKey: String
         get() {
@@ -97,7 +97,7 @@ class ConversationsActivity :
             return "show_battery_optimization" + (device ?: "")
         }
 
-    override fun refreshUiReal() = fragments.refresh()
+    public override fun refreshUiReal() = fragments.refresh()
 
     internal override fun onBackendConnected() {
         if (performRedirectIfNecessary(true)) {
@@ -219,18 +219,7 @@ class ConversationsActivity :
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        UriHandlerActivity.onRequestPermissionResult(this, requestCode, grantResults)
-        if (grantResults.isNotEmpty()) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                when (requestCode) {
-                    REQUEST_OPEN_MESSAGE -> {
-                        refreshUiReal()
-                        ConversationFragment.openPendingMessage(this)
-                    }
-                    REQUEST_PLAY_PAUSE -> ConversationFragment.startStopPending(this)
-                }
-            }
-        }
+        handlePermissionsResult(requestCode, permissions, grantResults)
     }
 
     public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
