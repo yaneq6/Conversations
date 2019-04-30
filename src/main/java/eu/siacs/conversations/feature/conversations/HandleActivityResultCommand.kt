@@ -8,7 +8,7 @@ import eu.siacs.conversations.ui.util.ActivityResult
 import org.openintents.openpgp.util.OpenPgpApi
 import timber.log.Timber
 
-class HandleActivityResultInteractor(
+class HandleActivityResultCommand(
     private val activity: ConversationsActivity
 ) : (ActivityResult) -> Unit {
 

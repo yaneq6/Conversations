@@ -56,7 +56,6 @@ import eu.siacs.conversations.ui.util.ConversationMenuConfigurator
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil
 import eu.siacs.conversations.ui.util.PendingItem
 import eu.siacs.conversations.utils.AccountUtils
-import eu.siacs.conversations.utils.ExceptionHelper
 import eu.siacs.conversations.utils.SignupUtils
 import eu.siacs.conversations.utils.XmppUri
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist
@@ -85,7 +84,7 @@ class ConversationsActivity :
 
     private val fragments by lazy { XmppFragmentsInteractor(fragmentManager) }
 
-    private val handleActivityResult by lazy { HandleActivityResultInteractor(this) }
+    private val handleActivityResult by lazy { HandleActivityResultCommand(this) }
 
     private val hasAccountWithoutPush by lazy { HasAccountWithoutPushQuery(xmppConnectionService) }
 
@@ -105,6 +104,13 @@ class ConversationsActivity :
         OpenBatteryOptimizationDialogIfNeededCommand(
             activity = this,
             hasAccountWithoutPush = hasAccountWithoutPush
+        )
+    }
+
+    private val showDialogsIfMainIsOverview by lazy {
+        ShowDialogsIfMainIsOverviewCommand(
+            activity = this,
+            openBatteryOptimizationDialogIfNeeded = openBatteryOptimizationDialogIfNeeded
         )
     }
 
@@ -166,19 +172,6 @@ class ConversationsActivity :
             }
         }
         return redirectInProcess.get()
-    }
-
-    private fun showDialogsIfMainIsOverview() {
-        if (xmppConnectionService == null) {
-            return
-        }
-        val fragment = fragmentManager.findFragmentById(R.id.main_fragment)
-        if (fragment is ConversationsOverviewFragment) {
-            if (ExceptionHelper.checkForCrash(this)) {
-                return
-            }
-            openBatteryOptimizationDialogIfNeeded()
-        }
     }
 
     internal fun setNeverAskForBatteryOptimizationsAgain() {

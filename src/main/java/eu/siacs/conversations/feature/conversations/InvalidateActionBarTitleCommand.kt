@@ -11,26 +11,10 @@ class InvalidateActionBarTitleCommand(
 ) : () -> Unit {
     override fun invoke() {
         activity.supportActionBar?.invalidateTitle()
-
-        activity.supportActionBar?.run {
-            activity.fragmentManager
-                .findFragmentById(R.id.main_fragment)
-                .let { it as? ConversationFragment }
-                ?.let { mainFragment ->
-                    mainFragment.conversation?.let { conversation ->
-                        title = EmojiWrapper.transform(conversation.name)
-                        setDisplayHomeAsUpEnabled(true)
-                    }
-                }
-                ?: run {
-                    setTitle(R.string.app_name)
-                    setDisplayHomeAsUpEnabled(false)
-                }
-        }
     }
 
     private fun ActionBar.invalidateTitle() =
-        activity.fragmentManager.findFragmentById(R.id.main_fragment).let { fragment ->
+        activity.fragmentManager.findFragmentById(R.id.main_fragment)?.let { fragment ->
             when (fragment is ConversationFragment) {
                 true -> setFragmentTitle(fragment)
                 false -> setAppTitle()
