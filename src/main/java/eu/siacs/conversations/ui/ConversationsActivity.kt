@@ -56,7 +56,6 @@ import eu.siacs.conversations.ui.util.ConversationMenuConfigurator
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil
 import eu.siacs.conversations.ui.util.PendingItem
 import eu.siacs.conversations.utils.AccountUtils
-import eu.siacs.conversations.utils.SignupUtils
 import eu.siacs.conversations.utils.XmppUri
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist
 import rocks.xmpp.addr.Jid
@@ -114,6 +113,13 @@ class ConversationsActivity :
         )
     }
 
+    private val performRedirectIfNecessary by lazy {
+        PerformRedirectIfNecessaryCommand(
+            activity = this,
+            redirectInProcess = redirectInProcess
+        )
+    }
+
     val batteryOptimizationPreferenceKey: String
         get() {
             @SuppressLint("HardwareIds") val device =
@@ -152,26 +158,6 @@ class ConversationsActivity :
             }
         }
         showDialogsIfMainIsOverview()
-    }
-
-    private fun performRedirectIfNecessary(noAnimation: Boolean, ignore: Conversation? = null): Boolean {
-        if (xmppConnectionService == null) {
-            return false
-        }
-        val isConversationsListEmpty = xmppConnectionService.isConversationsListEmpty(ignore)
-        if (isConversationsListEmpty && redirectInProcess.compareAndSet(false, true)) {
-            val intent = SignupUtils.getRedirectionIntent(this)
-            if (noAnimation) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-            }
-            runOnUiThread {
-                startActivity(intent)
-                if (noAnimation) {
-                    overridePendingTransition(0, 0)
-                }
-            }
-        }
-        return redirectInProcess.get()
     }
 
     internal fun setNeverAskForBatteryOptimizationsAgain() {
