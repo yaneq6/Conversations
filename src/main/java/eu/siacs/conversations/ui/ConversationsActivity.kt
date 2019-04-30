@@ -55,7 +55,6 @@ import eu.siacs.conversations.ui.util.ActivityResult
 import eu.siacs.conversations.ui.util.ConversationMenuConfigurator
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil
 import eu.siacs.conversations.ui.util.PendingItem
-import eu.siacs.conversations.utils.AccountUtils
 import eu.siacs.conversations.utils.XmppUri
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist
 import rocks.xmpp.addr.Jid
@@ -90,6 +89,8 @@ class ConversationsActivity :
     private val handlePermissionsResult by lazy { HandlePermissionsResultCommand(this) }
 
     private val invalidateActionBarTitle by lazy { InvalidateActionBarTitleCommand(this) }
+
+    private val createOptionMenu by lazy { CreateOptionMenuCommand(this) }
 
     private val openConversation by lazy {
         OpenConversationCommand(
@@ -138,14 +139,14 @@ class ConversationsActivity :
         if (intent != null) {
             if (processViewIntent(intent)) {
                 if (binding!!.secondaryFragment != null) {
-                    notifyFragmentOfBackendConnected(R.id.main_fragment)
+                    fragments.onBackendConnected(R.id.main_fragment)
                 }
                 invalidateActionBarTitle()
                 return
             }
         }
         for (id in FRAGMENT_ID_NOTIFICATION_ORDER) {
-            notifyFragmentOfBackendConnected(id)
+            fragments.onBackendConnected(R.id.main_fragment)
         }
 
         postponedActivityResult.pop()?.let(handleActivityResult)
@@ -162,13 +163,6 @@ class ConversationsActivity :
 
     internal fun setNeverAskForBatteryOptimizationsAgain() {
         preferences.edit().putBoolean(batteryOptimizationPreferenceKey, false).apply()
-    }
-
-    private fun notifyFragmentOfBackendConnected(@IdRes id: Int) {
-        val fragment = fragmentManager.findFragmentById(id)
-        if (fragment is OnBackendConnected) {
-            (fragment as OnBackendConnected).onBackendConnected()
-        }
     }
 
     private fun processViewIntent(intent: Intent): Boolean {
@@ -219,23 +213,9 @@ class ConversationsActivity :
             ?.let { intent = createLauncherIntent(this) }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.activity_conversations, menu)
-        AccountUtils.showHideMenuItems(menu)
-        val qrCodeScanMenuItem = menu.findItem(R.id.action_scan_qr_code)
-        if (qrCodeScanMenuItem != null) {
-            if (isCameraFeatureAvailable) {
-                val fragment = fragmentManager.findFragmentById(R.id.main_fragment)
-                val visible = (resources.getBoolean(R.bool.show_qr_code_scan)
-                        && fragment != null
-                        && fragment is ConversationsOverviewFragment)
-                qrCodeScanMenuItem.isVisible = visible
-            } else {
-                qrCodeScanMenuItem.isVisible = false
-            }
-        }
-        return super.onCreateOptionsMenu(menu)
-    }
+    override fun onCreateOptionsMenu(menu: Menu): Boolean = super
+        .onCreateOptionsMenu(menu)
+        .also { createOptionMenu(menu) }
 
     override fun onConversationSelected(conversation: Conversation) {
         clearPendingViewIntent()
@@ -439,4 +419,5 @@ class ConversationsActivity :
         }
     }
 }
+
 

@@ -404,7 +404,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 		this.mUsingEnterKey = usingEnterKey();
 	}
 
-	protected boolean isCameraFeatureAvailable() {
+	public boolean isCameraFeatureAvailable() {
 		return this.isCameraFeatureAvailable;
 	}
 

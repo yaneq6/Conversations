@@ -7,6 +7,7 @@ import eu.siacs.conversations.databinding.ActivityConversationsBinding
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsOverviewFragment
 import eu.siacs.conversations.ui.XmppFragment
+import eu.siacs.conversations.ui.interfaces.OnBackendConnected
 
 class XmppFragmentsInteractor(
     private val fragmentManager: FragmentManager
@@ -66,6 +67,11 @@ class XmppFragmentsInteractor(
         .map(fragmentManager::findFragmentById)
         .filterIsInstance<XmppFragment>()
         .forEach(XmppFragment::refresh)
+
+
+    fun onBackendConnected(@IdRes id: Int) {
+        fragmentManager.findFragmentById(id).let { it as? OnBackendConnected }?.onBackendConnected()
+    }
 
 
     companion object {
