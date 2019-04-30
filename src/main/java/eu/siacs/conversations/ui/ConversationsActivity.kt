@@ -50,10 +50,7 @@ import eu.siacs.conversations.R
 import eu.siacs.conversations.crypto.OmemoSetting
 import eu.siacs.conversations.databinding.ActivityConversationsBinding
 import eu.siacs.conversations.entities.Conversation
-import eu.siacs.conversations.feature.conversations.HandleActivityResultInteractor
-import eu.siacs.conversations.feature.conversations.HasAccountWithoutPushQuery
-import eu.siacs.conversations.feature.conversations.HandlePermissionsResultCommand
-import eu.siacs.conversations.feature.conversations.XmppFragmentsInteractor
+import eu.siacs.conversations.feature.conversations.*
 import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.ui.interfaces.*
 import eu.siacs.conversations.ui.util.ActivityResult
@@ -89,6 +86,7 @@ class ConversationsActivity :
     private val handleActivityResult by lazy { HandleActivityResultInteractor(this) }
     private val hasAccountWithoutPush by lazy { HasAccountWithoutPushQuery(xmppConnectionService) }
     private val handlePermissionsResult by lazy { HandlePermissionsResultCommand(this) }
+    private val invalidateActionBarTitle by lazy { InvalidateActionBarTitleCommand(this) }
 
     private val batteryOptimizationPreferenceKey: String
         get() {
@@ -406,23 +404,6 @@ class ConversationsActivity :
     override fun onResume() {
         super.onResume()
         activityPaused = false
-    }
-
-    private fun invalidateActionBarTitle() {
-        val actionBar = supportActionBar
-        if (actionBar != null) {
-            val mainFragment = fragmentManager.findFragmentById(R.id.main_fragment)
-            if (mainFragment is ConversationFragment) {
-                val conversation = mainFragment.conversation
-                if (conversation != null) {
-                    actionBar.title = EmojiWrapper.transform(conversation.name)
-                    actionBar.setDisplayHomeAsUpEnabled(true)
-                    return
-                }
-            }
-            actionBar.setTitle(R.string.app_name)
-            actionBar.setDisplayHomeAsUpEnabled(false)
-        }
     }
 
     override fun onConversationArchived(conversation: Conversation) {
