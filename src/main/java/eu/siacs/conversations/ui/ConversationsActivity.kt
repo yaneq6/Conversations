@@ -31,7 +31,6 @@ package eu.siacs.conversations.ui
 
 
 import android.annotation.SuppressLint
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
@@ -39,7 +38,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.support.annotation.IdRes
-import android.support.v7.app.AlertDialog
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.Menu
@@ -57,7 +55,10 @@ import eu.siacs.conversations.ui.util.ActivityResult
 import eu.siacs.conversations.ui.util.ConversationMenuConfigurator
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil
 import eu.siacs.conversations.ui.util.PendingItem
-import eu.siacs.conversations.utils.*
+import eu.siacs.conversations.utils.AccountUtils
+import eu.siacs.conversations.utils.ExceptionHelper
+import eu.siacs.conversations.utils.SignupUtils
+import eu.siacs.conversations.utils.XmppUri
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist
 import rocks.xmpp.addr.Jid
 import java.util.*
@@ -100,9 +101,17 @@ class ConversationsActivity :
         )
     }
 
-    private val batteryOptimizationPreferenceKey: String
+    private val openBatteryOptimizationDialogIfNeeded by lazy {
+        OpenBatteryOptimizationDialogIfNeededCommand(
+            activity = this,
+            hasAccountWithoutPush = hasAccountWithoutPush
+        )
+    }
+
+    val batteryOptimizationPreferenceKey: String
         get() {
-            @SuppressLint("HardwareIds") val device = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+            @SuppressLint("HardwareIds") val device =
+                Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
             return "show_battery_optimization" + (device ?: "")
         }
 
@@ -176,43 +185,10 @@ class ConversationsActivity :
         preferences.edit().putBoolean(batteryOptimizationPreferenceKey, false).apply()
     }
 
-    private fun openBatteryOptimizationDialogIfNeeded() {
-        if (hasAccountWithoutPush()
-            && isOptimizingBattery
-            && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M
-            && preferences.getBoolean(batteryOptimizationPreferenceKey, true)
-        ) {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle(R.string.battery_optimizations_enabled)
-            builder.setMessage(R.string.battery_optimizations_enabled_dialog)
-            builder.setPositiveButton(R.string.next) { dialog, which ->
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                val uri = Uri.parse("package:$packageName")
-                intent.data = uri
-                try {
-                    startActivityForResult(intent, REQUEST_BATTERY_OP)
-                } catch (e: ActivityNotFoundException) {
-                    Toast.makeText(this, R.string.device_does_not_support_battery_op, Toast.LENGTH_SHORT).show()
-                }
-            }
-            builder.setOnDismissListener { dialog -> setNeverAskForBatteryOptimizationsAgain() }
-            val dialog = builder.create()
-            dialog.setCanceledOnTouchOutside(false)
-            dialog.show()
-        }
-    }
-
     private fun notifyFragmentOfBackendConnected(@IdRes id: Int) {
         val fragment = fragmentManager.findFragmentById(id)
         if (fragment is OnBackendConnected) {
             (fragment as OnBackendConnected).onBackendConnected()
-        }
-    }
-
-    private fun refreshFragment(@IdRes id: Int) {
-        val fragment = fragmentManager.findFragmentById(id)
-        if (fragment is XmppFragment) {
-            fragment.refresh()
         }
     }
 
@@ -234,7 +210,7 @@ class ConversationsActivity :
         handlePermissionsResult(requestCode, permissions, grantResults)
     }
 
-    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         ActivityResult.of(requestCode, resultCode, data).let { activityResult ->
             if (xmppConnectionService != null)
@@ -347,7 +323,7 @@ class ConversationsActivity :
         return super.onOptionsItemSelected(item)
     }
 
-    public override fun onSaveInstanceState(savedInstanceState: Bundle) {
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
         val pendingIntent = pendingViewIntent.peek()
         savedInstanceState.putParcelable("intent", pendingIntent ?: intent)
         super.onSaveInstanceState(savedInstanceState)

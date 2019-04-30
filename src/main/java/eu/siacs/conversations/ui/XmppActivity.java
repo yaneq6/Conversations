@@ -422,7 +422,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 		return res;
 	}
 
-	protected boolean isOptimizingBattery() {
+	public boolean isOptimizingBattery() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			final PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
 			return pm != null
@@ -447,7 +447,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 		return getBooleanPreference("display_enter_key", R.bool.display_enter_key);
 	}
 
-	protected SharedPreferences getPreferences() {
+	public SharedPreferences getPreferences() {
 		return PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 	}
 
