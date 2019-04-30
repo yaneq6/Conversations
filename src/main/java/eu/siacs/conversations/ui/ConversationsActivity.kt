@@ -53,6 +53,7 @@ import eu.siacs.conversations.databinding.ActivityConversationsBinding
 import eu.siacs.conversations.entities.Account
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.feature.conversations.HandleActivityResultInteractor
+import eu.siacs.conversations.feature.conversations.HasAccountWithoutPushQuery
 import eu.siacs.conversations.feature.conversations.XmppFragmentsInteractor
 import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.ui.interfaces.*
@@ -87,6 +88,7 @@ class ConversationsActivity :
 
     private val fragments by lazy { XmppFragmentsInteractor(fragmentManager = fragmentManager) }
     private val handleActivityResult by lazy { HandleActivityResultInteractor(this) }
+    private val hasAccountWithoutPush by lazy { HasAccountWithoutPushQuery(xmppConnectionService) }
 
     private val batteryOptimizationPreferenceKey: String
         get() {
@@ -189,15 +191,6 @@ class ConversationsActivity :
             dialog.setCanceledOnTouchOutside(false)
             dialog.show()
         }
-    }
-
-    private fun hasAccountWithoutPush(): Boolean {
-        for (account in xmppConnectionService.accounts) {
-            if (account.status == Account.State.ONLINE && !xmppConnectionService.pushManagementService.available(account)) {
-                return true
-            }
-        }
-        return false
     }
 
     private fun notifyFragmentOfBackendConnected(@IdRes id: Int) {
