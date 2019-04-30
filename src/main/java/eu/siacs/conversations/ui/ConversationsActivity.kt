@@ -83,15 +83,26 @@ class ConversationsActivity :
     private val redirectInProcess = AtomicBoolean(false)
 
     private val fragments by lazy { XmppFragmentsInteractor(fragmentManager) }
+
     private val handleActivityResult by lazy { HandleActivityResultInteractor(this) }
+
     private val hasAccountWithoutPush by lazy { HasAccountWithoutPushQuery(xmppConnectionService) }
+
     private val handlePermissionsResult by lazy { HandlePermissionsResultCommand(this) }
+
     private val invalidateActionBarTitle by lazy { InvalidateActionBarTitleCommand(this) }
+
+    private val openConversation by lazy {
+        OpenConversationCommand(
+            activity = this,
+            fragmentsInteractor = fragments,
+            invalidateActionBarTitle = invalidateActionBarTitle
+        )
+    }
 
     private val batteryOptimizationPreferenceKey: String
         get() {
-            @SuppressLint("HardwareIds") val device =
-                Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+            @SuppressLint("HardwareIds") val device = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
             return "show_battery_optimization" + (device ?: "")
         }
 
@@ -122,7 +133,7 @@ class ConversationsActivity :
         if (binding!!.secondaryFragment != null && ConversationFragment.getConversation(this) == null) {
             val conversation = ConversationsOverviewFragment.getSuggestion(this)
             if (conversation != null) {
-                openConversation(conversation, null)
+                openConversation(conversation)
             }
         }
         showDialogsIfMainIsOverview()
@@ -212,7 +223,10 @@ class ConversationsActivity :
             Log.d(Config.LOGTAG, "unable to view conversation with uuid:" + uuid!!)
             return false
         }
-        openConversation(conversation, intent.extras)
+        openConversation(
+            conversation = conversation,
+            extras = intent.extras ?: Bundle()
+        )
         return true
     }
 
@@ -274,7 +288,7 @@ class ConversationsActivity :
             Log.d(Config.LOGTAG, "ignore onConversationSelected() because conversation is already open")
             return
         }
-        openConversation(conversation, null)
+        openConversation(conversation)
     }
 
     fun clearPendingViewIntent() {
@@ -295,46 +309,13 @@ class ConversationsActivity :
         displayToast(getString(resId, jid.asBareJid().toString()))
     }
 
-    private fun openConversation(conversation: Conversation, extras: Bundle?) {
-        var conversationFragment: ConversationFragment? =
-            fragmentManager.findFragmentById(R.id.secondary_fragment) as? ConversationFragment
-        val mainNeedsRefresh: Boolean
-        if (conversationFragment == null) {
-            mainNeedsRefresh = false
-            val mainFragment = fragmentManager.findFragmentById(R.id.main_fragment)
-            if (mainFragment is ConversationFragment) {
-                conversationFragment = mainFragment
-            } else {
-                conversationFragment = ConversationFragment()
-                val fragmentTransaction = fragmentManager.beginTransaction()
-                fragmentTransaction.replace(R.id.main_fragment, conversationFragment)
-                fragmentTransaction.addToBackStack(null)
-                try {
-                    fragmentTransaction.commit()
-                } catch (e: IllegalStateException) {
-                    Log.w(Config.LOGTAG, "sate loss while opening conversation", e)
-                    //allowing state loss is probably fine since view intents et all are already stored and a click can probably be 'ignored'
-                    return
-                }
-
-            }
-        } else {
-            mainNeedsRefresh = true
-        }
-        conversationFragment.reInit(conversation, extras ?: Bundle())
-        if (mainNeedsRefresh) {
-            refreshFragment(R.id.main_fragment)
-        } else {
-            invalidateActionBarTitle()
-        }
-    }
 
     fun onXmppUriClicked(uri: Uri): Boolean {
         val xmppUri = XmppUri(uri)
         if (xmppUri.isJidValid && !xmppUri.hasFingerprints()) {
             val conversation = xmppConnectionService.findUniqueConversationByJid(xmppUri)
             if (conversation != null) {
-                openConversation(conversation, null)
+                openConversation(conversation)
                 return true
             }
         }
@@ -426,7 +407,7 @@ class ConversationsActivity :
             if (secondaryFragment.conversation === conversation) {
                 val suggestion = ConversationsOverviewFragment.getSuggestion(this, conversation)
                 if (suggestion != null) {
-                    openConversation(suggestion, null)
+                    openConversation(suggestion)
                 }
             }
         }
@@ -440,7 +421,7 @@ class ConversationsActivity :
 
     override fun switchToConversation(conversation: Conversation) {
         Log.d(Config.LOGTAG, "override")
-        openConversation(conversation, null)
+        openConversation(conversation)
     }
 
     override fun onConversationRead(conversation: Conversation, upToUuid: String) {

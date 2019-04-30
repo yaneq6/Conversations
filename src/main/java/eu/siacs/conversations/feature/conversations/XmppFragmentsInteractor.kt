@@ -60,7 +60,9 @@ class XmppFragmentsInteractor(
     }
 
 
-    fun refresh() = FRAGMENT_ID_NOTIFICATION_ORDER
+    fun refresh() = refresh(*FRAGMENT_ID_NOTIFICATION_ORDER)
+
+    fun refresh(@IdRes vararg ids: Int) = ids
         .map(fragmentManager::findFragmentById)
         .filterIsInstance<XmppFragment>()
         .forEach(XmppFragment::refresh)
