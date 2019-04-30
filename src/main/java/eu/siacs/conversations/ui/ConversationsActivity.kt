@@ -128,6 +128,15 @@ class ConversationsActivity :
         )
     }
 
+    private val handleConversationArchived by lazy {
+        HandleConversationArchivedCommand(
+            activity = this,
+            fragmentManager = fragmentManager,
+            openConversation = openConversation,
+            performRedirectIfNecessary = performRedirectIfNecessary
+        )
+    }
+
     val batteryOptimizationPreferenceKey: String
         get() {
             @SuppressLint("HardwareIds") val device =
@@ -315,31 +324,7 @@ class ConversationsActivity :
         activityPaused = false
     }
 
-    override fun onConversationArchived(conversation: Conversation) {
-        if (performRedirectIfNecessary(false, conversation)) {
-            return
-        }
-        val mainFragment = fragmentManager.findFragmentById(R.id.main_fragment)
-        if (mainFragment is ConversationFragment) {
-            try {
-                fragmentManager.popBackStack()
-            } catch (e: IllegalStateException) {
-                Log.w(Config.LOGTAG, "state loss while popping back state after archiving conversation", e)
-                //this usually means activity is no longer active; meaning on the next open we will run through this again
-            }
-
-            return
-        }
-        val secondaryFragment = fragmentManager.findFragmentById(R.id.secondary_fragment)
-        if (secondaryFragment is ConversationFragment) {
-            if (secondaryFragment.conversation === conversation) {
-                val suggestion = ConversationsOverviewFragment.getSuggestion(this, conversation)
-                if (suggestion != null) {
-                    openConversation(suggestion)
-                }
-            }
-        }
-    }
+    override fun onConversationArchived(conversation: Conversation) = handleConversationArchived(conversation)
 
     override fun onConversationsListItemUpdated() {
         fragmentManager.findFragmentById(R.id.main_fragment)
@@ -412,5 +397,4 @@ class ConversationsActivity :
         }
     }
 }
-
 
