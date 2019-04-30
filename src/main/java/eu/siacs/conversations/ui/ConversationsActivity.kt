@@ -58,6 +58,7 @@ import eu.siacs.conversations.ui.util.PendingItem
 import eu.siacs.conversations.utils.XmppUri
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist
 import rocks.xmpp.addr.Jid
+import timber.log.Timber
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -75,9 +76,13 @@ class ConversationsActivity :
     XmppConnectionService.OnAffiliationChanged {
 
     private val pendingViewIntent = PendingItem<Intent>()
+
     private val postponedActivityResult = PendingItem<ActivityResult>()
+
     private var binding: ActivityConversationsBinding? = null
+
     private var activityPaused = true
+
     private val redirectInProcess = AtomicBoolean(false)
 
     private val fragments by lazy { XmppFragmentsInteractor(fragmentManager) }
@@ -137,13 +142,20 @@ class ConversationsActivity :
         )
     }
 
+    val handleNewIntent by lazy {
+        HandleNewIntentCommand(
+            activity = this,
+            pendingViewIntent = pendingViewIntent,
+            processViewIntent = processViewIntent
+        )
+    }
+
     val batteryOptimizationPreferenceKey: String
         get() {
             @SuppressLint("HardwareIds") val device =
                 Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
             return "show_battery_optimization" + (device ?: "")
         }
-
     public override fun refreshUiReal() = fragments.refresh()
 
     internal override fun onBackendConnected() {
@@ -302,17 +314,7 @@ class ConversationsActivity :
         super.onStart()
     }
 
-    override fun onNewIntent(intent: Intent) {
-        if (isViewOrShareIntent(intent)) {
-            if (xmppConnectionService != null) {
-                clearPendingViewIntent()
-                processViewIntent(intent)
-            } else {
-                pendingViewIntent.push(intent)
-            }
-        }
-        setIntent(createLauncherIntent(this))
-    }
+    override fun onNewIntent(intent: Intent) = handleNewIntent(intent)
 
     override fun onPause() {
         activityPaused = true
@@ -384,12 +386,12 @@ class ConversationsActivity :
         @IdRes
         private val FRAGMENT_ID_NOTIFICATION_ORDER = intArrayOf(R.id.secondary_fragment, R.id.main_fragment)
 
-        private fun isViewOrShareIntent(i: Intent?): Boolean {
-            Log.d(Config.LOGTAG, "action: " + i?.action)
-            return i != null && VIEW_AND_SHARE_ACTIONS.contains(i.action) && i.hasExtra(EXTRA_CONVERSATION)
+        fun isViewOrShareIntent(intent: Intent?): Boolean {
+            Timber.d("action: ${intent?.action}")
+            return intent?.run { VIEW_AND_SHARE_ACTIONS.contains(action) && hasExtra(EXTRA_CONVERSATION) } ?: false
         }
 
-        private fun createLauncherIntent(context: Context): Intent {
+        fun createLauncherIntent(context: Context): Intent {
             val intent = Intent(context, ConversationsActivity::class.java)
             intent.action = Intent.ACTION_MAIN
             intent.addCategory(Intent.CATEGORY_LAUNCHER)
