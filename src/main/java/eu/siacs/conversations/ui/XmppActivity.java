@@ -170,13 +170,13 @@ public abstract class XmppActivity extends ActionBarActivity {
 		return null;
 	}
 
-	protected void hideToast() {
+	public void hideToast() {
 		if (mToast != null) {
 			mToast.cancel();
 		}
 	}
 
-	protected void replaceToast(String msg) {
+	public void replaceToast(String msg) {
 		replaceToast(msg, true);
 	}
 
@@ -538,7 +538,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 		}
 	}
 
-	protected void delegateUriPermissionsToService(Uri uri) {
+	public void delegateUriPermissionsToService(Uri uri) {
 		Intent intent = new Intent(this, XmppConnectionService.class);
 		intent.setAction(Intent.ACTION_SEND);
 		intent.setData(uri);

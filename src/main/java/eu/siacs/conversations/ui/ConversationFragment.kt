@@ -39,6 +39,9 @@ import eu.siacs.conversations.crypto.axolotl.AxolotlService
 import eu.siacs.conversations.crypto.axolotl.FingerprintStatus
 import eu.siacs.conversations.databinding.FragmentConversationBinding
 import eu.siacs.conversations.entities.*
+import eu.siacs.conversations.feature.conversation.command.AttachFileToConversation
+import eu.siacs.conversations.feature.conversation.di.DaggerConversationComponent
+import eu.siacs.conversations.feature.conversations.di.ActivityModule
 import eu.siacs.conversations.http.HttpDownloadConnection
 import eu.siacs.conversations.persistance.FileBackend
 import eu.siacs.conversations.services.QuickConversationsService
@@ -58,10 +61,14 @@ import rocks.xmpp.addr.Jid
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
 
 
 class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, MessageAdapter.OnContactPictureLongClicked,
     MessageAdapter.OnContactPictureClicked {
+
+    @Inject
+    lateinit var attachFileToConversation: AttachFileToConversation
 
     private val messageList = ArrayList<Message>()
     private val postponedActivityResult = PendingItem<ActivityResult>()
@@ -448,40 +455,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         })
     }
 
-    private fun attachFileToConversation(conversation: Conversation?, uri: Uri, type: String) {
-        if (conversation == null) {
-            return
-        }
-        val prepareFileToast = Toast.makeText(getActivity(), getText(R.string.preparing_file), Toast.LENGTH_LONG)
-        prepareFileToast.show()
-        activity!!.delegateUriPermissionsToService(uri)
-        activity!!.xmppConnectionService.attachFileToConversation(
-            conversation,
-            uri,
-            type,
-            object : UiInformableCallback<Message> {
-                override fun inform(text: String) {
-                    hidePrepareFileToast(prepareFileToast)
-                    runOnUiThread { activity!!.replaceToast(text) }
-                }
-
-                override fun success(message: Message) {
-                    runOnUiThread { activity!!.hideToast() }
-                    hidePrepareFileToast(prepareFileToast)
-                }
-
-                override fun error(errorCode: Int, message: Message) {
-                    hidePrepareFileToast(prepareFileToast)
-                    runOnUiThread { activity!!.replaceToast(getString(errorCode)) }
-
-                }
-
-                override fun userInputRequried(pi: PendingIntent, message: Message) {
-                    hidePrepareFileToast(prepareFileToast)
-                }
-            })
-    }
-
     fun attachEditorContentToConversation(uri: Uri) {
         mediaPreviewAdapter!!.addMediaPreviews(Attachment.of(getActivity(), uri, Attachment.Type.FILE))
         toggleInputMethod()
@@ -735,6 +708,9 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
     override fun onAttach(activity: Activity) {
         super.onAttach(activity)
         Log.d(Config.LOGTAG, "ConversationFragment.onAttach()")
+        DaggerConversationComponent.builder()
+            .activityModule(ActivityModule(activity))
+            .build()(this)
         if (activity is ConversationsActivity) {
             this.activity = activity
         } else {
@@ -2768,3 +2744,4 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 }
+

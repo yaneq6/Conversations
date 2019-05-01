@@ -237,13 +237,13 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 		return i != null && (Intent.ACTION_VIEW.equals(i.getAction()) || Intent.ACTION_SENDTO.equals(i.getAction()) || i.hasExtra(EXTRA_INVITE_URI));
 	}
 
-	protected void hideToast() {
+	public void hideToast() {
 		if (mToast != null) {
 			mToast.cancel();
 		}
 	}
 
-	protected void replaceToast(String msg) {
+	public void replaceToast(String msg) {
 		hideToast();
 		mToast = Toast.makeText(this, msg, Toast.LENGTH_LONG);
 		mToast.show();
