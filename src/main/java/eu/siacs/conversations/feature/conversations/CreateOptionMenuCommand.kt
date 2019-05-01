@@ -6,7 +6,10 @@ import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.ConversationsOverviewFragment
 import eu.siacs.conversations.utils.AccountUtils
 
-class CreateOptionMenuCommand(
+import javax.inject.Inject
+
+@ActivityScope
+class CreateOptionMenuCommand @Inject constructor(
     private val activity: ConversationsActivity
 ) : (Menu) -> Unit {
     override fun invoke(menu: Menu) = activity.run {

@@ -4,7 +4,10 @@ import android.content.Intent
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.util.PendingItem
 
-class HandleNewIntentCommand(
+import javax.inject.Inject
+
+@ActivityScope
+class HandleNewIntentCommand @Inject constructor(
     private val activity: ConversationsActivity,
     private val pendingViewIntent: PendingItem<Intent>,
     private val processViewIntent: ProcessViewIntentCommand

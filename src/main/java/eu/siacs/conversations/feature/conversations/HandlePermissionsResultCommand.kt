@@ -6,8 +6,10 @@ import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.ConversationsActivity.Companion.REQUEST_OPEN_MESSAGE
 import eu.siacs.conversations.ui.ConversationsActivity.Companion.REQUEST_PLAY_PAUSE
 import eu.siacs.conversations.ui.UriHandlerActivity
+import javax.inject.Inject
 
-class HandlePermissionsResultCommand(
+@ActivityScope
+class HandlePermissionsResultCommand @Inject constructor(
     private val activity: ConversationsActivity
 ) : (Int, Array<String>, IntArray) -> Unit {
 

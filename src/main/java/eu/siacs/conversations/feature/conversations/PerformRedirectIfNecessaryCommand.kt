@@ -5,8 +5,10 @@ import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.utils.SignupUtils
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
 
-class PerformRedirectIfNecessaryCommand(
+@ActivityScope
+class PerformRedirectIfNecessaryCommand @Inject constructor(
     private val activity: ConversationsActivity,
     private val redirectInProcess: AtomicBoolean
 ) :

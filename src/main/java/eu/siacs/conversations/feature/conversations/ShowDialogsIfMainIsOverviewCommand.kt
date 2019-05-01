@@ -4,8 +4,10 @@ import eu.siacs.conversations.R
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.ConversationsOverviewFragment
 import eu.siacs.conversations.utils.ExceptionHelper
+import javax.inject.Inject
 
-class ShowDialogsIfMainIsOverviewCommand(
+@ActivityScope
+class ShowDialogsIfMainIsOverviewCommand @Inject constructor(
     private val activity: ConversationsActivity,
     private val openBatteryOptimizationDialogIfNeeded: OpenBatteryOptimizationDialogIfNeededCommand
 ) : () -> Unit {

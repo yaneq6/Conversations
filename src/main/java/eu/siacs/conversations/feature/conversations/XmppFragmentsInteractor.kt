@@ -8,8 +8,10 @@ import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsOverviewFragment
 import eu.siacs.conversations.ui.XmppFragment
 import eu.siacs.conversations.ui.interfaces.OnBackendConnected
+import javax.inject.Inject
 
-class XmppFragmentsInteractor(
+@ActivityScope
+class XmppFragmentsInteractor @Inject constructor(
     private val fragmentManager: FragmentManager
 ) {
 

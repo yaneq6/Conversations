@@ -4,8 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import eu.siacs.conversations.ui.ConversationsActivity
 import timber.log.Timber
+import javax.inject.Inject
 
-class ProcessViewIntentCommand(
+@ActivityScope
+class ProcessViewIntentCommand @Inject constructor(
     private val activity: ConversationsActivity,
     private val openConversation: OpenConversationCommand
 ) : (Intent) -> Boolean {
@@ -14,7 +16,7 @@ class ProcessViewIntentCommand(
         val uuid = intent.getStringExtra(ConversationsActivity.EXTRA_CONVERSATION)
         val conversation = if (uuid != null) activity.xmppConnectionService?.findConversationByUuid(uuid) else null
         if (conversation == null) {
-            Timber.d("unable to view conversation with uuid:${uuid}")
+            Timber.d("unable to view conversation with uuid:$uuid")
             return false
         }
         openConversation(

@@ -5,8 +5,10 @@ import eu.siacs.conversations.R
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.utils.EmojiWrapper
+import javax.inject.Inject
 
-class InvalidateActionBarTitleCommand(
+@ActivityScope
+class InvalidateActionBarTitleCommand @Inject constructor(
     private val activity: ConversationsActivity
 ) : () -> Unit {
     override fun invoke() {

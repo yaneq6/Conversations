@@ -7,8 +7,10 @@ import eu.siacs.conversations.ui.XmppActivity
 import eu.siacs.conversations.ui.util.ActivityResult
 import org.openintents.openpgp.util.OpenPgpApi
 import timber.log.Timber
+import javax.inject.Inject
 
-class HandleActivityResultCommand(
+@ActivityScope
+class HandleActivityResultCommand @Inject constructor(
     private val activity: ConversationsActivity
 ) : (ActivityResult) -> Unit {
 

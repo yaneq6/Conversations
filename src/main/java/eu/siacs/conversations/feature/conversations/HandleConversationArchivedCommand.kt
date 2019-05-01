@@ -7,8 +7,10 @@ import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.ConversationsOverviewFragment
 import timber.log.Timber
+import javax.inject.Inject
 
-class HandleConversationArchivedCommand(
+@ActivityScope
+class HandleConversationArchivedCommand @Inject constructor(
     private val activity: ConversationsActivity,
     private val performRedirectIfNecessary: PerformRedirectIfNecessaryCommand,
     private val openConversation: OpenConversationCommand,

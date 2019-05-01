@@ -9,17 +9,20 @@ import android.widget.Toast
 import eu.siacs.conversations.R
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.XmppActivity.REQUEST_BATTERY_OP
+import javax.inject.Inject
 
-class OpenBatteryOptimizationDialogIfNeededCommand(
+@ActivityScope
+class OpenBatteryOptimizationDialogIfNeededCommand @Inject constructor(
     private val activity: ConversationsActivity,
-    private val hasAccountWithoutPush: HasAccountWithoutPushQuery
+    private val hasAccountWithoutPush: HasAccountWithoutPushQuery,
+    private val batteryOptimizationPreferenceKey: BatteryOptimizationPreferenceKeyQuery
 ) : () -> Unit {
 
     override fun invoke() = activity.run {
         if (hasAccountWithoutPush()
             && isOptimizingBattery
             && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M
-            && preferences.getBoolean(batteryOptimizationPreferenceKey, true)
+            && preferences.getBoolean(batteryOptimizationPreferenceKey(), true)
         ) {
             val builder = AlertDialog.Builder(activity)
             builder.setTitle(R.string.battery_optimizations_enabled)

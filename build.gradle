@@ -5,21 +5,24 @@ buildscript {
         kotlin_version = '1.3.31'
         dagger_version = '2.22.1'
         aakit_version = '7c550e9a94'
+        timber_version = '4.7.1'
     }
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.2'
+        classpath 'com.android.tools.build:gradle:3.4.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath 'com.android.tools.build.jetifier:jetifier-processor:1.0.0-beta04'
     }
 }
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: "kotlin-kapt"
 
 repositories {
     google()
@@ -41,54 +44,6 @@ ext {
     supportLibVersion = '28.0.0'
 }
 
-dependencies {
-    playstoreImplementation('com.google.firebase:firebase-messaging:17.3.4') {
-        exclude group: 'com.google.firebase', module: 'firebase-core'
-        exclude group: 'com.google.firebase', module: 'firebase-analytics'
-        exclude group: 'com.google.firebase', module: 'firebase-measurement-connector'
-    }
-    implementation 'org.sufficientlysecure:openpgp-api:10.0'
-    implementation ('com.theartofdev.edmodo:android-image-cropper:2.7.+') {
-        exclude group: 'com.android.support', module: 'appcompat-v7'
-        exclude group: 'com.android.support', module: 'exifinterface'
-    }
-    implementation "com.android.support:support-v13:$supportLibVersion"
-    implementation "com.android.support:appcompat-v7:$supportLibVersion"
-    implementation "com.android.support:exifinterface:$supportLibVersion"
-    implementation "com.android.support:cardview-v7:$supportLibVersion"
-    implementation "com.android.support:support-emoji:$supportLibVersion"
-    implementation "com.android.support:design:$supportLibVersion"
-    compatImplementation "com.android.support:support-emoji-appcompat:$supportLibVersion"
-    conversationsFreeCompatImplementation "com.android.support:support-emoji-bundled:$supportLibVersion"
-    quicksyFreeCompatImplementation "com.android.support:support-emoji-bundled:$supportLibVersion"
-    implementation 'org.bouncycastle:bcmail-jdk15on:1.58'
-    implementation 'com.google.zxing:core:3.3.3'
-    implementation 'de.measite.minidns:minidns-hla:0.2.4'
-    implementation 'me.leolin:ShortcutBadger:1.1.22@aar'
-    implementation 'org.whispersystems:signal-protocol-java:2.6.2'
-    implementation 'com.makeramen:roundedimageview:2.3.0'
-    implementation("com.wefika:flowlayout:0.4.1") {
-        exclude group: 'com.intellij', module: 'annotations'
-    }
-    implementation 'net.ypresto.androidtranscoder:android-transcoder:0.3.0'
-    implementation project(':libs:xmpp-addr')
-    implementation 'org.osmdroid:osmdroid-android:6.0.3'
-    implementation 'org.hsluv:hsluv:0.2'
-    implementation 'org.conscrypt:conscrypt-android:1.3.0'
-    implementation 'me.drakeet.support:toastcompat:1.1.0'
-    implementation "com.leinardi.android:speed-dial:2.0.1"
-    implementation 'com.squareup.retrofit2:retrofit:2.5.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
-    quicksyImplementation 'io.michaelrocks:libphonenumber-android:8.10.1'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-//    implementation "com.google.dagger:dagger-android:$dagger_version"
-//    implementation "com.google.dagger:dagger-android-support:$dagger_version"
-//    annotationProcessor "com.google.dagger:dagger-android-processor:$dagger_version"
-    implementation("com.github.yaneq6:aakit:$aakit_version") {
-        exclude group: 'com.intellij', module: 'annotations'
-    }
-}
-
 ext {
     travisBuild = System.getenv("TRAVIS") == "true"
     preDexEnabled = System.getProperty("pre-dex", "true")
@@ -96,7 +51,7 @@ ext {
 
 android {
     compileSdkVersion 28
-
+    buildToolsVersion = '28.0.3'
     defaultConfig {
         minSdkVersion 22
         targetSdkVersion 28
@@ -109,8 +64,20 @@ android {
         buildConfigField "String", "LOGTAG", "\"conversations\""
     }
 
+    androidExtensions {
+        experimental = true
+    }
+
     dataBinding {
         enabled true
+    }
+
+    kapt {
+        javacOptions {
+            // Increase the max count of errors from annotation processors.
+            // Default is 100.
+            option("-Xmaxerrs", 500)
+        }
     }
 
     dexOptions {
@@ -207,13 +174,12 @@ android {
             versionNameSuffix "r"
         }
         debug {
-            shrinkResources true
-            minifyEnabled true
+            shrinkResources false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             versionNameSuffix "d"
         }
     }
-
 
 
     if (new File("signing.properties").exists()) {
@@ -253,4 +219,54 @@ android {
         exclude 'META-INF/BCKEY.DSA'
         exclude 'META-INF/BCKEY.SF'
     }
+}
+
+dependencies {
+    playstoreImplementation('com.google.firebase:firebase-messaging:17.3.4') {
+        exclude group: 'com.google.firebase', module: 'firebase-core'
+        exclude group: 'com.google.firebase', module: 'firebase-analytics'
+        exclude group: 'com.google.firebase', module: 'firebase-measurement-connector'
+    }
+    implementation 'org.sufficientlysecure:openpgp-api:10.0'
+    implementation('com.theartofdev.edmodo:android-image-cropper:2.7.+') {
+        exclude group: 'com.android.support', module: 'appcompat-v7'
+        exclude group: 'com.android.support', module: 'exifinterface'
+    }
+    implementation "com.android.support:support-v13:$supportLibVersion"
+    implementation "com.android.support:appcompat-v7:$supportLibVersion"
+    implementation "com.android.support:exifinterface:$supportLibVersion"
+    implementation "com.android.support:cardview-v7:$supportLibVersion"
+    implementation "com.android.support:support-emoji:$supportLibVersion"
+    implementation "com.android.support:design:$supportLibVersion"
+    compatImplementation "com.android.support:support-emoji-appcompat:$supportLibVersion"
+    conversationsFreeCompatImplementation "com.android.support:support-emoji-bundled:$supportLibVersion"
+    quicksyFreeCompatImplementation "com.android.support:support-emoji-bundled:$supportLibVersion"
+    implementation 'org.bouncycastle:bcmail-jdk15on:1.58'
+    implementation 'com.google.zxing:core:3.3.3'
+    implementation 'de.measite.minidns:minidns-hla:0.2.4'
+    implementation 'me.leolin:ShortcutBadger:1.1.22@aar'
+    implementation 'org.whispersystems:signal-protocol-java:2.6.2'
+    implementation 'com.makeramen:roundedimageview:2.3.0'
+    implementation("com.wefika:flowlayout:0.4.1") {
+        exclude group: 'com.intellij', module: 'annotations'
+    }
+    implementation 'net.ypresto.androidtranscoder:android-transcoder:0.3.0'
+    implementation project(':libs:xmpp-addr')
+    implementation 'org.osmdroid:osmdroid-android:6.0.3'
+    implementation 'org.hsluv:hsluv:0.2'
+    implementation 'org.conscrypt:conscrypt-android:1.3.0'
+    implementation 'me.drakeet.support:toastcompat:1.1.0'
+    implementation "com.leinardi.android:speed-dial:2.0.1"
+    implementation 'com.squareup.retrofit2:retrofit:2.5.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
+    quicksyImplementation 'io.michaelrocks:libphonenumber-android:8.10.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "com.google.dagger:dagger-android:$dagger_version"
+    implementation "com.google.dagger:dagger-android-support:$dagger_version"
+    kapt "com.google.dagger:dagger-compiler:$dagger_version"
+//    kapt "com.google.dagger:dagger-android-processor:$dagger_version"
+//    implementation("com.github.yaneq6:aakit:$aakit_version") {
+//        exclude group: 'com.intellij', module: 'annotations'
+//    }
+    implementation "com.jakewharton.timber:timber:$timber_version"
 }

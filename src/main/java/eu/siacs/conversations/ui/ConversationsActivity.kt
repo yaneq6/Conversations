@@ -30,13 +30,11 @@
 package eu.siacs.conversations.ui
 
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.support.annotation.IdRes
 import android.support.v7.widget.Toolbar
 import android.util.Log
@@ -49,17 +47,19 @@ import eu.siacs.conversations.crypto.OmemoSetting
 import eu.siacs.conversations.databinding.ActivityConversationsBinding
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.feature.conversations.*
+import eu.siacs.conversations.feature.conversations.di.ActivityModule
+import eu.siacs.conversations.feature.conversations.di.DaggerConversationsComponent
 import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.ui.interfaces.*
 import eu.siacs.conversations.ui.util.ActivityResult
 import eu.siacs.conversations.ui.util.ConversationMenuConfigurator
 import eu.siacs.conversations.ui.util.PendingItem
-import eu.siacs.conversations.utils.XmppUri
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist
 import rocks.xmpp.addr.Jid
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
 
 class ConversationsActivity :
     XmppActivity(),
@@ -74,101 +74,46 @@ class ConversationsActivity :
     XmppConnectionService.OnShowErrorToast,
     XmppConnectionService.OnAffiliationChanged {
 
-    private val pendingViewIntent = PendingItem<Intent>()
-
-    private val postponedActivityResult = PendingItem<ActivityResult>()
-
     private var binding: ActivityConversationsBinding? = null
 
     private var activityPaused = true
 
-    private val redirectInProcess = AtomicBoolean(false)
+    private val postponedActivityResult = PendingItem<ActivityResult>()
 
-    private val fragments by lazy { XmppFragmentsInteractor(fragmentManager) }
+    @Inject
+    lateinit var pendingViewIntent: PendingItem<Intent>
+    @Inject
+    lateinit var redirectInProcess: AtomicBoolean
+    @Inject
+    lateinit var fragments: XmppFragmentsInteractor
+    @Inject
+    lateinit var handleActivityResult: HandleActivityResultCommand
+    @Inject
+    lateinit var handlePermissionsResult: HandlePermissionsResultCommand
+    @Inject
+    lateinit var invalidateActionBarTitle: InvalidateActionBarTitleCommand
+    @Inject
+    lateinit var createOptionMenu: CreateOptionMenuCommand
+    @Inject
+    lateinit var openConversation: OpenConversationCommand
+    @Inject
+    lateinit var showDialogsIfMainIsOverview: ShowDialogsIfMainIsOverviewCommand
+    @Inject
+    lateinit var performRedirectIfNecessary: PerformRedirectIfNecessaryCommand
+    @Inject
+    lateinit var processViewIntent: ProcessViewIntentCommand
+    @Inject
+    lateinit var handleConversationArchived: HandleConversationArchivedCommand
+    @Inject
+    lateinit var handleNewIntent: HandleNewIntentCommand
+    @Inject
+    lateinit var handleOptionsItemSelected: HandleOptionsItemSelected
+    @Inject
+    lateinit var handleXmppUriClick: HandleXmppUriClickCommand
+    @Inject
+    lateinit var batteryOptimizationPreferenceKey: BatteryOptimizationPreferenceKeyQuery
 
-    private val handleActivityResult by lazy { HandleActivityResultCommand(this) }
 
-    private val hasAccountWithoutPush by lazy { HasAccountWithoutPushQuery(xmppConnectionService) }
-
-    private val handlePermissionsResult by lazy { HandlePermissionsResultCommand(this) }
-
-    private val invalidateActionBarTitle by lazy { InvalidateActionBarTitleCommand(this) }
-
-    private val createOptionMenu by lazy { CreateOptionMenuCommand(this) }
-
-    private val openConversation by lazy {
-        OpenConversationCommand(
-            activity = this,
-            fragmentsInteractor = fragments,
-            invalidateActionBarTitle = invalidateActionBarTitle
-        )
-    }
-
-    private val openBatteryOptimizationDialogIfNeeded by lazy {
-        OpenBatteryOptimizationDialogIfNeededCommand(
-            activity = this,
-            hasAccountWithoutPush = hasAccountWithoutPush
-        )
-    }
-
-    private val showDialogsIfMainIsOverview by lazy {
-        ShowDialogsIfMainIsOverviewCommand(
-            activity = this,
-            openBatteryOptimizationDialogIfNeeded = openBatteryOptimizationDialogIfNeeded
-        )
-    }
-
-    private val performRedirectIfNecessary by lazy {
-        PerformRedirectIfNecessaryCommand(
-            activity = this,
-            redirectInProcess = redirectInProcess
-        )
-    }
-
-    private val processViewIntent by lazy {
-        ProcessViewIntentCommand(
-            activity = this,
-            openConversation = openConversation
-        )
-    }
-
-    private val handleConversationArchived by lazy {
-        HandleConversationArchivedCommand(
-            activity = this,
-            fragmentManager = fragmentManager,
-            openConversation = openConversation,
-            performRedirectIfNecessary = performRedirectIfNecessary
-        )
-    }
-
-    val handleNewIntent by lazy {
-        HandleNewIntentCommand(
-            activity = this,
-            pendingViewIntent = pendingViewIntent,
-            processViewIntent = processViewIntent
-        )
-    }
-
-    val handleOptionsItemSelected by lazy {
-        HandleOptionsItemSelected(
-            activity = this,
-            fragmentManager = fragmentManager
-        )
-    }
-
-    val handleXmppUriClick by lazy {
-        HandleXmppUriClickCommand(
-            activity = this,
-            openConversation = openConversation
-        )
-    }
-
-    val batteryOptimizationPreferenceKey: String
-        get() {
-            @SuppressLint("HardwareIds") val device =
-                Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-            return "show_battery_optimization" + (device ?: "")
-        }
     public override fun refreshUiReal() = fragments.refresh()
 
     internal override fun onBackendConnected() {
@@ -203,7 +148,7 @@ class ConversationsActivity :
     }
 
     internal fun setNeverAskForBatteryOptimizationsAgain() {
-        preferences.edit().putBoolean(batteryOptimizationPreferenceKey, false).apply()
+        preferences.edit().putBoolean(batteryOptimizationPreferenceKey(), false).apply()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -222,6 +167,7 @@ class ConversationsActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DaggerConversationsComponent.builder().activityModule(ActivityModule(this)).build()(this)
         ConversationMenuConfigurator.reloadFeatures(this)
         OmemoSetting.load(this)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_conversations)
@@ -374,4 +320,5 @@ class ConversationsActivity :
         }
     }
 }
+
 

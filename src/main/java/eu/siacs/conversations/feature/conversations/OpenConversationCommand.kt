@@ -7,8 +7,9 @@ import android.support.annotation.IdRes
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.ui.ConversationFragment
+import javax.inject.Inject
 
-class OpenConversationCommand(
+class OpenConversationCommand @Inject constructor(
     private val activity: Activity,
     private val fragmentsInteractor: XmppFragmentsInteractor,
     private val invalidateActionBarTitle: InvalidateActionBarTitleCommand

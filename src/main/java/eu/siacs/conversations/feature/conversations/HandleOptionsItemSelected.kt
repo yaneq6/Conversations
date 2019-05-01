@@ -7,8 +7,10 @@ import eu.siacs.conversations.R
 import eu.siacs.conversations.ui.UriHandlerActivity
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil
 import timber.log.Timber
+import javax.inject.Inject
 
-class HandleOptionsItemSelected(
+@ActivityScope
+class HandleOptionsItemSelected @Inject constructor(
     private val activity: Activity,
     private val fragmentManager: FragmentManager
 ) : (MenuItem) -> Boolean? {
