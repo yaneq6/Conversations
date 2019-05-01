@@ -39,10 +39,10 @@ import eu.siacs.conversations.crypto.axolotl.AxolotlService
 import eu.siacs.conversations.crypto.axolotl.FingerprintStatus
 import eu.siacs.conversations.databinding.FragmentConversationBinding
 import eu.siacs.conversations.entities.*
-import eu.siacs.conversations.feature.conversation.command.AttachFileToConversation
-import eu.siacs.conversations.feature.conversation.command.CommitAttachments
+import eu.siacs.conversations.feature.conversation.command.*
 import eu.siacs.conversations.feature.conversation.di.ConversationModule
 import eu.siacs.conversations.feature.conversation.di.DaggerConversationComponent
+import eu.siacs.conversations.feature.conversation.query.GetIndexOf
 import eu.siacs.conversations.feature.conversations.di.ActivityModule
 import eu.siacs.conversations.http.HttpDownloadConnection
 import eu.siacs.conversations.persistance.FileBackend
@@ -73,42 +73,56 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
     lateinit var attachFileToConversation: AttachFileToConversation
     @Inject
     lateinit var commitAttachments: CommitAttachments
+    @Inject
+    lateinit var getIndexOf: GetIndexOf
+    @Inject
+    lateinit var setScrollPosition: SetScrollPosition
+    @Inject
+    lateinit var toggleScrollDownButton: ToggleScrollDownButton
+    @Inject
+    lateinit var hidePrepareFileToast: HidePrepareFileToast
+    @Inject
+    lateinit var sendMessage: SendMessage
+    @Inject
+    lateinit var handleActivityResult: HandleActivityResult
+    @Inject
+    lateinit var toggleInputMethod: ToggleInputMethod
 
-    private val messageList = ArrayList<Message>()
-    private val postponedActivityResult = PendingItem<ActivityResult>()
-    private val pendingConversationsUuid = PendingItem<String>()
-    private val pendingMediaPreviews = PendingItem<ArrayList<Attachment>>()
-    private val pendingExtras = PendingItem<Bundle>()
-    private val pendingTakePhotoUri = PendingItem<Uri>()
-    private val pendingScrollState = PendingItem<ScrollState>()
-    private val pendingLastMessageUuid = PendingItem<String>()
-    private val pendingMessage = PendingItem<Message>()
-    private var mPendingEditorContent: Uri? = null
-    private lateinit var messageListAdapter: MessageAdapter
+    val messageList = ArrayList<Message>()
+    val postponedActivityResult = PendingItem<ActivityResult>()
+    val pendingConversationsUuid = PendingItem<String>()
+    val pendingMediaPreviews = PendingItem<ArrayList<Attachment>>()
+    val pendingExtras = PendingItem<Bundle>()
+    val pendingTakePhotoUri = PendingItem<Uri>()
+    val pendingScrollState = PendingItem<ScrollState>()
+    val pendingLastMessageUuid = PendingItem<String>()
+    val pendingMessage = PendingItem<Message>()
+    var mPendingEditorContent: Uri? = null
+    lateinit var messageListAdapter: MessageAdapter
     var mediaPreviewAdapter: MediaPreviewAdapter? = null
-    private var lastMessageUuid: String? = null
+    var lastMessageUuid: String? = null
     var conversation: Conversation? = null
-        private set
-    private var binding: FragmentConversationBinding? = null
-    private var messageLoaderToast: Toast? = null
-    private var activity: ConversationsActivity? = null
-    private var reInitRequiredOnStart = true
-    private val clickToMuc = OnClickListener {
+        set
+    var binding: FragmentConversationBinding? = null
+    var messageLoaderToast: Toast? = null
+    var activity: ConversationsActivity? = null
+    var reInitRequiredOnStart = true
+    val clickToMuc = OnClickListener {
         val intent = Intent(getActivity(), ConferenceDetailsActivity::class.java)
         intent.action = ConferenceDetailsActivity.ACTION_VIEW_MUC
         intent.putExtra("uuid", conversation!!.uuid)
         startActivity(intent)
     }
-    private val leaveMuc = OnClickListener { activity!!.xmppConnectionService.archiveConversation(conversation) }
-    private val joinMuc = OnClickListener { activity!!.xmppConnectionService.joinMuc(conversation) }
+    val leaveMuc = OnClickListener { activity!!.xmppConnectionService.archiveConversation(conversation) }
+    val joinMuc = OnClickListener { activity!!.xmppConnectionService.joinMuc(conversation) }
 
-    private val acceptJoin = OnClickListener {
+    val acceptJoin = OnClickListener {
         conversation!!.setAttribute("accept_non_anonymous", true)
         activity!!.xmppConnectionService.updateConversation(conversation)
         activity!!.xmppConnectionService.joinMuc(conversation)
     }
 
-    private val enterPassword = OnClickListener {
+    val enterPassword = OnClickListener {
         val muc = conversation!!.mucOptions
         var password: String? = muc.password
         if (password == null) {
@@ -119,7 +133,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
             null
         }
     }
-    private val mOnScrollListener = object : OnScrollListener {
+    val mOnScrollListener = object : OnScrollListener {
 
         override fun onScrollStateChanged(view: AbsListView, scrollState: Int) {
             if (AbsListView.OnScrollListener.SCROLL_STATE_IDLE == scrollState) {
@@ -207,7 +221,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
             }
         }
     }
-    private val mEditorContentListener =
+    val mEditorContentListener =
         EditMessage.OnCommitContentListener { inputContentInfo, flags, opts, contentMimeTypes ->
             // try to get permission to read the image, if applicable
             if (flags and InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION != 0) {
@@ -231,15 +245,15 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
             }
             true
         }
-    private var selectedMessage: Message? = null
-    private val mEnableAccountListener = OnClickListener {
+    var selectedMessage: Message? = null
+    val mEnableAccountListener = OnClickListener {
         val account = if (conversation == null) null else conversation!!.account
         if (account != null) {
             account.setOption(Account.OPTION_DISABLED, false)
             activity!!.xmppConnectionService.updateAccount(account)
         }
     }
-    private val mUnblockClickListener = OnClickListener { v ->
+    val mUnblockClickListener = OnClickListener { v ->
         v.post { v.visibility = View.INVISIBLE }
         if (conversation!!.isDomainBlocked) {
             BlockContactDialog.show(activity, conversation!!)
@@ -247,16 +261,16 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
             unblockConversation(conversation)
         }
     }
-    private val mBlockClickListener = OnClickListener { this.showBlockSubmenu(it) }
-    private val mAddBackClickListener = OnClickListener {
+    val mBlockClickListener = OnClickListener { this.showBlockSubmenu(it) }
+    val mAddBackClickListener = OnClickListener {
         val contact = if (conversation == null) null else conversation!!.contact
         if (contact != null) {
             activity!!.xmppConnectionService.createContact(contact, true)
             activity!!.switchToContactDetails(contact)
         }
     }
-    private val mLongPressBlockListener = View.OnLongClickListener { this.showBlockSubmenu(it) }
-    private val mAllowPresenceSubscription = OnClickListener {
+    val mLongPressBlockListener = View.OnLongClickListener { this.showBlockSubmenu(it) }
+    val mAllowPresenceSubscription = OnClickListener {
         val contact = if (conversation == null) null else conversation!!.contact
         if (contact != null) {
             activity!!.xmppConnectionService.sendPresencePacket(
@@ -267,7 +281,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
             hideSnackbar()
         }
     }
-    protected var clickToDecryptListener: OnClickListener = OnClickListener {
+    var clickToDecryptListener: OnClickListener = OnClickListener {
         val pendingIntent = conversation!!.account.pgpDecryptionService.pendingIntent
         if (pendingIntent != null) {
             try {
@@ -286,8 +300,8 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
         updateSnackBar(conversation!!)
     }
-    private val mSendingPgpMessage = AtomicBoolean(false)
-    private val mEditorActionListener = OnEditorActionListener { v, actionId, event ->
+    val mSendingPgpMessage = AtomicBoolean(false)
+    val mEditorActionListener = OnEditorActionListener { v, actionId, event ->
         if (actionId == EditorInfo.IME_ACTION_SEND) {
             val imm = activity!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             if (imm.isFullscreenMode) {
@@ -298,11 +312,11 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         } else
             false
     }
-    private val mScrollButtonListener = OnClickListener {
+    val mScrollButtonListener = OnClickListener {
         stopScrolling()
         setSelection(binding!!.messagesView.count - 1, true)
     }
-    private val mSendButtonListener = OnClickListener { v ->
+    val mSendButtonListener = OnClickListener { v ->
         val tag = v.tag
         if (tag is SendButtonAction) {
             when (tag) {
@@ -327,14 +341,14 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
             sendMessage()
         }
     }
-    private var completionIndex = 0
-    private var lastCompletionLength = 0
-    private var incomplete: String? = null
-    private var lastCompletionCursor: Int = 0
-    private var firstWord = false
-    private var mPendingDownloadableMessage: Message? = null
+    var completionIndex = 0
+    var lastCompletionLength = 0
+    var incomplete: String? = null
+    var lastCompletionCursor: Int = 0
+    var firstWord = false
+    var mPendingDownloadableMessage: Message? = null
 
-    private val scrollPosition: ScrollState?
+    val scrollPosition: ScrollState?
         get() {
             val listView = if (this.binding == null) null else this.binding!!.messagesView
             if (listView == null || listView.count == 0 || listView.lastVisiblePosition == listView.count - 1) {
@@ -350,7 +364,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
             }
         }
 
-    private//should not happen if we synchronize properly. however if that fails we just gonna try item -1
+    //should not happen if we synchronize properly. however if that fails we just gonna try item -1
     val lastVisibleMessageUuid: String?
         get() {
             if (binding == null) {
@@ -382,62 +396,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
             return null
         }
 
-    private fun toggleScrollDownButton(listView: AbsListView = binding!!.messagesView) {
-        if (conversation == null) {
-            return
-        }
-        if (scrolledToBottom(listView)) {
-            lastMessageUuid = null
-            hideUnreadMessagesCount()
-        } else {
-            binding!!.scrollToBottomButton.isEnabled = true
-            binding!!.scrollToBottomButton.show()
-            if (lastMessageUuid == null) {
-                lastMessageUuid = conversation!!.latestMessage.uuid
-            }
-            if (conversation!!.getReceivedMessagesCountSinceUuid(lastMessageUuid) > 0) {
-                binding!!.unreadCountCustomView.visibility = View.VISIBLE
-            }
-        }
-    }
-
-    private fun getIndexOf(uuid: String?, messages: List<Message>): Int {
-        if (uuid == null) {
-            return messages.size - 1
-        }
-        for (i in messages.indices) {
-            if (uuid == messages[i].uuid) {
-                return i
-            } else {
-                var next: Message? = messages[i]
-                while (next != null && next.wasMergedIntoPrevious()) {
-                    if (uuid == next.uuid) {
-                        return i
-                    }
-                    next = next.next()
-                }
-
-            }
-        }
-        return -1
-    }
-
-    private fun setScrollPosition(scrollPosition: ScrollState?, lastMessageUuid: String?) {
-        if (scrollPosition != null) {
-
-            this.lastMessageUuid = lastMessageUuid
-            if (lastMessageUuid != null) {
-                binding!!.unreadCountCustomView.setUnreadCount(
-                    conversation!!.getReceivedMessagesCountSinceUuid(
-                        lastMessageUuid
-                    )
-                )
-            }
-            //TODO maybe this needs a 'post'
-            this.binding!!.messagesView.setSelectionFromTop(scrollPosition.position, scrollPosition.offset)
-            toggleScrollDownButton()
-        }
-    }
 
     fun attachLocationToConversation(conversation: Conversation?, uri: Uri) {
         if (conversation == null) {
@@ -489,49 +447,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
             })
     }
 
-    private fun hidePrepareFileToast(prepareFileToast: Toast?) {
-        if (prepareFileToast != null && activity != null) {
-            activity!!.runOnUiThread { prepareFileToast.cancel() }
-        }
-    }
-
-    private fun sendMessage() {
-        if (mediaPreviewAdapter!!.hasAttachments()) {
-            commitAttachments()
-            return
-        }
-        val text = this.binding!!.textinput.text
-        val body = text?.toString() ?: ""
-        val conversation = this.conversation
-        if (body.length == 0 || conversation == null) {
-            return
-        }
-        if (conversation.nextEncryption == Message.ENCRYPTION_AXOLOTL && trustKeysIfNeeded(REQUEST_TRUST_KEYS_TEXT)) {
-            return
-        }
-        val message: Message
-        if (conversation.correctingMessage == null) {
-            message = Message(conversation, body, conversation.nextEncryption)
-            if (conversation.mode == Conversation.MODE_MULTI) {
-                val nextCounterpart = conversation.nextCounterpart
-                if (nextCounterpart != null) {
-                    message.counterpart = nextCounterpart
-                    message.trueCounterpart = conversation.mucOptions.getTrueCounterpart(nextCounterpart)
-                    message.type = Message.TYPE_PRIVATE
-                }
-            }
-        } else {
-            message = conversation.correctingMessage
-            message.body = body
-            message.putEdited(message.uuid, message.serverMsgId)
-            message.serverMsgId = null
-            message.uuid = UUID.randomUUID().toString()
-        }
-        when (conversation.nextEncryption) {
-            Message.ENCRYPTION_PGP -> sendPgpMessage(message)
-            else -> sendMessage(message)
-        }
-    }
 
     fun trustKeysIfNeeded(requestCode: Int): Boolean {
         val axolotlService = conversation!!.account.axolotlService
@@ -579,79 +494,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
 
     fun setupIme() {
         this.binding!!.textinput.refreshIme()
-    }
-
-    private fun handleActivityResult(activityResult: ActivityResult) {
-        if (activityResult.resultCode == Activity.RESULT_OK) {
-            handlePositiveActivityResult(activityResult.requestCode, activityResult.data)
-        } else {
-            handleNegativeActivityResult(activityResult.requestCode)
-        }
-    }
-
-    private fun handlePositiveActivityResult(requestCode: Int, data: Intent) {
-        when (requestCode) {
-            REQUEST_TRUST_KEYS_TEXT -> sendMessage()
-            REQUEST_TRUST_KEYS_ATTACHMENTS -> commitAttachments()
-            ATTACHMENT_CHOICE_CHOOSE_IMAGE -> {
-                val imageUris = Attachment.extractAttachments(getActivity(), data, Attachment.Type.IMAGE)
-                mediaPreviewAdapter!!.addMediaPreviews(imageUris)
-                toggleInputMethod()
-            }
-            ATTACHMENT_CHOICE_TAKE_PHOTO -> {
-                val takePhotoUri = pendingTakePhotoUri.pop()
-                if (takePhotoUri != null) {
-                    mediaPreviewAdapter!!.addMediaPreviews(
-                        Attachment.of(
-                            getActivity(),
-                            takePhotoUri,
-                            Attachment.Type.IMAGE
-                        )
-                    )
-                    toggleInputMethod()
-                } else {
-                    Log.d(Config.LOGTAG, "lost take photo uri. unable to to attach")
-                }
-            }
-            ATTACHMENT_CHOICE_CHOOSE_FILE, ATTACHMENT_CHOICE_RECORD_VIDEO, ATTACHMENT_CHOICE_RECORD_VOICE -> {
-                val type =
-                    if (requestCode == ATTACHMENT_CHOICE_RECORD_VOICE) Attachment.Type.RECORDING else Attachment.Type.FILE
-                val fileUris = Attachment.extractAttachments(getActivity(), data, type)
-                mediaPreviewAdapter!!.addMediaPreviews(fileUris)
-                toggleInputMethod()
-            }
-            ATTACHMENT_CHOICE_LOCATION -> {
-                val latitude = data.getDoubleExtra("latitude", 0.0)
-                val longitude = data.getDoubleExtra("longitude", 0.0)
-                val geo = Uri.parse("geo:$latitude,$longitude")
-                mediaPreviewAdapter!!.addMediaPreviews(Attachment.of(getActivity(), geo, Attachment.Type.LOCATION))
-                toggleInputMethod()
-            }
-            REQUEST_INVITE_TO_CONVERSATION -> {
-                val invite = XmppActivity.ConferenceInvite.parse(data)
-                if (invite != null) {
-                    if (invite.execute(activity)) {
-                        activity!!.mToast = Toast.makeText(activity, R.string.creating_conference, Toast.LENGTH_LONG)
-                        activity!!.mToast.show()
-                    }
-                }
-            }
-        }
-    }
-
-    fun toggleInputMethod() {
-        val hasAttachments = mediaPreviewAdapter!!.hasAttachments()
-        binding!!.textinput.visibility = if (hasAttachments) View.GONE else View.VISIBLE
-        binding!!.mediaPreview.visibility = if (hasAttachments) View.VISIBLE else View.GONE
-        updateSendButton()
-    }
-
-    private fun handleNegativeActivityResult(requestCode: Int) {
-        when (requestCode) {
-            ATTACHMENT_CHOICE_TAKE_PHOTO -> if (pendingTakePhotoUri.clear()) {
-                Timber.d("cleared pending photo uri after negative activity result")
-            }
-        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -756,7 +598,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         return binding!!.root
     }
 
-    private fun quoteText(text: String) {
+    fun quoteText(text: String) {
         if (binding!!.textinput.isEnabled) {
             binding!!.textinput.insertAsQuote(text)
             binding!!.textinput.requestFocus()
@@ -765,7 +607,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun quoteMessage(message: Message?) {
+    fun quoteMessage(message: Message?) {
         quoteText(MessageUtils.prepareQuote(message!!))
     }
 
@@ -778,7 +620,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun populateContextMenu(menu: ContextMenu) {
+    fun populateContextMenu(menu: ContextMenu) {
         val m = this.selectedMessage
         val t = m!!.transferable
         var relevantForCorrection = m
@@ -980,7 +822,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         return super.onOptionsItemSelected(item)
     }
 
-    private fun handleAttachmentSelection(item: MenuItem) {
+    fun handleAttachmentSelection(item: MenuItem) {
         when (item.itemId) {
             R.id.attach_choose_picture -> attachFile(ATTACHMENT_CHOICE_CHOOSE_IMAGE)
             R.id.attach_take_picture -> attachFile(ATTACHMENT_CHOICE_TAKE_PHOTO)
@@ -991,7 +833,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun handleEncryptionSelection(item: MenuItem) {
+    fun handleEncryptionSelection(item: MenuItem) {
         if (conversation == null) {
             return
         }
@@ -1157,7 +999,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun createNewConnection(message: Message) {
+    fun createNewConnection(message: Message) {
         if (!activity!!.xmppConnectionService.httpConnectionManager.checkConnection(message)) {
             Toast.makeText(getActivity(), R.string.not_connected_try_again, Toast.LENGTH_SHORT).show()
             return
@@ -1303,7 +1145,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         binding!!.messagesView.post { this.fireReadEvent() }
     }
 
-    private fun fireReadEvent() {
+    fun fireReadEvent() {
         if (activity != null && this.conversation != null) {
             val uuid = lastVisibleMessageUuid
             if (uuid != null) {
@@ -1312,7 +1154,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun openWith(message: Message) {
+    fun openWith(message: Message) {
         if (message.isGeoUri) {
             GeoHelper.view(getActivity(), message)
         } else {
@@ -1321,7 +1163,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun showErrorMessage(message: Message) {
+    fun showErrorMessage(message: Message) {
         val builder = AlertDialog.Builder(getActivity())
         builder.setTitle(R.string.error_message)
         val errorMessage = message.errorMessage
@@ -1343,7 +1185,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
     }
 
 
-    private fun deleteFile(message: Message?) {
+    fun deleteFile(message: Message?) {
         val builder = AlertDialog.Builder(getActivity())
         builder.setNegativeButton(R.string.cancel, null)
         builder.setTitle(R.string.delete_file_dialog)
@@ -1360,7 +1202,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
 
     }
 
-    private fun resendMessage(message: Message) {
+    fun resendMessage(message: Message) {
         if (message.isFileOrImage) {
             if (message.conversation !is Conversation) {
                 return
@@ -1403,7 +1245,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun cancelTransmission(message: Message) {
+    fun cancelTransmission(message: Message) {
         val transferable = message.transferable
         if (transferable != null) {
             transferable.cancel()
@@ -1416,7 +1258,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun retryDecryption(message: Message) {
+    fun retryDecryption(message: Message) {
         message.encryption = Message.ENCRYPTION_PGP
         activity!!.onConversationsListItemUpdated()
         refresh()
@@ -1434,7 +1276,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         updateEditablity()
     }
 
-    private fun correctMessage(message: Message) {
+    fun correctMessage(message: Message) {
         var message = message
         while (message.mergeable(message.next())) {
             message = message.next()
@@ -1447,7 +1289,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
 
     }
 
-    private fun highlightInConference(nick: String) {
+    fun highlightInConference(nick: String) {
         val editable = this.binding!!.textinput.text
         val oldString = editable!!.toString().trim { it <= ' ' }
         val pos = this.binding!!.textinput.selectionStart
@@ -1572,7 +1414,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         this.reInitRequiredOnStart = true
     }
 
-    private fun updateChatState(conversation: Conversation, msg: String) {
+    fun updateChatState(conversation: Conversation, msg: String) {
         val state = if (msg.length == 0) Config.DEFAULT_CHATSTATE else ChatState.PAUSED
         val status = conversation.account.status
         if (status == Account.State.ONLINE && conversation.setOutgoingChatState(state)) {
@@ -1580,7 +1422,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun saveMessageDraftStopAudioPlayer() {
+    fun saveMessageDraftStopAudioPlayer() {
         val previousConversation = this.conversation
         if (this.activity == null || this.binding == null || previousConversation == null) {
             return
@@ -1610,11 +1452,11 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         resetUnreadMessagesCount()
     }
 
-    private fun reInit(conversation: Conversation) {
+    fun reInit(conversation: Conversation) {
         reInit(conversation, false)
     }
 
-    private fun reInit(conversation: Conversation?, hasExtras: Boolean): Boolean {
+    fun reInit(conversation: Conversation?, hasExtras: Boolean): Boolean {
         if (conversation == null) {
             return false
         }
@@ -1682,12 +1524,12 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         return true
     }
 
-    private fun resetUnreadMessagesCount() {
+    fun resetUnreadMessagesCount() {
         lastMessageUuid = null
         hideUnreadMessagesCount()
     }
 
-    private fun hideUnreadMessagesCount() {
+    fun hideUnreadMessagesCount() {
         if (this.binding == null) {
             return
         }
@@ -1696,18 +1538,18 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         this.binding!!.unreadCountCustomView.visibility = View.GONE
     }
 
-    private fun setSelection(pos: Int, jumpToBottom: Boolean) {
+    fun setSelection(pos: Int, jumpToBottom: Boolean) {
         ListViewUtils.setSelection(this.binding!!.messagesView, pos, jumpToBottom)
         this.binding!!.messagesView.post { ListViewUtils.setSelection(this.binding!!.messagesView, pos, jumpToBottom) }
         this.binding!!.messagesView.post { this.fireReadEvent() }
     }
 
 
-    private fun scrolledToBottom(): Boolean {
+    fun scrolledToBottom(): Boolean {
         return this.binding != null && scrolledToBottom(this.binding!!.messagesView)
     }
 
-    private fun processExtras(extras: Bundle) {
+    fun processExtras(extras: Bundle) {
         val downloadUuid = extras.getString(ConversationsActivity.EXTRA_DOWNLOAD_UUID)
         val text = extras.getString(Intent.EXTRA_TEXT)
         val nick = extras.getString(ConversationsActivity.EXTRA_NICK)
@@ -1750,7 +1592,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun extractUris(extras: Bundle): List<Uri>? {
+    fun extractUris(extras: Bundle): List<Uri>? {
         val uris = extras.getParcelableArrayList<Uri>(Intent.EXTRA_STREAM)
         if (uris != null) {
             return uris
@@ -1763,7 +1605,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun cleanUris(uris: MutableList<Uri>): List<Uri> {
+    fun cleanUris(uris: MutableList<Uri>): List<Uri> {
         val iterator = uris.iterator()
         while (iterator.hasNext()) {
             val uri = iterator.next()
@@ -1775,7 +1617,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         return uris
     }
 
-    private fun showBlockSubmenu(view: View): Boolean {
+    fun showBlockSubmenu(view: View): Boolean {
         val conversation = conversation
         val jid = conversation!!.jid
         val showReject =
@@ -1802,7 +1644,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         return true
     }
 
-    private fun updateSnackBar(conversation: Conversation) {
+    fun updateSnackBar(conversation: Conversation) {
         val account = conversation.account
         val connection = account.xmppConnection
         val mode = conversation.mode
@@ -1904,7 +1746,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         this.refresh(true)
     }
 
-    private fun refresh(notifyConversationRead: Boolean) {
+    fun refresh(notifyConversationRead: Boolean) {
         synchronized(this.messageList) {
             if (this.conversation != null) {
                 conversation!!.populateWithMessages(this.messageList)
@@ -1950,7 +1792,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun storeNextMessage(msg: String = this.binding!!.textinput.text!!.toString()): Boolean {
+    fun storeNextMessage(msg: String = this.binding!!.textinput.text!!.toString()): Boolean {
         val participating =
             conversation!!.mode == Conversational.MODE_SINGLE || conversation!!.mucOptions.participating()
         if (this.conversation!!.status != Conversation.STATUS_ARCHIVED && participating && this.conversation!!.setNextMessage(
@@ -1972,7 +1814,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         return connection?.features?.maxHttpUploadSize ?: -1
     }
 
-    private fun updateEditablity() {
+    fun updateEditablity() {
         val canWrite =
             this.conversation!!.mode == Conversation.MODE_SINGLE || this.conversation!!.mucOptions.participating() || this.conversation!!.nextCounterpart != null
         this.binding!!.textinput.isFocusable = canWrite
@@ -2156,13 +1998,13 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun stopScrolling() {
+    fun stopScrolling() {
         val now = SystemClock.uptimeMillis()
         val cancel = MotionEvent.obtain(now, now, MotionEvent.ACTION_CANCEL, 0f, 0f, 0)
         binding!!.messagesView.dispatchTouchEvent(cancel)
     }
 
-    private fun showLoadMoreMessages(c: Conversation?): Boolean {
+    fun showLoadMoreMessages(c: Conversation?): Boolean {
         if (activity == null || activity!!.xmppConnectionService == null) {
             return false
         }
@@ -2173,7 +2015,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         ))
     }
 
-    private fun hasMamSupport(c: Conversation): Boolean =
+    fun hasMamSupport(c: Conversation): Boolean =
         if (c.mode == Conversation.MODE_SINGLE) {
             val connection = c.account.xmppConnection
             connection != null && connection.features.mam()
@@ -2200,16 +2042,16 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         this.binding!!.snackbarAction.setOnLongClickListener(longClickListener)
     }
 
-    protected fun hideSnackbar() {
+    fun hideSnackbar() {
         this.binding!!.snackbar.visibility = View.GONE
     }
 
-    protected fun sendMessage(message: Message) {
+    fun sendMessage(message: Message) {
         activity!!.xmppConnectionService.sendMessage(message)
         messageSent()
     }
 
-    protected fun sendPgpMessage(message: Message) {
+    fun sendPgpMessage(message: Message) {
         val xmppService = activity!!.xmppConnectionService
         val contact = message.conversation.contact
         if (!activity!!.hasPgp()) {
@@ -2428,7 +2270,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         return true
     }
 
-    private fun startPendingIntent(pendingIntent: PendingIntent, requestCode: Int) {
+    fun startPendingIntent(pendingIntent: PendingIntent, requestCode: Int) {
         try {
             getActivity().startIntentSenderForResult(pendingIntent.intentSender, requestCode, null, 0, 0, 0)
         } catch (ignored: SendIntentException) {
@@ -2457,7 +2299,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         clearPending()
     }
 
-    private fun findAndReInitByUuidOrArchive(uuid: String): Boolean {
+    fun findAndReInitByUuidOrArchive(uuid: String): Boolean {
         val conversation = activity!!.xmppConnectionService.findConversationByUuid(uuid)
         if (conversation == null) {
             clearPending()
@@ -2479,7 +2321,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         return true
     }
 
-    private fun clearPending() {
+    fun clearPending() {
         if (postponedActivityResult.clear()) {
             Log.e(Config.LOGTAG, "cleared pending intent with unhandled result left")
         }
@@ -2708,4 +2550,3 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 }
-

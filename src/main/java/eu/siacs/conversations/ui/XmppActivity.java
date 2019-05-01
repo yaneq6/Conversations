@@ -98,7 +98,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 
 	protected int mTheme;
 	protected boolean mUsingEnterKey = false;
-	protected Toast mToast;
+	public Toast mToast;
 	public Runnable onOpenPGPKeyPublished = () -> Toast.makeText(XmppActivity.this, R.string.openpgp_has_been_published, Toast.LENGTH_SHORT).show();
 	protected ConferenceInvite mPendingConferenceInvite = null;
 	protected ServiceConnection mConnection = new ServiceConnection() {
