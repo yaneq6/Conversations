@@ -156,6 +156,13 @@ class ConversationsActivity :
         )
     }
 
+    val handleXmppUriClick by lazy {
+        HandleXmppUriClickCommand(
+            activity = this,
+            openConversation = openConversation
+        )
+    }
+
     val batteryOptimizationPreferenceKey: String
         get() {
             @SuppressLint("HardwareIds") val device =
@@ -246,36 +253,20 @@ class ConversationsActivity :
         openConversation(conversation)
     }
 
-    fun clearPendingViewIntent() {
-        if (pendingViewIntent.clear()) {
-            Log.e(Config.LOGTAG, "cleared pending view intent")
-        }
+    fun clearPendingViewIntent() = pendingViewIntent.clear()
+
+    private fun displayToast(msg: String) = runOnUiThread {
+        Toast.makeText(this@ConversationsActivity, msg, Toast.LENGTH_SHORT).show()
     }
 
-    private fun displayToast(msg: String) {
-        runOnUiThread { Toast.makeText(this@ConversationsActivity, msg, Toast.LENGTH_SHORT).show() }
-    }
+    override fun onAffiliationChangedSuccessful(jid: Jid) {}
 
-    override fun onAffiliationChangedSuccessful(jid: Jid) {
-
-    }
-
-    override fun onAffiliationChangeFailed(jid: Jid, resId: Int) {
-        displayToast(getString(resId, jid.asBareJid().toString()))
-    }
+    override fun onAffiliationChangeFailed(jid: Jid, resId: Int) = displayToast(
+        getString(resId, jid.asBareJid().toString())
+    )
 
 
-    fun onXmppUriClicked(uri: Uri): Boolean {
-        val xmppUri = XmppUri(uri)
-        if (xmppUri.isJidValid && !xmppUri.hasFingerprints()) {
-            val conversation = xmppConnectionService.findUniqueConversationByJid(xmppUri)
-            if (conversation != null) {
-                openConversation(conversation)
-                return true
-            }
-        }
-        return false
-    }
+    fun onXmppUriClicked(uri: Uri): Boolean = handleXmppUriClick(uri)
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean =
         handleOptionsItemSelected(item) ?: super.onOptionsItemSelected(item)
