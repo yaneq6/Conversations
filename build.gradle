@@ -219,6 +219,10 @@ android {
         exclude 'META-INF/BCKEY.DSA'
         exclude 'META-INF/BCKEY.SF'
     }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 }
 
 dependencies {
