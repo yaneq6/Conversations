@@ -1,10 +1,10 @@
-//package eu.siacs.conversations
-//
-//import android.app.Activity
-//import io.aakit.BaseNavigator
-//import io.aakit.Navigator
-//
-//fun activityNavigator(activity: Activity): ActivityNavigator = object : ActivityNavigator, Navigator by BaseNavigator(activity) {}
-//
-//interface ActivityNavigator : AppNavigator
-//
+package eu.siacs.conversations
+
+import android.app.Activity
+import io.aakit.BaseNavigator
+import io.aakit.Navigator
+
+fun Activity.activityNavigator(): ActivityNavigator = object : ActivityNavigator, Navigator by BaseNavigator(this) {}
+
+interface ActivityNavigator : AppNavigator
+

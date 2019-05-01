@@ -5,6 +5,7 @@ import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.XmppActivity
 import eu.siacs.conversations.ui.util.ActivityResult
+import io.aakit.scope.ActivityScope
 import org.openintents.openpgp.util.OpenPgpApi
 import timber.log.Timber
 import javax.inject.Inject

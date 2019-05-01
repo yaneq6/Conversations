@@ -4,6 +4,7 @@ import eu.siacs.conversations.R
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.ConversationsOverviewFragment
 import eu.siacs.conversations.utils.ExceptionHelper
+import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
 @ActivityScope

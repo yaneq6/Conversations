@@ -7,8 +7,10 @@ import android.support.annotation.IdRes
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.ui.ConversationFragment
+import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
+@ActivityScope
 class OpenConversationCommand @Inject constructor(
     private val activity: Activity,
     private val fragmentsInteractor: XmppFragmentsInteractor,

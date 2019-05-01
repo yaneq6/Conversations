@@ -4,6 +4,7 @@ import android.content.Intent
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.utils.SignupUtils
+import io.aakit.scope.ActivityScope
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 

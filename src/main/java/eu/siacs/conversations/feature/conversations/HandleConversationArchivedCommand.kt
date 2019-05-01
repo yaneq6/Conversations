@@ -6,6 +6,7 @@ import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.ConversationsOverviewFragment
+import io.aakit.scope.ActivityScope
 import timber.log.Timber
 import javax.inject.Inject
 

@@ -8,6 +8,7 @@ import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsOverviewFragment
 import eu.siacs.conversations.ui.XmppFragment
 import eu.siacs.conversations.ui.interfaces.OnBackendConnected
+import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
 @ActivityScope

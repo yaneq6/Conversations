@@ -6,6 +6,7 @@ import android.view.MenuItem
 import eu.siacs.conversations.R
 import eu.siacs.conversations.ui.UriHandlerActivity
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil
+import io.aakit.scope.ActivityScope
 import timber.log.Timber
 import javax.inject.Inject
 

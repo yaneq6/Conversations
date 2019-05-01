@@ -5,9 +5,11 @@ import android.content.Intent
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import eu.siacs.conversations.feature.conversations.ActivityScope
+import eu.siacs.conversations.ActivityNavigator
+import eu.siacs.conversations.activityNavigator
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.util.PendingItem
+import io.aakit.scope.ActivityScope
 
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -47,4 +49,8 @@ class ActivityModule(
     @Provides
     @ActivityScope
     fun contentResolver() = activity.contentResolver!!
+
+    @Provides
+    @ActivityScope
+    fun navigator(): ActivityNavigator = activity.activityNavigator()
 }

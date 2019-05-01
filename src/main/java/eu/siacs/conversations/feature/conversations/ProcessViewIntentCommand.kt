@@ -3,6 +3,7 @@ package eu.siacs.conversations.feature.conversations
 import android.content.Intent
 import android.os.Bundle
 import eu.siacs.conversations.ui.ConversationsActivity
+import io.aakit.scope.ActivityScope
 import timber.log.Timber
 import javax.inject.Inject
 

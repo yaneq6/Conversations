@@ -4,8 +4,10 @@ import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.provider.Settings.Secure.ANDROID_ID
 import android.provider.Settings.Secure.getString
+import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
+@ActivityScope
 class BatteryOptimizationPreferenceKeyQuery @Inject constructor(
     private val contentResolver: ContentResolver
 ) : () -> String {

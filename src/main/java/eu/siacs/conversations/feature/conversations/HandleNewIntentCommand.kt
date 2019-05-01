@@ -3,6 +3,7 @@ package eu.siacs.conversations.feature.conversations
 import android.content.Intent
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.util.PendingItem
+import io.aakit.scope.ActivityScope
 
 import javax.inject.Inject
 

@@ -2,6 +2,7 @@ package eu.siacs.conversations.feature.conversations
 
 import eu.siacs.conversations.entities.Account
 import eu.siacs.conversations.ui.ConversationsActivity
+import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
 @ActivityScope

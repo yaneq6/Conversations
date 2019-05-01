@@ -6,6 +6,7 @@ import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.ConversationsActivity.Companion.REQUEST_OPEN_MESSAGE
 import eu.siacs.conversations.ui.ConversationsActivity.Companion.REQUEST_PLAY_PAUSE
 import eu.siacs.conversations.ui.UriHandlerActivity
+import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
 @ActivityScope

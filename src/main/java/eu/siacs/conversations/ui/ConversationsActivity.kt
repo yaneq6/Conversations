@@ -201,21 +201,20 @@ class ConversationsActivity :
 
     fun clearPendingViewIntent() = pendingViewIntent.clear()
 
-    private fun displayToast(msg: String) = runOnUiThread {
-        Toast.makeText(this@ConversationsActivity, msg, Toast.LENGTH_SHORT).show()
-    }
-
     override fun onAffiliationChangedSuccessful(jid: Jid) {}
 
-    override fun onAffiliationChangeFailed(jid: Jid, resId: Int) = displayToast(
-        getString(resId, jid.asBareJid().toString())
-    )
+    override fun onAffiliationChangeFailed(jid: Jid, resId: Int) = runOnUiThread {
+        Toast.makeText(
+            this@ConversationsActivity,
+            getString(resId, jid.asBareJid().toString()),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
 
 
     fun onXmppUriClicked(uri: Uri): Boolean = handleXmppUriClick(uri)
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean =
-        handleOptionsItemSelected(item) ?: super.onOptionsItemSelected(item)
+    override fun onOptionsItemSelected(item: MenuItem) = handleOptionsItemSelected(item) ?: super.onOptionsItemSelected(item)
 
     override fun onSaveInstanceState(savedInstanceState: Bundle) {
         val pendingIntent = pendingViewIntent.peek()
