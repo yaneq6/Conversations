@@ -397,105 +397,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
 
 
-    fun attachLocationToConversation(conversation: Conversation?, uri: Uri) {
-        if (conversation == null) {
-            return
-        }
-        activity!!.xmppConnectionService.attachLocationToConversation(conversation, uri, object : UiCallback<Message> {
-
-            override fun success(message: Message) {
-
-            }
-
-            override fun error(errorCode: Int, `object`: Message) {
-                //TODO show possible pgp error
-            }
-
-            override fun userInputRequried(pi: PendingIntent, `object`: Message) {
-
-            }
-        })
-    }
-
-    fun attachEditorContentToConversation(uri: Uri) {
-        mediaPreviewAdapter!!.addMediaPreviews(Attachment.of(getActivity(), uri, Attachment.Type.FILE))
-        toggleInputMethod()
-    }
-
-    fun attachImageToConversation(conversation: Conversation?, uri: Uri) {
-        if (conversation == null) {
-            return
-        }
-        val prepareFileToast = Toast.makeText(getActivity(), getText(R.string.preparing_image), Toast.LENGTH_LONG)
-        prepareFileToast.show()
-        activity!!.delegateUriPermissionsToService(uri)
-        activity!!.xmppConnectionService.attachImageToConversation(conversation, uri,
-            object : UiCallback<Message> {
-
-                override fun userInputRequried(pi: PendingIntent, `object`: Message) {
-                    hidePrepareFileToast(prepareFileToast)
-                }
-
-                override fun success(message: Message) {
-                    hidePrepareFileToast(prepareFileToast)
-                }
-
-                override fun error(error: Int, message: Message) {
-                    hidePrepareFileToast(prepareFileToast)
-                    activity!!.runOnUiThread { activity!!.replaceToast(getString(error)) }
-                }
-            })
-    }
-
-
-    fun trustKeysIfNeeded(requestCode: Int): Boolean {
-        val axolotlService = conversation!!.account.axolotlService
-        val targets = axolotlService.getCryptoTargets(conversation)
-        val hasUnaccepted = !conversation!!.acceptedCryptoTargets.containsAll(targets)
-        val hasUndecidedOwn = !axolotlService.getKeysWithTrust(FingerprintStatus.createActiveUndecided()).isEmpty()
-        val hasUndecidedContacts =
-            !axolotlService.getKeysWithTrust(FingerprintStatus.createActiveUndecided(), targets).isEmpty()
-        val hasPendingKeys = !axolotlService.findDevicesWithoutSession(conversation).isEmpty()
-        val hasNoTrustedKeys = axolotlService.anyTargetHasNoTrustedKeys(targets)
-        val downloadInProgress = axolotlService.hasPendingKeyFetches(targets)
-        if (hasUndecidedOwn || hasUndecidedContacts || hasPendingKeys || hasNoTrustedKeys || hasUnaccepted || downloadInProgress) {
-            axolotlService.createSessionsIfNeeded(conversation)
-            val intent = Intent(getActivity(), TrustKeysActivity::class.java)
-            val contacts = arrayOfNulls<String>(targets.size)
-            for (i in contacts.indices) {
-                contacts[i] = targets[i].toString()
-            }
-            intent.putExtra("contacts", contacts)
-            intent.putExtra(EXTRA_ACCOUNT, conversation!!.account.jid.asBareJid().toString())
-            intent.putExtra("conversation", conversation!!.uuid)
-            startActivityForResult(intent, requestCode)
-            return true
-        } else {
-            return false
-        }
-    }
-
-    fun updateChatMsgHint() {
-        val multi = conversation!!.mode == Conversation.MODE_MULTI
-        if (conversation!!.correctingMessage != null) {
-            this.binding!!.textinput.setHint(R.string.send_corrected_message)
-        } else if (multi && conversation!!.nextCounterpart != null) {
-            this.binding!!.textinput.hint = getString(
-                R.string.send_private_message_to,
-                conversation!!.nextCounterpart.resource
-            )
-        } else if (multi && !conversation!!.mucOptions.participating()) {
-            this.binding!!.textinput.setHint(R.string.you_are_not_participating)
-        } else {
-            this.binding!!.textinput.hint = UIHelper.getMessageHint(getActivity(), conversation!!)
-            getActivity().invalidateOptionsMenu()
-        }
-    }
-
-    fun setupIme() {
-        this.binding!!.textinput.refreshIme()
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         val activityResult = ActivityResult.of(requestCode, resultCode, data)
@@ -504,10 +405,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         } else {
             this.postponedActivityResult.push(activityResult)
         }
-    }
-
-    fun unblockConversation(conversation: Blockable?) {
-        activity!!.xmppConnectionService.sendUnblockRequest(conversation)
     }
 
     override fun onAttach(activity: Activity) {
@@ -598,6 +495,463 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         return binding!!.root
     }
 
+    override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenuInfo) {
+        synchronized(this.messageList) {
+            super.onCreateContextMenu(menu, v, menuInfo)
+            val acmi = menuInfo as AdapterContextMenuInfo
+            this.selectedMessage = this.messageList[acmi.position]
+            populateContextMenu(menu)
+        }
+    }
+
+    override fun onContextItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.share_with -> {
+                ShareUtil.share(activity, selectedMessage!!)
+                return true
+            }
+            R.id.correct_message -> {
+                correctMessage(selectedMessage!!)
+                return true
+            }
+            R.id.copy_message -> {
+                ShareUtil.copyToClipboard(activity!!, selectedMessage!!)
+                return true
+            }
+            R.id.copy_link -> {
+                ShareUtil.copyLinkToClipboard(activity, selectedMessage!!)
+                return true
+            }
+            R.id.quote_message -> {
+                quoteMessage(selectedMessage)
+                return true
+            }
+            R.id.send_again -> {
+                resendMessage(selectedMessage!!)
+                return true
+            }
+            R.id.copy_url -> {
+                ShareUtil.copyUrlToClipboard(activity, selectedMessage!!)
+                return true
+            }
+            R.id.download_file -> {
+                startDownloadable(selectedMessage)
+                return true
+            }
+            R.id.cancel_transmission -> {
+                cancelTransmission(selectedMessage!!)
+                return true
+            }
+            R.id.retry_decryption -> {
+                retryDecryption(selectedMessage!!)
+                return true
+            }
+            R.id.delete_file -> {
+                deleteFile(selectedMessage)
+                return true
+            }
+            R.id.show_error_message -> {
+                showErrorMessage(selectedMessage!!)
+                return true
+            }
+            R.id.open_with -> {
+                openWith(selectedMessage!!)
+                return true
+            }
+            else -> return super.onContextItemSelected(item)
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (MenuDoubleTabUtil.shouldIgnoreTap()) {
+            return false
+        } else if (conversation == null) {
+            return super.onOptionsItemSelected(item)
+        }
+        when (item.itemId) {
+            R.id.encryption_choice_axolotl, R.id.encryption_choice_pgp, R.id.encryption_choice_none -> handleEncryptionSelection(
+                item
+            )
+            R.id.attach_choose_picture, R.id.attach_take_picture, R.id.attach_record_video, R.id.attach_choose_file, R.id.attach_record_voice, R.id.attach_location -> handleAttachmentSelection(
+                item
+            )
+            R.id.action_archive -> activity!!.xmppConnectionService.archiveConversation(conversation)
+            R.id.action_contact_details -> activity!!.switchToContactDetails(conversation!!.contact)
+            R.id.action_muc_details -> {
+                val intent = Intent(getActivity(), ConferenceDetailsActivity::class.java)
+                intent.action = ConferenceDetailsActivity.ACTION_VIEW_MUC
+                intent.putExtra("uuid", conversation!!.uuid)
+                startActivity(intent)
+            }
+            R.id.action_invite -> startActivityForResult(
+                ChooseContactActivity.create(activity, conversation!!),
+                REQUEST_INVITE_TO_CONVERSATION
+            )
+            R.id.action_clear_history -> clearHistoryDialog(conversation!!)
+            R.id.action_mute -> muteConversationDialog(conversation!!)
+            R.id.action_unmute -> unmuteConversation(conversation!!)
+            R.id.action_block, R.id.action_unblock -> {
+                val activity = getActivity()
+                if (activity is XmppActivity) {
+                    BlockContactDialog.show(activity, conversation!!)
+                }
+            }
+            else -> {
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        if (grantResults.size > 0) {
+            if (allGranted(grantResults)) {
+                when (requestCode) {
+                    REQUEST_START_DOWNLOAD -> if (this.mPendingDownloadableMessage != null) {
+                        startDownloadable(this.mPendingDownloadableMessage)
+                    }
+                    REQUEST_ADD_EDITOR_CONTENT -> if (this.mPendingEditorContent != null) {
+                        attachEditorContentToConversation(this.mPendingEditorContent!!)
+                    }
+                    REQUEST_COMMIT_ATTACHMENTS -> commitAttachments()
+                    else -> attachFile(requestCode)
+                }
+            } else {
+                @StringRes val res: Int
+                val firstDenied = getFirstDenied(grantResults, permissions)
+                if (Manifest.permission.RECORD_AUDIO == firstDenied) {
+                    res = R.string.no_microphone_permission
+                } else if (Manifest.permission.CAMERA == firstDenied) {
+                    res = R.string.no_camera_permission
+                } else {
+                    res = R.string.no_storage_permission
+                }
+                Toast.makeText(getActivity(), res, Toast.LENGTH_SHORT).show()
+            }
+        }
+        if (writeGranted(grantResults, permissions)) {
+            if (activity != null && activity!!.xmppConnectionService != null) {
+                activity!!.xmppConnectionService.restartFileObserver()
+            }
+            refresh()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding!!.messagesView.post { this.fireReadEvent() }
+    }
+
+    override fun startActivityForResult(intent: Intent, requestCode: Int) {
+        val activity = getActivity()
+        if (activity is ConversationsActivity) {
+            activity.clearPendingViewIntent()
+        }
+        super.startActivityForResult(intent, requestCode)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (conversation != null) {
+            outState.putString(STATE_CONVERSATION_UUID, conversation!!.uuid)
+            outState.putString(STATE_LAST_MESSAGE_UUID, lastMessageUuid)
+            val uri = pendingTakePhotoUri.peek()
+            if (uri != null) {
+                outState.putString(STATE_PHOTO_URI, uri.toString())
+            }
+            val scrollState = scrollPosition
+            if (scrollState != null) {
+                outState.putParcelable(STATE_SCROLL_POSITION, scrollState)
+            }
+            val attachments = if (mediaPreviewAdapter == null) ArrayList() else mediaPreviewAdapter!!.attachments
+            if (attachments.size > 0) {
+                outState.putParcelableArrayList(STATE_MEDIA_PREVIEWS, attachments)
+            }
+        }
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        if (savedInstanceState == null) {
+            return
+        }
+        val uuid = savedInstanceState.getString(STATE_CONVERSATION_UUID)
+        val attachments = savedInstanceState.getParcelableArrayList<Attachment>(STATE_MEDIA_PREVIEWS)
+        pendingLastMessageUuid.push(savedInstanceState.getString(STATE_LAST_MESSAGE_UUID, null))
+        if (uuid != null) {
+            QuickLoader.set(uuid)
+            this.pendingConversationsUuid.push(uuid)
+            if (attachments != null && attachments.size > 0) {
+                this.pendingMediaPreviews.push(attachments)
+            }
+            val takePhotoUri = savedInstanceState.getString(STATE_PHOTO_URI)
+            if (takePhotoUri != null) {
+                pendingTakePhotoUri.push(Uri.parse(takePhotoUri))
+            }
+            pendingScrollState.push(savedInstanceState.getParcelable(STATE_SCROLL_POSITION))
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (this.reInitRequiredOnStart && this.conversation != null) {
+            val extras = pendingExtras.pop()
+            reInit(this.conversation, extras != null)
+            if (extras != null) {
+                processExtras(extras)
+            }
+        } else if (conversation == null && activity != null && activity!!.xmppConnectionService != null) {
+            val uuid = pendingConversationsUuid.pop()
+            Log.d(
+                Config.LOGTAG,
+                "ConversationFragment.onStart() - activity was bound but no conversation loaded. uuid=" + uuid!!
+            )
+            if (uuid != null) {
+                findAndReInitByUuidOrArchive(uuid)
+            }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        val activity = getActivity()
+        messageListAdapter.unregisterListenerInAudioPlayer()
+        if (activity == null || !activity.isChangingConfigurations) {
+            hideSoftKeyboard(activity!!)
+            messageListAdapter.stopAudioPlayer()
+        }
+        if (this.conversation != null) {
+            val msg = this.binding!!.textinput.text!!.toString()
+            storeNextMessage(msg)
+            updateChatState(this.conversation!!, msg)
+            this.activity!!.xmppConnectionService.notificationService.setOpenConversation(null)
+        }
+        this.reInitRequiredOnStart = true
+    }
+
+    override fun refresh() {
+        if (this.binding == null) {
+            Log.d(Config.LOGTAG, "ConversationFragment.refresh() skipped updated because view binding was null")
+            return
+        }
+        if (this.conversation != null && this.activity != null && this.activity!!.xmppConnectionService != null) {
+            if (!activity!!.xmppConnectionService.isConversationStillOpen(this.conversation)) {
+                activity!!.onConversationArchived(this.conversation!!)
+                return
+            }
+        }
+        this.refresh(true)
+    }
+
+    override fun onEnterPressed(): Boolean {
+        val p = PreferenceManager.getDefaultSharedPreferences(getActivity())
+        val enterIsSend = p.getBoolean("enter_is_send", resources.getBoolean(R.bool.enter_is_send))
+        return if (enterIsSend) {
+            sendMessage()
+            true
+        } else {
+            false
+        }
+    }
+
+    override fun onTypingStarted() {
+        val service = (if (activity == null) null else activity!!.xmppConnectionService) ?: return
+        val status = conversation!!.account.status
+        if (status == Account.State.ONLINE && conversation!!.setOutgoingChatState(ChatState.COMPOSING)) {
+            service.sendChatState(conversation)
+        }
+        updateSendButton()
+    }
+
+    override fun onTypingStopped() {
+        val service = (if (activity == null) null else activity!!.xmppConnectionService) ?: return
+        val status = conversation!!.account.status
+        if (status == Account.State.ONLINE && conversation!!.setOutgoingChatState(ChatState.PAUSED)) {
+            service.sendChatState(conversation)
+        }
+    }
+
+    override fun onTextDeleted() {
+        val service = (if (activity == null) null else activity!!.xmppConnectionService) ?: return
+        val status = conversation!!.account.status
+        if (status == Account.State.ONLINE && conversation!!.setOutgoingChatState(Config.DEFAULT_CHATSTATE)) {
+            service.sendChatState(conversation)
+        }
+        if (storeNextMessage()) {
+            activity!!.onConversationsListItemUpdated()
+        }
+        updateSendButton()
+    }
+
+    override fun onTextChanged() {
+        if (conversation != null && conversation!!.correctingMessage != null) {
+            updateSendButton()
+        }
+    }
+
+    override fun onTabPressed(repeated: Boolean): Boolean {
+        if (conversation == null || conversation!!.mode == Conversation.MODE_SINGLE) {
+            return false
+        }
+        if (repeated) {
+            completionIndex++
+        } else {
+            lastCompletionLength = 0
+            completionIndex = 0
+            val content = this.binding!!.textinput.text!!.toString()
+            lastCompletionCursor = this.binding!!.textinput.selectionEnd
+            val start = if (lastCompletionCursor > 0) content.lastIndexOf(" ", lastCompletionCursor - 1) + 1 else 0
+            firstWord = start == 0
+            incomplete = content.substring(start, lastCompletionCursor)
+        }
+        val completions = ArrayList<String>()
+        for (user in conversation!!.mucOptions.users) {
+            val name = user.name
+            if (name != null && name.startsWith(incomplete!!)) {
+                completions.add(name + if (firstWord) ": " else " ")
+            }
+        }
+        Collections.sort(completions)
+        if (completions.size > completionIndex) {
+            val completion = completions[completionIndex].substring(incomplete!!.length)
+            this.binding!!.textinput.editableText.delete(
+                lastCompletionCursor,
+                lastCompletionCursor + lastCompletionLength
+            )
+            this.binding!!.textinput.editableText.insert(lastCompletionCursor, completion)
+            lastCompletionLength = completion.length
+        } else {
+            completionIndex = -1
+            this.binding!!.textinput.editableText.delete(
+                lastCompletionCursor,
+                lastCompletionCursor + lastCompletionLength
+            )
+            lastCompletionLength = 0
+        }
+        return true
+    }
+
+    override fun onBackendConnected() {
+        Log.d(Config.LOGTAG, "ConversationFragment.onBackendConnected()")
+        val uuid = pendingConversationsUuid.pop()
+        if (uuid != null) {
+            if (!findAndReInitByUuidOrArchive(uuid)) {
+                return
+            }
+        } else {
+            if (!activity!!.xmppConnectionService.isConversationStillOpen(conversation)) {
+                clearPending()
+                activity!!.onConversationArchived(conversation!!)
+                return
+            }
+        }
+        val activityResult = postponedActivityResult.pop()
+        if (activityResult != null) {
+            handleActivityResult(activityResult)
+        }
+        clearPending()
+    }
+
+    override fun onContactPictureLongClicked(v: View, message: Message) {
+        val fingerprint: String
+        if (message.encryption == Message.ENCRYPTION_PGP || message.encryption == Message.ENCRYPTION_DECRYPTED) {
+            fingerprint = "pgp"
+        } else {
+            fingerprint = message.fingerprint
+        }
+        val popupMenu = PopupMenu(getActivity(), v)
+        val contact = message.contact
+        if (message.status <= Message.STATUS_RECEIVED && (contact == null || !contact.isSelf)) {
+            if (message.conversation.mode == Conversation.MODE_MULTI) {
+                val cp = message.counterpart
+                if (cp == null || cp.isBareJid) {
+                    return
+                }
+                val tcp = message.trueCounterpart
+                val userByRealJid =
+                    if (tcp != null) conversation!!.mucOptions.findOrCreateUserByRealJid(tcp, cp) else null
+                val user = userByRealJid ?: conversation!!.mucOptions.findUserByFullJid(cp)
+                popupMenu.inflate(R.menu.muc_details_context)
+                val menu = popupMenu.menu
+                MucDetailsContextMenuHelper.configureMucDetailsContextMenu(activity, menu, conversation!!, user)
+                popupMenu.setOnMenuItemClickListener { menuItem ->
+                    MucDetailsContextMenuHelper.onContextItemSelected(
+                        menuItem,
+                        user!!,
+                        activity,
+                        fingerprint
+                    )
+                }
+            } else {
+                popupMenu.inflate(R.menu.one_on_one_context)
+                popupMenu.setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        R.id.action_contact_details -> activity!!.switchToContactDetails(message.contact, fingerprint)
+                        R.id.action_show_qr_code -> activity!!.showQrCode("xmpp:" + message.contact!!.jid.asBareJid().toEscapedString())
+                    }
+                    true
+                }
+            }
+        } else {
+            popupMenu.inflate(R.menu.account_context)
+            val menu = popupMenu.menu
+            menu.findItem(R.id.action_manage_accounts).isVisible = QuickConversationsService.isConversations()
+            popupMenu.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.action_show_qr_code -> activity!!.showQrCode(conversation!!.account.shareableUri)
+                    R.id.action_account_details -> activity!!.switchToAccount(
+                        message.conversation.account,
+                        fingerprint
+                    )
+                    R.id.action_manage_accounts -> AccountUtils.launchManageAccounts(activity)
+                }
+                true
+            }
+        }
+        popupMenu.show()
+    }
+
+    override fun onContactPictureClicked(message: Message) {
+        val fingerprint: String
+        if (message.encryption == Message.ENCRYPTION_PGP || message.encryption == Message.ENCRYPTION_DECRYPTED) {
+            fingerprint = "pgp"
+        } else {
+            fingerprint = message.fingerprint
+        }
+        val received = message.status <= Message.STATUS_RECEIVED
+        if (received) {
+            if (message.conversation is Conversation && message.conversation.mode == Conversation.MODE_MULTI) {
+                val tcp = message.trueCounterpart
+                val user = message.counterpart
+                if (user != null && !user.isBareJid) {
+                    val mucOptions = (message.conversation as Conversation).mucOptions
+                    if (mucOptions.participating() || (message.conversation as Conversation).nextCounterpart != null) {
+                        if (!mucOptions.isUserInRoom(user) && mucOptions.findUserByRealJid(tcp?.asBareJid()) == null) {
+                            Toast.makeText(
+                                getActivity(),
+                                activity!!.getString(R.string.user_has_left_conference, user.resource),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        highlightInConference(user.resource)
+                    } else {
+                        Toast.makeText(getActivity(), R.string.you_are_not_participating, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                return
+            } else {
+                if (!message.contact!!.isSelf) {
+                    activity!!.switchToContactDetails(message.contact, fingerprint)
+                    return
+                }
+            }
+        }
+        activity!!.switchToAccount(message.conversation.account, fingerprint)
+    }
+
+    fun unblockConversation(conversation: Blockable?) {
+        activity!!.xmppConnectionService.sendUnblockRequest(conversation)
+    }
+
     fun quoteText(text: String) {
         if (binding!!.textinput.isEnabled) {
             binding!!.textinput.insertAsQuote(text)
@@ -609,15 +963,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
 
     fun quoteMessage(message: Message?) {
         quoteText(MessageUtils.prepareQuote(message!!))
-    }
-
-    override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenuInfo) {
-        synchronized(this.messageList) {
-            super.onCreateContextMenu(menu, v, menuInfo)
-            val acmi = menuInfo as AdapterContextMenuInfo
-            this.selectedMessage = this.messageList[acmi.position]
-            populateContextMenu(menu)
-        }
     }
 
     fun populateContextMenu(menu: ContextMenu) {
@@ -722,104 +1067,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
                 openWith.isVisible = true
             }
         }
-    }
-
-    override fun onContextItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.share_with -> {
-                ShareUtil.share(activity, selectedMessage!!)
-                return true
-            }
-            R.id.correct_message -> {
-                correctMessage(selectedMessage!!)
-                return true
-            }
-            R.id.copy_message -> {
-                ShareUtil.copyToClipboard(activity!!, selectedMessage!!)
-                return true
-            }
-            R.id.copy_link -> {
-                ShareUtil.copyLinkToClipboard(activity, selectedMessage!!)
-                return true
-            }
-            R.id.quote_message -> {
-                quoteMessage(selectedMessage)
-                return true
-            }
-            R.id.send_again -> {
-                resendMessage(selectedMessage!!)
-                return true
-            }
-            R.id.copy_url -> {
-                ShareUtil.copyUrlToClipboard(activity, selectedMessage!!)
-                return true
-            }
-            R.id.download_file -> {
-                startDownloadable(selectedMessage)
-                return true
-            }
-            R.id.cancel_transmission -> {
-                cancelTransmission(selectedMessage!!)
-                return true
-            }
-            R.id.retry_decryption -> {
-                retryDecryption(selectedMessage!!)
-                return true
-            }
-            R.id.delete_file -> {
-                deleteFile(selectedMessage)
-                return true
-            }
-            R.id.show_error_message -> {
-                showErrorMessage(selectedMessage!!)
-                return true
-            }
-            R.id.open_with -> {
-                openWith(selectedMessage!!)
-                return true
-            }
-            else -> return super.onContextItemSelected(item)
-        }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (MenuDoubleTabUtil.shouldIgnoreTap()) {
-            return false
-        } else if (conversation == null) {
-            return super.onOptionsItemSelected(item)
-        }
-        when (item.itemId) {
-            R.id.encryption_choice_axolotl, R.id.encryption_choice_pgp, R.id.encryption_choice_none -> handleEncryptionSelection(
-                item
-            )
-            R.id.attach_choose_picture, R.id.attach_take_picture, R.id.attach_record_video, R.id.attach_choose_file, R.id.attach_record_voice, R.id.attach_location -> handleAttachmentSelection(
-                item
-            )
-            R.id.action_archive -> activity!!.xmppConnectionService.archiveConversation(conversation)
-            R.id.action_contact_details -> activity!!.switchToContactDetails(conversation!!.contact)
-            R.id.action_muc_details -> {
-                val intent = Intent(getActivity(), ConferenceDetailsActivity::class.java)
-                intent.action = ConferenceDetailsActivity.ACTION_VIEW_MUC
-                intent.putExtra("uuid", conversation!!.uuid)
-                startActivity(intent)
-            }
-            R.id.action_invite -> startActivityForResult(
-                ChooseContactActivity.create(activity, conversation!!),
-                REQUEST_INVITE_TO_CONVERSATION
-            )
-            R.id.action_clear_history -> clearHistoryDialog(conversation!!)
-            R.id.action_mute -> muteConversationDialog(conversation!!)
-            R.id.action_unmute -> unmuteConversation(conversation!!)
-            R.id.action_block, R.id.action_unblock -> {
-                val activity = getActivity()
-                if (activity is XmppActivity) {
-                    BlockContactDialog.show(activity, conversation!!)
-                }
-            }
-            else -> {
-            }
-        }
-        return super.onOptionsItemSelected(item)
     }
 
     fun handleAttachmentSelection(item: MenuItem) {
@@ -945,40 +1192,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        if (grantResults.size > 0) {
-            if (allGranted(grantResults)) {
-                when (requestCode) {
-                    REQUEST_START_DOWNLOAD -> if (this.mPendingDownloadableMessage != null) {
-                        startDownloadable(this.mPendingDownloadableMessage)
-                    }
-                    REQUEST_ADD_EDITOR_CONTENT -> if (this.mPendingEditorContent != null) {
-                        attachEditorContentToConversation(this.mPendingEditorContent!!)
-                    }
-                    REQUEST_COMMIT_ATTACHMENTS -> commitAttachments()
-                    else -> attachFile(requestCode)
-                }
-            } else {
-                @StringRes val res: Int
-                val firstDenied = getFirstDenied(grantResults, permissions)
-                if (Manifest.permission.RECORD_AUDIO == firstDenied) {
-                    res = R.string.no_microphone_permission
-                } else if (Manifest.permission.CAMERA == firstDenied) {
-                    res = R.string.no_camera_permission
-                } else {
-                    res = R.string.no_storage_permission
-                }
-                Toast.makeText(getActivity(), res, Toast.LENGTH_SHORT).show()
-            }
-        }
-        if (writeGranted(grantResults, permissions)) {
-            if (activity != null && activity!!.xmppConnectionService != null) {
-                activity!!.xmppConnectionService.restartFileObserver()
-            }
-            refresh()
-        }
-    }
-
     fun startDownloadable(message: Message?) {
         if (!hasPermissions(REQUEST_START_DOWNLOAD, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             this.mPendingDownloadableMessage = message
@@ -1086,7 +1299,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         getActivity().invalidateOptionsMenu()
     }
 
-    protected fun selectPresenceToAttachFile(attachmentChoice: Int) {
+    fun selectPresenceToAttachFile(attachmentChoice: Int) {
         val account = conversation!!.account
         val callback = PresenceSelector.OnPresenceSelected {
             var intent = Intent()
@@ -1138,11 +1351,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         } else {
             activity!!.selectPresence(conversation, callback)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        binding!!.messagesView.post { this.fireReadEvent() }
     }
 
     fun fireReadEvent() {
@@ -1325,93 +1533,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
                 }
             }
         }
-    }
-
-    override fun startActivityForResult(intent: Intent, requestCode: Int) {
-        val activity = getActivity()
-        if (activity is ConversationsActivity) {
-            activity.clearPendingViewIntent()
-        }
-        super.startActivityForResult(intent, requestCode)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        if (conversation != null) {
-            outState.putString(STATE_CONVERSATION_UUID, conversation!!.uuid)
-            outState.putString(STATE_LAST_MESSAGE_UUID, lastMessageUuid)
-            val uri = pendingTakePhotoUri.peek()
-            if (uri != null) {
-                outState.putString(STATE_PHOTO_URI, uri.toString())
-            }
-            val scrollState = scrollPosition
-            if (scrollState != null) {
-                outState.putParcelable(STATE_SCROLL_POSITION, scrollState)
-            }
-            val attachments = if (mediaPreviewAdapter == null) ArrayList() else mediaPreviewAdapter!!.attachments
-            if (attachments.size > 0) {
-                outState.putParcelableArrayList(STATE_MEDIA_PREVIEWS, attachments)
-            }
-        }
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        if (savedInstanceState == null) {
-            return
-        }
-        val uuid = savedInstanceState.getString(STATE_CONVERSATION_UUID)
-        val attachments = savedInstanceState.getParcelableArrayList<Attachment>(STATE_MEDIA_PREVIEWS)
-        pendingLastMessageUuid.push(savedInstanceState.getString(STATE_LAST_MESSAGE_UUID, null))
-        if (uuid != null) {
-            QuickLoader.set(uuid)
-            this.pendingConversationsUuid.push(uuid)
-            if (attachments != null && attachments.size > 0) {
-                this.pendingMediaPreviews.push(attachments)
-            }
-            val takePhotoUri = savedInstanceState.getString(STATE_PHOTO_URI)
-            if (takePhotoUri != null) {
-                pendingTakePhotoUri.push(Uri.parse(takePhotoUri))
-            }
-            pendingScrollState.push(savedInstanceState.getParcelable(STATE_SCROLL_POSITION))
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        if (this.reInitRequiredOnStart && this.conversation != null) {
-            val extras = pendingExtras.pop()
-            reInit(this.conversation, extras != null)
-            if (extras != null) {
-                processExtras(extras)
-            }
-        } else if (conversation == null && activity != null && activity!!.xmppConnectionService != null) {
-            val uuid = pendingConversationsUuid.pop()
-            Log.d(
-                Config.LOGTAG,
-                "ConversationFragment.onStart() - activity was bound but no conversation loaded. uuid=" + uuid!!
-            )
-            if (uuid != null) {
-                findAndReInitByUuidOrArchive(uuid)
-            }
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        val activity = getActivity()
-        messageListAdapter.unregisterListenerInAudioPlayer()
-        if (activity == null || !activity.isChangingConfigurations) {
-            hideSoftKeyboard(activity!!)
-            messageListAdapter.stopAudioPlayer()
-        }
-        if (this.conversation != null) {
-            val msg = this.binding!!.textinput.text!!.toString()
-            storeNextMessage(msg)
-            updateChatState(this.conversation!!, msg)
-            this.activity!!.xmppConnectionService.notificationService.setOpenConversation(null)
-        }
-        this.reInitRequiredOnStart = true
     }
 
     fun updateChatState(conversation: Conversation, msg: String) {
@@ -1732,18 +1853,12 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    override fun refresh() {
-        if (this.binding == null) {
-            Log.d(Config.LOGTAG, "ConversationFragment.refresh() skipped updated because view binding was null")
-            return
+    fun startPendingIntent(pendingIntent: PendingIntent, requestCode: Int) {
+        try {
+            getActivity().startIntentSenderForResult(pendingIntent.intentSender, requestCode, null, 0, 0, 0)
+        } catch (ignored: SendIntentException) {
         }
-        if (this.conversation != null && this.activity != null && this.activity!!.xmppConnectionService != null) {
-            if (!activity!!.xmppConnectionService.isConversationStillOpen(this.conversation)) {
-                activity!!.onConversationArchived(this.conversation!!)
-                return
-            }
-        }
-        this.refresh(true)
+
     }
 
     fun refresh(notifyConversationRead: Boolean) {
@@ -1772,7 +1887,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    protected fun messageSent() {
+    fun messageSent() {
         mSendingPgpMessage.set(false)
         this.binding!!.textinput.setText("")
         if (conversation!!.setCorrectingMessage(null)) {
@@ -1861,13 +1976,13 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         )
     }
 
-    protected fun updateDateSeparators() {
+    fun updateDateSeparators() {
         synchronized(this.messageList) {
             DateSeparator.addAll(this.messageList)
         }
     }
 
-    protected fun updateStatusMessages() {
+    fun updateStatusMessages() {
         updateDateSeparators()
         synchronized(this.messageList) {
             if (showLoadMoreMessages(conversation)) {
@@ -2024,7 +2139,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
 
     @JvmOverloads
-    protected fun showSnackbar(
+    fun showSnackbar(
         message: Int,
         action: Int,
         clickListener: OnClickListener?,
@@ -2182,123 +2297,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         this.binding!!.textinput.append(text)
     }
 
-    override fun onEnterPressed(): Boolean {
-        val p = PreferenceManager.getDefaultSharedPreferences(getActivity())
-        val enterIsSend = p.getBoolean("enter_is_send", resources.getBoolean(R.bool.enter_is_send))
-        return if (enterIsSend) {
-            sendMessage()
-            true
-        } else {
-            false
-        }
-    }
-
-    override fun onTypingStarted() {
-        val service = (if (activity == null) null else activity!!.xmppConnectionService) ?: return
-        val status = conversation!!.account.status
-        if (status == Account.State.ONLINE && conversation!!.setOutgoingChatState(ChatState.COMPOSING)) {
-            service.sendChatState(conversation)
-        }
-        updateSendButton()
-    }
-
-    override fun onTypingStopped() {
-        val service = (if (activity == null) null else activity!!.xmppConnectionService) ?: return
-        val status = conversation!!.account.status
-        if (status == Account.State.ONLINE && conversation!!.setOutgoingChatState(ChatState.PAUSED)) {
-            service.sendChatState(conversation)
-        }
-    }
-
-    override fun onTextDeleted() {
-        val service = (if (activity == null) null else activity!!.xmppConnectionService) ?: return
-        val status = conversation!!.account.status
-        if (status == Account.State.ONLINE && conversation!!.setOutgoingChatState(Config.DEFAULT_CHATSTATE)) {
-            service.sendChatState(conversation)
-        }
-        if (storeNextMessage()) {
-            activity!!.onConversationsListItemUpdated()
-        }
-        updateSendButton()
-    }
-
-    override fun onTextChanged() {
-        if (conversation != null && conversation!!.correctingMessage != null) {
-            updateSendButton()
-        }
-    }
-
-    override fun onTabPressed(repeated: Boolean): Boolean {
-        if (conversation == null || conversation!!.mode == Conversation.MODE_SINGLE) {
-            return false
-        }
-        if (repeated) {
-            completionIndex++
-        } else {
-            lastCompletionLength = 0
-            completionIndex = 0
-            val content = this.binding!!.textinput.text!!.toString()
-            lastCompletionCursor = this.binding!!.textinput.selectionEnd
-            val start = if (lastCompletionCursor > 0) content.lastIndexOf(" ", lastCompletionCursor - 1) + 1 else 0
-            firstWord = start == 0
-            incomplete = content.substring(start, lastCompletionCursor)
-        }
-        val completions = ArrayList<String>()
-        for (user in conversation!!.mucOptions.users) {
-            val name = user.name
-            if (name != null && name.startsWith(incomplete!!)) {
-                completions.add(name + if (firstWord) ": " else " ")
-            }
-        }
-        Collections.sort(completions)
-        if (completions.size > completionIndex) {
-            val completion = completions[completionIndex].substring(incomplete!!.length)
-            this.binding!!.textinput.editableText.delete(
-                lastCompletionCursor,
-                lastCompletionCursor + lastCompletionLength
-            )
-            this.binding!!.textinput.editableText.insert(lastCompletionCursor, completion)
-            lastCompletionLength = completion.length
-        } else {
-            completionIndex = -1
-            this.binding!!.textinput.editableText.delete(
-                lastCompletionCursor,
-                lastCompletionCursor + lastCompletionLength
-            )
-            lastCompletionLength = 0
-        }
-        return true
-    }
-
-    fun startPendingIntent(pendingIntent: PendingIntent, requestCode: Int) {
-        try {
-            getActivity().startIntentSenderForResult(pendingIntent.intentSender, requestCode, null, 0, 0, 0)
-        } catch (ignored: SendIntentException) {
-        }
-
-    }
-
-    override fun onBackendConnected() {
-        Log.d(Config.LOGTAG, "ConversationFragment.onBackendConnected()")
-        val uuid = pendingConversationsUuid.pop()
-        if (uuid != null) {
-            if (!findAndReInitByUuidOrArchive(uuid)) {
-                return
-            }
-        } else {
-            if (!activity!!.xmppConnectionService.isConversationStillOpen(conversation)) {
-                clearPending()
-                activity!!.onConversationArchived(conversation!!)
-                return
-            }
-        }
-        val activityResult = postponedActivityResult.pop()
-        if (activityResult != null) {
-            handleActivityResult(activityResult)
-        }
-        clearPending()
-    }
-
     fun findAndReInitByUuidOrArchive(uuid: String): Boolean {
         val conversation = activity!!.xmppConnectionService.findConversationByUuid(uuid)
         if (conversation == null) {
@@ -2339,101 +2337,103 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    override fun onContactPictureLongClicked(v: View, message: Message) {
-        val fingerprint: String
-        if (message.encryption == Message.ENCRYPTION_PGP || message.encryption == Message.ENCRYPTION_DECRYPTED) {
-            fingerprint = "pgp"
-        } else {
-            fingerprint = message.fingerprint
+    fun attachLocationToConversation(conversation: Conversation?, uri: Uri) {
+        if (conversation == null) {
+            return
         }
-        val popupMenu = PopupMenu(getActivity(), v)
-        val contact = message.contact
-        if (message.status <= Message.STATUS_RECEIVED && (contact == null || !contact.isSelf)) {
-            if (message.conversation.mode == Conversation.MODE_MULTI) {
-                val cp = message.counterpart
-                if (cp == null || cp.isBareJid) {
-                    return
-                }
-                val tcp = message.trueCounterpart
-                val userByRealJid =
-                    if (tcp != null) conversation!!.mucOptions.findOrCreateUserByRealJid(tcp, cp) else null
-                val user = userByRealJid ?: conversation!!.mucOptions.findUserByFullJid(cp)
-                popupMenu.inflate(R.menu.muc_details_context)
-                val menu = popupMenu.menu
-                MucDetailsContextMenuHelper.configureMucDetailsContextMenu(activity, menu, conversation!!, user)
-                popupMenu.setOnMenuItemClickListener { menuItem ->
-                    MucDetailsContextMenuHelper.onContextItemSelected(
-                        menuItem,
-                        user!!,
-                        activity,
-                        fingerprint
-                    )
-                }
-            } else {
-                popupMenu.inflate(R.menu.one_on_one_context)
-                popupMenu.setOnMenuItemClickListener { item ->
-                    when (item.itemId) {
-                        R.id.action_contact_details -> activity!!.switchToContactDetails(message.contact, fingerprint)
-                        R.id.action_show_qr_code -> activity!!.showQrCode("xmpp:" + message.contact!!.jid.asBareJid().toEscapedString())
-                    }
-                    true
-                }
+        activity!!.xmppConnectionService.attachLocationToConversation(conversation, uri, object : UiCallback<Message> {
+
+            override fun success(message: Message) {
+
             }
-        } else {
-            popupMenu.inflate(R.menu.account_context)
-            val menu = popupMenu.menu
-            menu.findItem(R.id.action_manage_accounts).isVisible = QuickConversationsService.isConversations()
-            popupMenu.setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    R.id.action_show_qr_code -> activity!!.showQrCode(conversation!!.account.shareableUri)
-                    R.id.action_account_details -> activity!!.switchToAccount(
-                        message.conversation.account,
-                        fingerprint
-                    )
-                    R.id.action_manage_accounts -> AccountUtils.launchManageAccounts(activity)
-                }
-                true
+
+            override fun error(errorCode: Int, `object`: Message) {
+                //TODO show possible pgp error
             }
-        }
-        popupMenu.show()
+
+            override fun userInputRequried(pi: PendingIntent, `object`: Message) {
+
+            }
+        })
     }
 
-    override fun onContactPictureClicked(message: Message) {
-        val fingerprint: String
-        if (message.encryption == Message.ENCRYPTION_PGP || message.encryption == Message.ENCRYPTION_DECRYPTED) {
-            fingerprint = "pgp"
-        } else {
-            fingerprint = message.fingerprint
+    fun attachEditorContentToConversation(uri: Uri) {
+        mediaPreviewAdapter!!.addMediaPreviews(Attachment.of(getActivity(), uri, Attachment.Type.FILE))
+        toggleInputMethod()
+    }
+
+    fun attachImageToConversation(conversation: Conversation?, uri: Uri) {
+        if (conversation == null) {
+            return
         }
-        val received = message.status <= Message.STATUS_RECEIVED
-        if (received) {
-            if (message.conversation is Conversation && message.conversation.mode == Conversation.MODE_MULTI) {
-                val tcp = message.trueCounterpart
-                val user = message.counterpart
-                if (user != null && !user.isBareJid) {
-                    val mucOptions = (message.conversation as Conversation).mucOptions
-                    if (mucOptions.participating() || (message.conversation as Conversation).nextCounterpart != null) {
-                        if (!mucOptions.isUserInRoom(user) && mucOptions.findUserByRealJid(tcp?.asBareJid()) == null) {
-                            Toast.makeText(
-                                getActivity(),
-                                activity!!.getString(R.string.user_has_left_conference, user.resource),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        highlightInConference(user.resource)
-                    } else {
-                        Toast.makeText(getActivity(), R.string.you_are_not_participating, Toast.LENGTH_SHORT).show()
-                    }
+        val prepareFileToast = Toast.makeText(getActivity(), getText(R.string.preparing_image), Toast.LENGTH_LONG)
+        prepareFileToast.show()
+        activity!!.delegateUriPermissionsToService(uri)
+        activity!!.xmppConnectionService.attachImageToConversation(conversation, uri,
+            object : UiCallback<Message> {
+
+                override fun userInputRequried(pi: PendingIntent, `object`: Message) {
+                    hidePrepareFileToast(prepareFileToast)
                 }
-                return
-            } else {
-                if (!message.contact!!.isSelf) {
-                    activity!!.switchToContactDetails(message.contact, fingerprint)
-                    return
+
+                override fun success(message: Message) {
+                    hidePrepareFileToast(prepareFileToast)
                 }
+
+                override fun error(error: Int, message: Message) {
+                    hidePrepareFileToast(prepareFileToast)
+                    activity!!.runOnUiThread { activity!!.replaceToast(getString(error)) }
+                }
+            })
+    }
+
+
+    fun trustKeysIfNeeded(requestCode: Int): Boolean {
+        val axolotlService = conversation!!.account.axolotlService
+        val targets = axolotlService.getCryptoTargets(conversation)
+        val hasUnaccepted = !conversation!!.acceptedCryptoTargets.containsAll(targets)
+        val hasUndecidedOwn = !axolotlService.getKeysWithTrust(FingerprintStatus.createActiveUndecided()).isEmpty()
+        val hasUndecidedContacts =
+            !axolotlService.getKeysWithTrust(FingerprintStatus.createActiveUndecided(), targets).isEmpty()
+        val hasPendingKeys = !axolotlService.findDevicesWithoutSession(conversation).isEmpty()
+        val hasNoTrustedKeys = axolotlService.anyTargetHasNoTrustedKeys(targets)
+        val downloadInProgress = axolotlService.hasPendingKeyFetches(targets)
+        if (hasUndecidedOwn || hasUndecidedContacts || hasPendingKeys || hasNoTrustedKeys || hasUnaccepted || downloadInProgress) {
+            axolotlService.createSessionsIfNeeded(conversation)
+            val intent = Intent(getActivity(), TrustKeysActivity::class.java)
+            val contacts = arrayOfNulls<String>(targets.size)
+            for (i in contacts.indices) {
+                contacts[i] = targets[i].toString()
             }
+            intent.putExtra("contacts", contacts)
+            intent.putExtra(EXTRA_ACCOUNT, conversation!!.account.jid.asBareJid().toString())
+            intent.putExtra("conversation", conversation!!.uuid)
+            startActivityForResult(intent, requestCode)
+            return true
+        } else {
+            return false
         }
-        activity!!.switchToAccount(message.conversation.account, fingerprint)
+    }
+
+    fun updateChatMsgHint() {
+        val multi = conversation!!.mode == Conversation.MODE_MULTI
+        if (conversation!!.correctingMessage != null) {
+            this.binding!!.textinput.setHint(R.string.send_corrected_message)
+        } else if (multi && conversation!!.nextCounterpart != null) {
+            this.binding!!.textinput.hint = getString(
+                R.string.send_private_message_to,
+                conversation!!.nextCounterpart.resource
+            )
+        } else if (multi && !conversation!!.mucOptions.participating()) {
+            this.binding!!.textinput.setHint(R.string.you_are_not_participating)
+        } else {
+            this.binding!!.textinput.hint = UIHelper.getMessageHint(getActivity(), conversation!!)
+            getActivity().invalidateOptionsMenu()
+        }
+    }
+
+    fun setupIme() {
+        this.binding!!.textinput.refreshIme()
     }
 
     companion object {
