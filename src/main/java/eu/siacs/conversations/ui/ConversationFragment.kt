@@ -40,6 +40,8 @@ import eu.siacs.conversations.crypto.axolotl.FingerprintStatus
 import eu.siacs.conversations.databinding.FragmentConversationBinding
 import eu.siacs.conversations.entities.*
 import eu.siacs.conversations.feature.conversation.command.AttachFileToConversation
+import eu.siacs.conversations.feature.conversation.command.CommitAttachments
+import eu.siacs.conversations.feature.conversation.di.ConversationModule
 import eu.siacs.conversations.feature.conversation.di.DaggerConversationComponent
 import eu.siacs.conversations.feature.conversations.di.ActivityModule
 import eu.siacs.conversations.http.HttpDownloadConnection
@@ -69,6 +71,8 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
 
     @Inject
     lateinit var attachFileToConversation: AttachFileToConversation
+    @Inject
+    lateinit var commitAttachments: CommitAttachments
 
     private val messageList = ArrayList<Message>()
     private val postponedActivityResult = PendingItem<ActivityResult>()
@@ -81,7 +85,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
     private val pendingMessage = PendingItem<Message>()
     private var mPendingEditorContent: Uri? = null
     private lateinit var messageListAdapter: MessageAdapter
-    private var mediaPreviewAdapter: MediaPreviewAdapter? = null
+    var mediaPreviewAdapter: MediaPreviewAdapter? = null
     private var lastMessageUuid: String? = null
     var conversation: Conversation? = null
         private set
@@ -435,7 +439,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun attachLocationToConversation(conversation: Conversation?, uri: Uri) {
+    fun attachLocationToConversation(conversation: Conversation?, uri: Uri) {
         if (conversation == null) {
             return
         }
@@ -460,7 +464,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         toggleInputMethod()
     }
 
-    private fun attachImageToConversation(conversation: Conversation?, uri: Uri) {
+    fun attachImageToConversation(conversation: Conversation?, uri: Uri) {
         if (conversation == null) {
             return
         }
@@ -529,7 +533,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    protected fun trustKeysIfNeeded(requestCode: Int): Boolean {
+    fun trustKeysIfNeeded(requestCode: Int): Boolean {
         val axolotlService = conversation!!.account.axolotlService
         val targets = axolotlService.getCryptoTargets(conversation)
         val hasUnaccepted = !conversation!!.acceptedCryptoTargets.containsAll(targets)
@@ -635,47 +639,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         }
     }
 
-    private fun commitAttachments() {
-        if (!hasPermissions(REQUEST_COMMIT_ATTACHMENTS, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            return
-        }
-        if (conversation!!.nextEncryption == Message.ENCRYPTION_AXOLOTL && trustKeysIfNeeded(
-                REQUEST_TRUST_KEYS_ATTACHMENTS
-            )
-        ) {
-            return
-        }
-        val attachments = mediaPreviewAdapter!!.attachments
-        val callback = PresenceSelector.OnPresenceSelected {
-            val i = attachments.iterator()
-            while (i.hasNext()) {
-                val attachment = i.next()
-                if (attachment.type == Attachment.Type.LOCATION) {
-                    attachLocationToConversation(conversation, attachment.uri)
-                } else if (attachment.type == Attachment.Type.IMAGE) {
-                    Timber.d("ConversationsActivity.commitAttachments() - attaching image to conversations. CHOOSE_IMAGE")
-                    attachImageToConversation(conversation, attachment.uri)
-                } else {
-                    Timber.d("ConversationsActivity.commitAttachments() - attaching file to conversations. CHOOSE_FILE/RECORD_VOICE/RECORD_VIDEO")
-                    attachFileToConversation(conversation, attachment.uri, attachment.mime)
-                }
-                i.remove()
-            }
-            mediaPreviewAdapter!!.notifyDataSetChanged()
-            toggleInputMethod()
-        }
-        if (conversation == null || conversation!!.mode == Conversation.MODE_MULTI || FileBackend.allFilesUnderSize(
-                getActivity(),
-                attachments,
-                getMaxHttpUploadSize(conversation!!)
-            )
-        ) {
-            callback.onPresenceSelected()
-        } else {
-            activity!!.selectPresence(conversation, callback)
-        }
-    }
-
     fun toggleInputMethod() {
         val hasAttachments = mediaPreviewAdapter!!.hasAttachments()
         binding!!.textinput.visibility = if (hasAttachments) View.GONE else View.VISIBLE
@@ -710,6 +673,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         Log.d(Config.LOGTAG, "ConversationFragment.onAttach()")
         DaggerConversationComponent.builder()
             .activityModule(ActivityModule(activity))
+            .conversationModule(ConversationModule(this))
             .build()(this)
         if (activity is ConversationsActivity) {
             this.activity = activity
@@ -1250,7 +1214,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
         builder.create().show()
     }
 
-    private fun hasPermissions(requestCode: Int, vararg permissions: String): Boolean {
+    fun hasPermissions(requestCode: Int, vararg permissions: String): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val missingPermissions = ArrayList<String>()
             for (permission in permissions) {

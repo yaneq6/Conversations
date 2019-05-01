@@ -14,10 +14,15 @@ import io.aakit.scope.ActivityScope
 interface ConversationComponent : (ConversationFragment) -> ConversationFragment
 
 @Module(includes = [ActivityModule::class])
-class ConversationModule {
+class ConversationModule(
+    private val fragment: ConversationFragment
+) {
 
     @Provides
     @ActivityScope
     fun xmppActivity(activity: Activity) = activity as XmppActivity
 
+    @Provides
+    @ActivityScope
+    fun conversationFragment() = fragment
 }
