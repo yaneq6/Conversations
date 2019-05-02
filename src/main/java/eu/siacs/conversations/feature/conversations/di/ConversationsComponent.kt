@@ -53,4 +53,8 @@ class ActivityModule(
     @Provides
     @ActivityScope
     fun navigator(): ActivityNavigator = activity.activityNavigator()
+
+    @Provides
+    @ActivityScope
+    fun resources() = activity.resources!!
 }

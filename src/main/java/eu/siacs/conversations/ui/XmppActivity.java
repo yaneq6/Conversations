@@ -180,13 +180,13 @@ public abstract class XmppActivity extends ActionBarActivity {
 		replaceToast(msg, true);
 	}
 
-	protected void replaceToast(String msg, boolean showlong) {
+	public void replaceToast(String msg, boolean showlong) {
 		hideToast();
 		mToast = Toast.makeText(this, msg, showlong ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT);
 		mToast.show();
 	}
 
-	protected final void refreshUi() {
+	public final void refreshUi() {
 		final long diff = SystemClock.elapsedRealtime() - mLastUiRefresh;
 		if (diff > Config.REFRESH_UI_INTERVAL) {
 			mRefreshUiHandler.removeCallbacks(mRefreshUiRunnable);

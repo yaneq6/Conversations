@@ -172,7 +172,7 @@ public final class MucDetailsContextMenuHelper {
                 if (activity instanceof ConversationsActivity) {
                     ConversationFragment conversationFragment = ConversationFragment.get(activity);
                     if (conversationFragment != null) {
-                        conversationFragment.privateMessageWith(user.getFullJid());
+                        conversationFragment.privateMessageWith.invoke(user.getFullJid());
                         return true;
                     }
                 }

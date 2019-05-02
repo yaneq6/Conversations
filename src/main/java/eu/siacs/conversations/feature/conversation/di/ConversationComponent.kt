@@ -6,6 +6,7 @@ import dagger.Module
 import dagger.Provides
 import eu.siacs.conversations.feature.conversations.di.ActivityModule
 import eu.siacs.conversations.ui.ConversationFragment
+import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
 
@@ -22,7 +23,17 @@ class ConversationModule(
     @ActivityScope
     fun xmppActivity(activity: Activity) = activity as XmppActivity
 
+
+    @Provides
+    @ActivityScope
+    fun conversatinsActivity(activity: Activity) = activity as ConversationsActivity
+
+
     @Provides
     @ActivityScope
     fun conversationFragment() = fragment
+
+    @Provides
+    @ActivityScope
+    fun fragmentConversationBinding() = fragment.binding!!
 }

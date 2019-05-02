@@ -15,10 +15,18 @@ import javax.inject.Inject
 @ActivityScope
 class CommitAttachments @Inject constructor(
     private val fragment: ConversationFragment,
-    private val activity: XmppActivity
+    private val activity: XmppActivity,
+    private val getMaxHttpUploadSize: GetMaxHttpUploadSize,
+    private val hasPermissions: HasPermissions,
+    private val trustKeysIfNeeded: TrustKeysIfNeeded,
+    private val attachLocationToConversation: AttachLocationToConversation,
+    private val attachImageToConversation: AttachImageToConversation,
+    private val attachFileToConversation: AttachFileToConversation,
+    private val toggleInputMethod: ToggleInputMethod
 ) : () -> Unit {
 
-    override fun invoke() = fragment.run {
+    override fun invoke() {
+        val conversation = fragment.conversation
         if (!hasPermissions(
                 ConversationFragment.REQUEST_COMMIT_ATTACHMENTS,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -31,34 +39,37 @@ class CommitAttachments @Inject constructor(
         ) {
             return
         }
-        val attachments = mediaPreviewAdapter!!.attachments
+        val mediaPreviewAdapter = fragment.mediaPreviewAdapter!!
+        val attachments = mediaPreviewAdapter.attachments
         val callback = PresenceSelector.OnPresenceSelected {
             val i = attachments.iterator()
             while (i.hasNext()) {
                 val attachment = i.next()
-                if (attachment.type == Attachment.Type.LOCATION) {
-                    attachLocationToConversation(conversation, attachment.uri)
-                } else if (attachment.type == Attachment.Type.IMAGE) {
-                    Timber.d("ConversationsActivity.commitAttachments() - attaching image to conversations. CHOOSE_IMAGE")
-                    attachImageToConversation(conversation, attachment.uri)
-                } else {
-                    Timber.d("ConversationsActivity.commitAttachments() - attaching file to conversations. CHOOSE_FILE/RECORD_VOICE/RECORD_VIDEO")
-                    attachFileToConversation(conversation, attachment.uri, attachment.mime)
+                when {
+                    attachment.type == Attachment.Type.LOCATION -> attachLocationToConversation(conversation, attachment.uri)
+                    attachment.type == Attachment.Type.IMAGE -> {
+                        Timber.d("ConversationsActivity.commitAttachments() - attaching image to conversations. CHOOSE_IMAGE")
+                        attachImageToConversation(conversation, attachment.uri)
+                    }
+                    else -> {
+                        Timber.d("ConversationsActivity.commitAttachments() - attaching file to conversations. CHOOSE_FILE/RECORD_VOICE/RECORD_VIDEO")
+                        attachFileToConversation(conversation, attachment.uri, attachment.mime)
+                    }
                 }
                 i.remove()
             }
-            mediaPreviewAdapter!!.notifyDataSetChanged()
+            mediaPreviewAdapter.notifyDataSetChanged()
             toggleInputMethod()
         }
-        if (conversation == null || conversation!!.mode == Conversation.MODE_MULTI || FileBackend.allFilesUnderSize(
-                getActivity(),
+        if (conversation.mode == Conversation.MODE_MULTI || FileBackend.allFilesUnderSize(
+                activity,
                 attachments,
-                getMaxHttpUploadSize(conversation!!)
+                getMaxHttpUploadSize(conversation)
             )
         ) {
             callback.onPresenceSelected()
         } else {
-            this@CommitAttachments.activity.selectPresence(conversation, callback)
+            activity.selectPresence(conversation, callback)
         }
     }
 }

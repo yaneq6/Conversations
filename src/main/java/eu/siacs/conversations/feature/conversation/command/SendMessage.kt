@@ -8,26 +8,35 @@ import io.aakit.scope.ActivityScope
 import java.util.*
 import javax.inject.Inject
 
+
 @ActivityScope
 class SendMessage @Inject constructor(
-    private val activity: XmppActivity,
     private val fragment: ConversationFragment,
     private val commitAttachments: CommitAttachments
-) : () -> Unit {
-    override fun invoke(): Unit = activity.run {
-        if (fragment.mediaPreviewAdapter!!.hasAttachments()) {
+) :
+        (Message) -> Unit,
+        () -> Unit {
+
+    override fun invoke(message: Message) = fragment.run {
+        activity!!.xmppConnectionService.sendMessage(message)
+        messageSent()
+    }
+
+    override fun invoke(): Unit = fragment.run {
+        if (mediaPreviewAdapter!!.hasAttachments()) {
             commitAttachments()
             return
         }
-        val text = fragment.binding!!.textinput.text
+        val text = binding!!.textinput.text
         val body = text?.toString() ?: ""
-        val conversation = fragment.conversation
-        if (body.length == 0 || conversation == null) {
+        val conversation = conversation
+        if (body.isEmpty() || conversation == null) {
             return
         }
-        if (conversation.nextEncryption == Message.ENCRYPTION_AXOLOTL && fragment.trustKeysIfNeeded(
+        if (conversation.nextEncryption == Message.ENCRYPTION_AXOLOTL && trustKeysIfNeeded(
                 ConversationFragment.REQUEST_TRUST_KEYS_TEXT
-            )) {
+            )
+        ) {
             return
         }
         val message: Message
@@ -49,8 +58,8 @@ class SendMessage @Inject constructor(
             message.uuid = UUID.randomUUID().toString()
         }
         when (conversation.nextEncryption) {
-            Message.ENCRYPTION_PGP -> fragment.sendPgpMessage(message)
-            else -> fragment.sendMessage(message)
+            Message.ENCRYPTION_PGP -> sendPgpMessage(message)
+            else -> sendMessage(message)
         }
     }
 }
