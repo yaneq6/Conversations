@@ -44,17 +44,11 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     MessageAdapter.OnContactPictureClicked {
 
     @Inject
-    lateinit var attachFileToConversation: AttachFileToConversation
-    @Inject
     lateinit var commitAttachments: CommitAttachments
     @Inject
     lateinit var getIndexOf: GetIndexOf
     @Inject
-    lateinit var setScrollPosition: SetScrollPosition
-    @Inject
     lateinit var toggleScrollDownButton: ToggleScrollDownButton
-    @Inject
-    lateinit var hidePrepareFileToast: HidePrepareFileToast
     @Inject
     lateinit var sendMessage: SendMessage
     @Inject
@@ -68,25 +62,11 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     @Inject
     lateinit var attachFile: AttachFile
     @Inject
-    lateinit var attachImageToConversation: AttachImageToConversation
-    @Inject
-    lateinit var attachLocationToConversation: AttachLocationToConversation
-    @Inject
-    lateinit var cancelTransmission: CancelTransmission
-    @Inject
     lateinit var cleanUris: CleanUris
-    @Inject
-    lateinit var clearHistoryDialog: ClearHistoryDialog
     @Inject
     lateinit var clearPending: ClearPending
     @Inject
-    lateinit var correctMessage: CorrectMessage
-    @Inject
     lateinit var createNewConnection: CreateNewConnection
-    @Inject
-    lateinit var deleteFile: DeleteFile
-    @Inject
-    lateinit var doneSendingPgpMessage: DoneSendingPgpMessage
     @Inject
     lateinit var encryptTextMessage: EncryptTextMessage
     @Inject
@@ -95,12 +75,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     lateinit var findAndReInitByUuidOrArchive: FindAndReInitByUuidOrArchive
     @Inject
     lateinit var fireReadEvent: FireReadEvent
-    @Inject
-    lateinit var getMaxHttpUploadSize: GetMaxHttpUploadSize
-    @Inject
-    lateinit var handleAttachmentSelection: HandleAttachmentSelection
-    @Inject
-    lateinit var handleEncryptionSelection: HandleEncryptionSelection
     @Inject
     lateinit var hasMamSupport: HasMamSupport
     @Inject
@@ -114,17 +88,9 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     @Inject
     lateinit var messageSent: MessageSent
     @Inject
-    lateinit var muteConversationDialog: MuteConversationDialog
-    @Inject
-    lateinit var openWith: OpenWith
-    @Inject
-    lateinit var populateContextMenu: PopulateContextMenu
-    @Inject
     lateinit var privateMessageWith: PrivateMessageWith
     @Inject
     lateinit var processExtras: ProcessExtras
-    @Inject
-    lateinit var quoteMessage: QuoteMessage
     @Inject
     lateinit var quoteText: QuoteText
     @Inject
@@ -132,17 +98,11 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     @Inject
     lateinit var reInit: ReInit
     @Inject
-    lateinit var resendMessage: ResendMessage
-    @Inject
     lateinit var resetUnreadMessagesCount: ResetUnreadMessagesCount
-    @Inject
-    lateinit var retryDecryption: RetryDecryption
     @Inject
     lateinit var saveMessageDraftStopAudioPlayer: SaveMessageDraftStopAudioPlayer
     @Inject
     lateinit var scrolledToBottom: ScrolledToBottom
-    @Inject
-    lateinit var selectPresenceToAttachFile: SelectPresenceToAttachFile
     @Inject
     lateinit var sendPgpMessage: SendPgpMessage
     @Inject
@@ -152,11 +112,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     @Inject
     lateinit var showBlockSubmenu: ShowBlockSubmenu
     @Inject
-    lateinit var showErrorMessage: ShowErrorMessage
-    @Inject
     lateinit var showLoadMoreMessages: ShowLoadMoreMessages
-    @Inject
-    lateinit var showNoPgpKeyDialog: ShowNoPGPKeyDialog
     @Inject
     lateinit var showSnackbar: ShowSnackbar
     @Inject
@@ -171,8 +127,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     lateinit var trustKeysIfNeeded: TrustKeysIfNeeded
     @Inject
     lateinit var unblockConversation: unblockConversation
-    @Inject
-    lateinit var unmuteConversation: UnmuteConversation
     @Inject
     lateinit var updateChatMsgHint: UpdateChatMsgHint
     @Inject
