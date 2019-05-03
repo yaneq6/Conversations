@@ -274,7 +274,7 @@ class OnRequestPermissionsResult @Inject constructor(
 }
 
 @ActivityScope
-class onResume @Inject constructor(
+class OnResume @Inject constructor(
     private val binding: FragmentConversationBinding,
     private val fireReadEvent: FireReadEvent
 ) {

@@ -15,14 +15,15 @@ class OnAttach @Inject constructor(
     private val fragment: ConversationFragment
 ) {
 
-    operator fun invoke(activity: Context) {
+    operator fun invoke(activity: Context): ConversationsActivity {
         //        super.onAttach(activity)
+        Timber.d("ConversationFragment.onAttach()")
         activity as? ConversationsActivity
             ?: throw IllegalStateException("Trying to attach fragment to activity that is not the ConversationsActivity")
-        Timber.d("ConversationFragment.onAttach()")
         DaggerConversationComponent.builder()
             .activityModule(ActivityModule(activity))
             .conversationModule(ConversationModule(fragment))
             .build()(fragment)
+        return activity
     }
 }
