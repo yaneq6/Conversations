@@ -74,11 +74,11 @@ class ConversationsActivity :
     XmppConnectionService.OnShowErrorToast,
     XmppConnectionService.OnAffiliationChanged {
 
-    private var binding: ActivityConversationsBinding? = null
+    var binding: ActivityConversationsBinding? = null
 
-    private var activityPaused = true
+    var activityPaused = true
 
-    private val postponedActivityResult = PendingItem<ActivityResult>()
+    val postponedActivityResult = PendingItem<ActivityResult>()
 
     @Inject
     lateinit var pendingViewIntent: PendingItem<Intent>
@@ -292,7 +292,7 @@ class ConversationsActivity :
         const val EXTRA_IS_PRIVATE_MESSAGE = "pm"
         const val EXTRA_DO_NOT_APPEND = "do_not_append"
 
-        private val VIEW_AND_SHARE_ACTIONS = Arrays.asList(
+        val VIEW_AND_SHARE_ACTIONS = Arrays.asList(
             ACTION_VIEW_CONVERSATION,
             Intent.ACTION_SEND,
             Intent.ACTION_SEND_MULTIPLE
@@ -304,7 +304,7 @@ class ConversationsActivity :
 
         //secondary fragment (when holding the conversation, must be initialized before refreshing the overview fragment
         @IdRes
-        private val FRAGMENT_ID_NOTIFICATION_ORDER = intArrayOf(R.id.secondary_fragment, R.id.main_fragment)
+        val FRAGMENT_ID_NOTIFICATION_ORDER = intArrayOf(R.id.secondary_fragment, R.id.main_fragment)
 
         fun isViewOrShareIntent(intent: Intent?): Boolean {
             Timber.d("action: ${intent?.action}")

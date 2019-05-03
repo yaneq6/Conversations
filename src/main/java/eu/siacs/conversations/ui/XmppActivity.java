@@ -833,11 +833,11 @@ public abstract class XmppActivity extends ActionBarActivity {
 		return super.onMenuOpened(id, menu);
 	}
 
-	protected void showQrCode() {
+	public void showQrCode() {
 		showQrCode(getShareableUri());
 	}
 
-	protected void showQrCode(final String uri) {
+	public void showQrCode(final String uri) {
 		if (uri == null || uri.isEmpty()) {
 			return;
 		}

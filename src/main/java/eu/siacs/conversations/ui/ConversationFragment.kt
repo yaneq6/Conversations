@@ -443,12 +443,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        val activityResult = ActivityResult.of(requestCode, resultCode, data)
-        if (activity != null && activity!!.xmppConnectionService != null) {
-            handleActivityResult(activityResult)
-        } else {
-            this.postponedActivityResult.push(activityResult)
-        }
+        handleActivityResult(requestCode, resultCode, data)
     }
 
     override fun onAttach(activity: Activity) {
@@ -686,10 +681,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener, Messa
     }
 
     override fun startActivityForResult(intent: Intent, requestCode: Int) {
-        val activity = getActivity()
-        if (activity is ConversationsActivity) {
-            activity.clearPendingViewIntent()
-        }
+        (getActivity() as? ConversationsActivity)?.clearPendingViewIntent()
         super.startActivityForResult(intent, requestCode)
     }
 

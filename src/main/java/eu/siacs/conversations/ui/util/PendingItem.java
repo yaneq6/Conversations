@@ -29,6 +29,8 @@
 
 package eu.siacs.conversations.ui.util;
 
+import android.support.annotation.Nullable;
+
 public class PendingItem<T> {
 
 	private T item = null;
@@ -37,6 +39,7 @@ public class PendingItem<T> {
 		this.item = item;
 	}
 
+	@Nullable
 	public synchronized T pop() {
 		final T item = this.item;
 		this.item = null;
