@@ -33,10 +33,13 @@ import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.util.SendButtonAction
 import eu.siacs.conversations.ui.widget.EditMessage
+import io.aakit.scope.ActivityScope
 import timber.log.Timber
+import javax.inject.Inject
 
 
-class ClickToMu(
+@ActivityScope
+class ClickToMuc @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity
 ) : OnClickListener {
@@ -48,7 +51,8 @@ class ClickToMu(
     }
 }
 
-class LeaveMuc(
+@ActivityScope
+class LeaveMuc @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity
 ) : OnClickListener {
@@ -57,7 +61,8 @@ class LeaveMuc(
     }
 }
 
-class JoinMuc(
+@ActivityScope
+class JoinMuc @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity
 ) : OnClickListener {
@@ -66,7 +71,8 @@ class JoinMuc(
     }
 }
 
-class AcceptJoin(
+@ActivityScope
+class AcceptJoin @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity
 ) : OnClickListener {
@@ -78,10 +84,10 @@ class AcceptJoin(
     }
 }
 
-class EnterPassword(
+@ActivityScope
+class EnterPassword @Inject constructor(
     private val fragment: ConversationFragment,
-    private val activity: ConversationsActivity,
-    private val fireReadEvent: FireReadEvent
+    private val activity: ConversationsActivity
 ) : OnClickListener {
     override fun onClick(view: View) {
         val conversation = fragment.conversation!!
@@ -97,7 +103,8 @@ class EnterPassword(
     }
 }
 
-class OnScrollListener(
+@ActivityScope
+class OnScrollListener @Inject constructor(
     private val activity: ConversationsActivity,
     private val fragment: ConversationFragment,
     private val binding: FragmentConversationBinding,
@@ -199,7 +206,8 @@ class OnScrollListener(
     }
 }
 
-class EditorContentListener(
+@ActivityScope
+class EditorContentListener @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity,
     private val hasPermissions: HasPermissions,
@@ -243,7 +251,8 @@ class EditorContentListener(
     }
 }
 
-class EnableAccountListener(
+@ActivityScope
+class EnableAccountListener @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity
 ) : OnClickListener {
@@ -256,7 +265,8 @@ class EnableAccountListener(
     }
 }
 
-class UnblockClickListener(
+@ActivityScope
+class UnblockClickListener @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity,
     private val unblockConversation: UnblockConversation
@@ -272,7 +282,8 @@ class UnblockClickListener(
     }
 }
 
-class BlockClickListener(
+@ActivityScope
+class BlockClickListener @Inject constructor(
     private val showBlockSubmenu: ShowBlockSubmenu
 ) : OnClickListener {
     override fun onClick(view: View) {
@@ -280,7 +291,8 @@ class BlockClickListener(
     }
 }
 
-class AddBackClickListener(
+@ActivityScope
+class AddBackClickListener @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity
 ) : OnClickListener {
@@ -294,9 +306,8 @@ class AddBackClickListener(
     }
 }
 
-class LongPressBlockListener(
-    private val fragment: ConversationFragment,
-    private val activity: ConversationsActivity,
+@ActivityScope
+class LongPressBlockListener @Inject constructor(
     private val showBlockSubmenu: ShowBlockSubmenu
 ) : View.OnLongClickListener {
     override fun onLongClick(view: View): Boolean {
@@ -304,7 +315,8 @@ class LongPressBlockListener(
     }
 }
 
-class AllowPresenceSubscription(
+@ActivityScope
+class AllowPresenceSubscription @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity,
     private val hideSnackbar: HideSnackbar
@@ -321,7 +333,8 @@ class AllowPresenceSubscription(
     }
 }
 
-class ClickToDecryptListener(
+@ActivityScope
+class ClickToDecryptListener @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity,
     private val updateSnackBar: UpdateSnackBar
@@ -351,7 +364,8 @@ class ClickToDecryptListener(
     }
 }
 
-class EditorActionListener(
+@ActivityScope
+class EditorActionListener @Inject constructor(
     private val activity: ConversationsActivity,
     private val sendMessage: SendMessage
 ) : TextView.OnEditorActionListener {
@@ -368,7 +382,8 @@ class EditorActionListener(
             false
 }
 
-class ScrollButtonListener(
+@ActivityScope
+class ScrollButtonListener @Inject constructor(
     private val binding: FragmentConversationBinding,
     private val stopScrolling: StopScrolling,
     private val setSelection: SetSelection
@@ -379,7 +394,8 @@ class ScrollButtonListener(
     }
 }
 
-class SendButtonListener(
+@ActivityScope
+class SendButtonListener @Inject constructor(
     private val fragment: ConversationFragment,
     private val binding: FragmentConversationBinding,
     private val updateChatMsgHint: UpdateChatMsgHint,
