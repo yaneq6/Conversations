@@ -163,55 +163,6 @@ class ConversationFragment : XmppFragment(),
     @Inject
     lateinit var sendButtonListener: SendButtonListener
 
-    val scrollPosition: ScrollState?
-        get() {
-            val listView = if (this.binding == null) null else this.binding!!.messagesView
-            if (listView == null || listView.count == 0 || listView.lastVisiblePosition == listView.count - 1) {
-                return null
-            } else {
-                val pos = listView.firstVisiblePosition
-                val view = listView.getChildAt(0)
-                return if (view == null) {
-                    null
-                } else {
-                    ScrollState(pos, view.top)
-                }
-            }
-        }
-
-    //should not happen if we synchronize properly. however if that fails we just gonna try item -1
-    val lastVisibleMessageUuid: String?
-        get() {
-            if (binding == null) {
-                return null
-            }
-            synchronized(this.messageList) {
-                val pos = binding!!.messagesView.lastVisiblePosition
-                if (pos >= 0) {
-                    var message: Message? = null
-                    for (i in pos downTo 0) {
-                        try {
-                            message = binding!!.messagesView.getItemAtPosition(i) as Message
-                        } catch (e: IndexOutOfBoundsException) {
-                            continue
-                        }
-
-                        if (message.type != Message.TYPE_STATUS) {
-                            break
-                        }
-                    }
-                    if (message != null) {
-                        while (message!!.next() != null && message.next()!!.wasMergedIntoPrevious()) {
-                            message = message.next()
-                        }
-                        return message.uuid
-                    }
-                }
-            }
-            return null
-        }
-
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         handleActivityResult(requestCode, resultCode, data)
