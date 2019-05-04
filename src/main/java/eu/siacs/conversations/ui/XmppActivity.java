@@ -684,7 +684,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 		quickEdit(previousValue, callback, hint, false, permitEmpty);
 	}
 
-	protected void quickPasswordEdit(String previousValue, OnValueEdited callback) {
+	public void quickPasswordEdit(String previousValue, OnValueEdited callback) {
 		quickEdit(previousValue, callback, R.string.password, true, false);
 	}
 

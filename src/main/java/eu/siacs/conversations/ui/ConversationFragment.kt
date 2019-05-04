@@ -39,7 +39,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 
-class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
+class ConversationFragment : XmppFragment(),
+    EditMessage.KeyboardListener,
     MessageAdapter.OnContactPictureLongClicked,
     MessageAdapter.OnContactPictureClicked {
 
@@ -155,8 +156,9 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     val pendingScrollState = PendingItem<ScrollState>()
     val pendingLastMessageUuid = PendingItem<String>()
     val pendingMessage = PendingItem<Message>()
-    var pendingEditorContent: Uri? = null
+    val sendingPgpMessage = AtomicBoolean(false)
     lateinit var messageListAdapter: MessageAdapter
+    var pendingEditorContent: Uri? = null
     var mediaPreviewAdapter: MediaPreviewAdapter? = null
     var lastMessageUuid: String? = null
     var conversation: Conversation? = null
@@ -164,15 +166,28 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     var messageLoaderToast: Toast? = null
     var activity: ConversationsActivity? = null
     var reInitRequiredOnStart = true
+    var selectedMessage: Message? = null
+    var completionIndex = 0
+    var lastCompletionLength = 0
+    var incomplete: String? = null
+    var lastCompletionCursor: Int = 0
+    var firstWord = false
+    var pendingDownloadableMessage: Message? = null
+
     val clickToMuc = OnClickListener {
         val intent = Intent(getActivity(), ConferenceDetailsActivity::class.java)
         intent.action = ConferenceDetailsActivity.ACTION_VIEW_MUC
         intent.putExtra("uuid", conversation!!.uuid)
         startActivity(intent)
     }
-    val leaveMuc =
-        OnClickListener { activity!!.xmppConnectionService.archiveConversation(conversation) }
-    val joinMuc = OnClickListener { activity!!.xmppConnectionService.joinMuc(conversation) }
+
+    val leaveMuc = OnClickListener {
+        activity!!.xmppConnectionService.archiveConversation(conversation)
+    }
+
+    val joinMuc = OnClickListener {
+        activity!!.xmppConnectionService.joinMuc(conversation)
+    }
 
     val acceptJoin = OnClickListener {
         conversation!!.setAttribute("accept_non_anonymous", true)
@@ -288,8 +303,8 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             }
         }
     }
-    val editorContentListener =
-        EditMessage.OnCommitContentListener { inputContentInfo, flags, opts, contentMimeTypes ->
+
+    val editorContentListener = EditMessage.OnCommitContentListener { inputContentInfo, flags, opts, contentMimeTypes ->
             // try to get permission to read the image, if applicable
             if (flags and InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION != 0) {
                 try {
@@ -319,7 +334,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             }
             true
         }
-    var selectedMessage: Message? = null
+
     val enableAccountListener = OnClickListener {
         val account = if (conversation == null) null else conversation!!.account
         if (account != null) {
@@ -327,6 +342,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             activity!!.xmppConnectionService.updateAccount(account)
         }
     }
+
     val unblockClickListener = OnClickListener { v ->
         v.post { v.visibility = View.INVISIBLE }
         if (conversation!!.isDomainBlocked) {
@@ -335,7 +351,11 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             unblockConversation(conversation)
         }
     }
-    val blockClickListener = OnClickListener { showBlockSubmenu(it) }
+
+    val blockClickListener = OnClickListener {
+        showBlockSubmenu(it)
+    }
+
     val addBackClickListener = OnClickListener {
         val contact = if (conversation == null) null else conversation!!.contact
         if (contact != null) {
@@ -343,7 +363,11 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             activity!!.switchToContactDetails(contact)
         }
     }
-    val longPressBlockListener = View.OnLongClickListener { showBlockSubmenu(it) }
+
+    val longPressBlockListener = View.OnLongClickListener {
+        showBlockSubmenu(it)
+    }
+
     val allowPresenceSubscription = OnClickListener {
         val contact = if (conversation == null) null else conversation!!.contact
         if (contact != null) {
@@ -355,7 +379,8 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             hideSnackbar()
         }
     }
-    val clickToDecryptListener: OnClickListener = OnClickListener {
+
+    val clickToDecryptListener = OnClickListener {
         val pendingIntent = conversation!!.account.pgpDecryptionService.pendingIntent
         if (pendingIntent != null) {
             try {
@@ -378,7 +403,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
         }
         updateSnackBar(conversation!!)
     }
-    val sendingPgpMessage = AtomicBoolean(false)
+
     val editorActionListener = OnEditorActionListener { v, actionId, event ->
         if (actionId == EditorInfo.IME_ACTION_SEND) {
             val imm =
@@ -391,10 +416,12 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
         } else
             false
     }
+
     val scrollButtonListener = OnClickListener {
         stopScrolling()
         setSelection(binding!!.messagesView.count - 1, true)
     }
+
     val sendButtonListener = OnClickListener { v ->
         val tag = v.tag
         if (tag is SendButtonAction) {
@@ -420,12 +447,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             sendMessage()
         }
     }
-    var completionIndex = 0
-    var lastCompletionLength = 0
-    var incomplete: String? = null
-    var lastCompletionCursor: Int = 0
-    var firstWord = false
-    var pendingDownloadableMessage: Message? = null
 
     val scrollPosition: ScrollState?
         get() {

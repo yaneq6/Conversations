@@ -38,7 +38,7 @@ public abstract class XmppFragment extends Fragment implements OnBackendConnecte
 
 	public abstract void refresh();
 
-	protected void runOnUiThread(Runnable runnable) {
+	public void runOnUiThread(Runnable runnable) {
 		final Activity activity = getActivity();
 		if (activity != null) {
 			activity.runOnUiThread(runnable);
