@@ -19,7 +19,6 @@ import eu.siacs.conversations.ui.util.Attachment
 import eu.siacs.conversations.ui.util.PendingItem
 import eu.siacs.conversations.ui.util.ScrollState
 import eu.siacs.conversations.ui.widget.EditMessage
-import timber.log.Timber
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -284,7 +283,6 @@ class ConversationFragment : XmppFragment(),
         onTabPressed.invoke(repeated)
 
     override fun onBackendConnected() {
-        Timber.d("ConversationFragment.onBackendConnected()")
         onBackendConnected.invoke()
     }
 

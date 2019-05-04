@@ -10,6 +10,6 @@ class OnResume @Inject constructor(
     private val fireReadEvent: FireReadEvent
 ) {
     operator fun invoke() {
-        binding.messagesView.post { fireReadEvent() }
+        binding.messagesView.post(fireReadEvent)
     }
 }
