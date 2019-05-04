@@ -8,5 +8,5 @@ import javax.inject.Inject
 class DoneSendingPgpMessage @Inject constructor(
     private val fragment: ConversationFragment
 ) : () -> Unit {
-    override fun invoke() = fragment.mSendingPgpMessage.set(false)
+    override fun invoke() = fragment.sendingPgpMessage.set(false)
 }

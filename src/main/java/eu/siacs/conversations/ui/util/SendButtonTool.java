@@ -40,6 +40,8 @@ import eu.siacs.conversations.entities.Presence;
 import eu.siacs.conversations.ui.ConversationFragment;
 import eu.siacs.conversations.utils.UIHelper;
 
+import static eu.siacs.conversations.feature.conversation.UtilsKt.RECENTLY_USED_QUICK_ACTION;
+
 public class SendButtonTool {
 
 	public static SendButtonAction getAction(Activity activity, Conversation c, String text) {
@@ -64,7 +66,7 @@ public class SendButtonTool {
 						return SendButtonAction.SEND_LOCATION;
 					} else {
 						if (setting.equals("recent")) {
-							setting = preferences.getString(ConversationFragment.RECENTLY_USED_QUICK_ACTION, SendButtonAction.TEXT.toString());
+							setting = preferences.getString(RECENTLY_USED_QUICK_ACTION, SendButtonAction.TEXT.toString());
 							return SendButtonAction.valueOfOrDefault(setting, SendButtonAction.TEXT);
 						} else {
 							return SendButtonAction.valueOfOrDefault(setting, SendButtonAction.TEXT);

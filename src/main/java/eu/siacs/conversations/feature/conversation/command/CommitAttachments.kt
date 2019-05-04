@@ -3,6 +3,8 @@ package eu.siacs.conversations.feature.conversation.command
 import android.Manifest
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
+import eu.siacs.conversations.feature.conversation.REQUEST_COMMIT_ATTACHMENTS
+import eu.siacs.conversations.feature.conversation.REQUEST_TRUST_KEYS_ATTACHMENTS
 import eu.siacs.conversations.persistance.FileBackend
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.XmppActivity
@@ -28,13 +30,13 @@ class CommitAttachments @Inject constructor(
     override fun invoke() {
         val conversation = fragment.conversation
         if (!hasPermissions(
-                ConversationFragment.REQUEST_COMMIT_ATTACHMENTS,
+                REQUEST_COMMIT_ATTACHMENTS,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
             )) {
             return
         }
         if (conversation!!.nextEncryption == Message.ENCRYPTION_AXOLOTL && trustKeysIfNeeded(
-                ConversationFragment.REQUEST_TRUST_KEYS_ATTACHMENTS
+                REQUEST_TRUST_KEYS_ATTACHMENTS
             )
         ) {
             return

@@ -7,8 +7,9 @@ import javax.inject.Inject
 
 @ActivityScope
 class HasMamSupport @Inject constructor() : (Conversation) -> Boolean {
-    override fun invoke(c: Conversation): Boolean =
-        if (c.mode != Conversation.MODE_SINGLE) c.mucOptions.mamSupport()
-        else c.account.xmppConnection?.features?.mam() ?: false
 
+    override fun invoke(conversation: Conversation): Boolean = conversation.run {
+        if (mode != Conversation.MODE_SINGLE) mucOptions.mamSupport()
+        else account.xmppConnection?.features?.mam() ?: false
+    }
 }

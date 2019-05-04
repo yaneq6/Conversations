@@ -1,6 +1,8 @@
 package eu.siacs.conversations.feature.conversation.command
 
+import android.app.Activity
 import eu.siacs.conversations.R
+import eu.siacs.conversations.databinding.FragmentConversationBinding
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.utils.UIHelper
@@ -9,23 +11,26 @@ import javax.inject.Inject
 
 @ActivityScope
 class UpdateChatMsgHint @Inject constructor(
-    private val fragment: ConversationFragment
+    private val fragment: ConversationFragment,
+    private val binding: FragmentConversationBinding,
+    private val activity: Activity
 ) : () -> Unit {
-    override fun invoke() = fragment.run {
-        val multi = conversation!!.mode == Conversation.MODE_MULTI
-        if (conversation!!.correctingMessage != null) {
-            this.binding!!.textinput.setHint(R.string.send_corrected_message)
-        } else if (multi && conversation!!.nextCounterpart != null) {
-            this.binding!!.textinput.hint = getString(
+    override fun invoke() {
+        val conversation = fragment.conversation!!
+        val multi = conversation.mode == Conversation.MODE_MULTI
+        if (conversation.correctingMessage != null) {
+            binding.textinput.setHint(R.string.send_corrected_message)
+        } else if (multi && conversation.nextCounterpart != null) {
+            binding.textinput.hint = activity.getString(
                 R.string.send_private_message_to,
-                conversation!!.nextCounterpart.resource
+                conversation.nextCounterpart.resource
             )
-        } else if (multi && !conversation!!.mucOptions.participating()) {
-            this.binding!!.textinput.setHint(R.string.you_are_not_participating)
+        } else if (multi && !conversation.mucOptions.participating()) {
+            binding.textinput.setHint(R.string.you_are_not_participating)
         } else {
-            this.binding!!.textinput.hint =
-                UIHelper.getMessageHint(getActivity(), conversation!!)
-            getActivity().invalidateOptionsMenu()
+            binding.textinput.hint =
+                UIHelper.getMessageHint(activity, conversation)
+            activity.invalidateOptionsMenu()
         }
     }
 }

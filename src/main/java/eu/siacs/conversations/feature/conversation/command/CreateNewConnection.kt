@@ -11,6 +11,7 @@ import javax.inject.Inject
 class CreateNewConnection @Inject constructor(
     private val activity: XmppActivity
 ) : (Message) -> Unit {
+
     override fun invoke(message: Message) = activity.xmppConnectionService.httpConnectionManager.run {
         if (!checkConnection(message)) {
             Toast.makeText(

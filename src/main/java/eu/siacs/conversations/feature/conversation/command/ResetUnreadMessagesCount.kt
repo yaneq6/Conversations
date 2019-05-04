@@ -6,10 +6,11 @@ import javax.inject.Inject
 
 @ActivityScope
 class ResetUnreadMessagesCount @Inject constructor(
-    private val fragment: ConversationFragment
+    private val fragment: ConversationFragment,
+    private val hideUnreadMessagesCount: HideUnreadMessagesCount
 ) : () -> Unit {
-    override fun invoke() = fragment.run {
-        lastMessageUuid = null
+    override fun invoke() {
+        fragment.lastMessageUuid = null
         hideUnreadMessagesCount()
     }
 }

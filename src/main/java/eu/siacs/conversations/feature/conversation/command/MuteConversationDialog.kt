@@ -16,6 +16,7 @@ class MuteConversationDialog @Inject constructor(
     private val activity: ConversationsActivity,
     private val resources: Resources
 ) : (Conversation) -> Unit {
+
     override fun invoke(conversation: Conversation) {
         val builder = AlertDialog.Builder(activity)
         builder.setTitle(R.string.disable_notifications)

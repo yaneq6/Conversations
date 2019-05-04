@@ -9,6 +9,7 @@ import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Contact
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
+import eu.siacs.conversations.feature.conversation.*
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.UiCallback
 import eu.siacs.conversations.ui.XmppActivity
@@ -27,28 +28,28 @@ class AttachFile @Inject constructor(
 ) : (Int) -> Unit {
 
     override fun invoke(attachmentChoice: Int) {
-        if (attachmentChoice == ConversationFragment.ATTACHMENT_CHOICE_RECORD_VOICE) {
+        if (attachmentChoice == ATTACHMENT_CHOICE_RECORD_VOICE) {
             if (!hasPermissions(
                     attachmentChoice,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.RECORD_AUDIO
                 )
             ) return
-        } else if (attachmentChoice == ConversationFragment.ATTACHMENT_CHOICE_TAKE_PHOTO || attachmentChoice == ConversationFragment.ATTACHMENT_CHOICE_RECORD_VIDEO) {
+        } else if (attachmentChoice == ATTACHMENT_CHOICE_TAKE_PHOTO || attachmentChoice == ATTACHMENT_CHOICE_RECORD_VIDEO) {
             if (!hasPermissions(
                     attachmentChoice,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.CAMERA
                 )
             ) return
-        } else if (attachmentChoice != ConversationFragment.ATTACHMENT_CHOICE_LOCATION) {
+        } else if (attachmentChoice != ATTACHMENT_CHOICE_LOCATION) {
             if (!hasPermissions(attachmentChoice, Manifest.permission.WRITE_EXTERNAL_STORAGE))
                 return
         }
         try {
             activity.preferences.edit()
                 .putString(
-                    ConversationFragment.RECENTLY_USED_QUICK_ACTION,
+                    RECENTLY_USED_QUICK_ACTION,
                     SendButtonAction.of(attachmentChoice).toString()
                 )
                 .apply()

@@ -1,11 +1,12 @@
 package eu.siacs.conversations.feature.conversation.command
 
 import android.content.Intent
-import android.os.Build
 import android.provider.MediaStore
 import eu.siacs.conversations.R
+import eu.siacs.conversations.feature.conversation.*
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.RecordingActivity
+import eu.siacs.conversations.ui.XmppActivity
 import eu.siacs.conversations.ui.util.PresenceSelector
 import eu.siacs.conversations.utils.GeoHelper
 import io.aakit.scope.ActivityScope
@@ -13,65 +14,63 @@ import javax.inject.Inject
 
 @ActivityScope
 class SelectPresenceToAttachFile @Inject constructor(
-    private val fragment: ConversationFragment
+    private val fragment: ConversationFragment,
+    private val activity: XmppActivity
 ) : (Int) -> Unit {
-    override fun invoke(attachmentChoice: Int) = fragment.run {
-        val account = conversation!!.account
+
+    override fun invoke(attachmentChoice: Int) {
+        val conversation = fragment.conversation!!
+        val account = conversation.account
         val callback = PresenceSelector.OnPresenceSelected {
-            var intent = Intent()
             var chooser = false
-            when (attachmentChoice) {
-                ConversationFragment.ATTACHMENT_CHOICE_CHOOSE_IMAGE -> {
-                    intent.action = Intent.ACTION_GET_CONTENT
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                    }
-                    intent.type = "image/*"
+            val intent = when (attachmentChoice) {
+                ATTACHMENT_CHOICE_CHOOSE_IMAGE -> Intent().apply {
+                    action = Intent.ACTION_GET_CONTENT
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    type = "image/*"
                     chooser = true
                 }
-                ConversationFragment.ATTACHMENT_CHOICE_RECORD_VIDEO -> intent.action =
-                    MediaStore.ACTION_VIDEO_CAPTURE
-                ConversationFragment.ATTACHMENT_CHOICE_TAKE_PHOTO -> {
-                    val uri = activity!!.xmppConnectionService.fileBackend.takePhotoUri
-                    pendingTakePhotoUri.push(uri)
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, uri)
-                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    intent.action = MediaStore.ACTION_IMAGE_CAPTURE
+                ATTACHMENT_CHOICE_RECORD_VIDEO -> Intent().apply {
+                    action = MediaStore.ACTION_VIDEO_CAPTURE
                 }
-                ConversationFragment.ATTACHMENT_CHOICE_CHOOSE_FILE -> {
+                ATTACHMENT_CHOICE_TAKE_PHOTO -> Intent().apply {
+                    val uri = activity.xmppConnectionService.fileBackend.takePhotoUri
+                    fragment.pendingTakePhotoUri.push(uri)
+                    putExtra(MediaStore.EXTRA_OUTPUT, uri)
+                    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    action = MediaStore.ACTION_IMAGE_CAPTURE
+                }
+                ATTACHMENT_CHOICE_CHOOSE_FILE -> Intent().apply {
                     chooser = true
-                    intent.type = "*/*"
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                    }
-                    intent.addCategory(Intent.CATEGORY_OPENABLE)
-                    intent.action = Intent.ACTION_GET_CONTENT
+                    type = "*/*"
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    action = Intent.ACTION_GET_CONTENT
                 }
-                ConversationFragment.ATTACHMENT_CHOICE_RECORD_VOICE -> intent =
-                    Intent(getActivity(), RecordingActivity::class.java)
-                ConversationFragment.ATTACHMENT_CHOICE_LOCATION -> intent =
-                    GeoHelper.getFetchIntent(activity)
+                ATTACHMENT_CHOICE_RECORD_VOICE -> Intent(activity, RecordingActivity::class.java)
+                ATTACHMENT_CHOICE_LOCATION -> GeoHelper.getFetchIntent(activity)
+                else -> Intent()
             }
-            if (intent.resolveActivity(getActivity().packageManager) != null) {
+            if (intent.resolveActivity(activity.packageManager) != null) {
                 if (chooser) {
-                    startActivityForResult(
+                    fragment.startActivityForResult(
                         Intent.createChooser(
                             intent,
-                            getString(R.string.perform_action_with)
+                            activity.getString(R.string.perform_action_with)
                         ),
                         attachmentChoice
                     )
                 } else {
-                    startActivityForResult(intent, attachmentChoice)
+                    fragment.startActivityForResult(intent, attachmentChoice)
                 }
             }
         }
-        if (account.httpUploadAvailable() || attachmentChoice == ConversationFragment.ATTACHMENT_CHOICE_LOCATION) {
-            conversation!!.nextCounterpart = null
+        if (account.httpUploadAvailable() || attachmentChoice == ATTACHMENT_CHOICE_LOCATION) {
+            conversation.nextCounterpart = null
             callback.onPresenceSelected()
         } else {
-            activity!!.selectPresence(conversation, callback)
+            activity.selectPresence(conversation, callback)
         }
     }
 }

@@ -40,6 +40,8 @@ import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xmpp.OnKeyStatusUpdated;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.feature.conversation.UtilsKt.ATTACHMENT_CHOICE_INVALID;
+
 
 public class TrustKeysActivity extends OmemoActivity implements OnKeyStatusUpdated {
 	private final Map<String, Boolean> ownKeysToTrust = new HashMap<>();
@@ -392,7 +394,7 @@ public class TrustKeysActivity extends OmemoActivity implements OnKeyStatusUpdat
 
 	private void finishOk(boolean disabled) {
 		Intent data = new Intent();
-		data.putExtra("choice", getIntent().getIntExtra("choice", ConversationFragment.ATTACHMENT_CHOICE_INVALID));
+		data.putExtra("choice", getIntent().getIntExtra("choice", ATTACHMENT_CHOICE_INVALID));
 		data.putExtra("disabled", disabled);
 		setResult(RESULT_OK, data);
 		finish();

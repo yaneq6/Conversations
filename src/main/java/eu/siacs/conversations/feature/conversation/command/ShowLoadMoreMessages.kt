@@ -1,22 +1,24 @@
 package eu.siacs.conversations.feature.conversation.command
 
 import eu.siacs.conversations.entities.Conversation
-import eu.siacs.conversations.ui.ConversationFragment
+import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
 @ActivityScope
 class ShowLoadMoreMessages @Inject constructor(
-    private val fragment: ConversationFragment
-) : (Conversation?) -> Boolean {
-    override fun invoke(c: Conversation?): Boolean = fragment.run {
-        if (activity == null || activity!!.xmppConnectionService == null) {
-            return false
+    private val activity: XmppActivity,
+    private val hasMamSupport: HasMamSupport
+) : (Conversation) -> Boolean {
+    override fun invoke(conversation: Conversation) = activity.xmppConnectionService?.run {
+        conversation.run {
+            lastClearHistory.timestamp != 0L
+                    || countMessages() == 0
+                    && messagesLoaded.get()
+                    && hasMessagesLeftOnServer()
+                    && !messageArchiveService.queryInProgress(conversation)
+                    && !contact.isBlocked
+                    && hasMamSupport(conversation)
         }
-        val mam = hasMamSupport(c!!) && !c.contact.isBlocked
-        val service = activity!!.xmppConnectionService.messageArchiveService
-        return mam && (c.lastClearHistory.timestamp != 0L || c.countMessages() == 0 && c.messagesLoaded.get() && c.hasMessagesLeftOnServer() && !service.queryInProgress(
-            c
-        ))
-    }
+    } ?: false
 }

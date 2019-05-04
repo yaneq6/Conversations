@@ -1,27 +1,31 @@
 package eu.siacs.conversations.feature.conversation.command
 
 import android.Manifest
-import android.util.Log
+import android.app.Activity
 import android.widget.Toast
-import eu.siacs.conversations.Config
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Message
 import eu.siacs.conversations.entities.TransferablePlaceholder
+import eu.siacs.conversations.feature.conversation.REQUEST_START_DOWNLOAD
 import eu.siacs.conversations.ui.ConversationFragment
 import io.aakit.scope.ActivityScope
+import timber.log.Timber
 import javax.inject.Inject
 
 @ActivityScope
 class StartDownloadable @Inject constructor(
-    private val fragment: ConversationFragment
+    private val activity: Activity,
+    private val fragment: ConversationFragment,
+    private val hasPermissions: HasPermissions,
+    private val createNewConnection: CreateNewConnection
 ) : (Message?) -> Unit {
-    override fun invoke(message: Message?) = fragment.run {
+    override fun invoke(message: Message?) {
         if (!hasPermissions(
-                ConversationFragment.REQUEST_START_DOWNLOAD,
+                REQUEST_START_DOWNLOAD,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
             )
         ) {
-            this.mPendingDownloadableMessage = message
+            fragment.pendingDownloadableMessage = message
             return
         }
         val transferable = message!!.transferable
@@ -31,9 +35,9 @@ class StartDownloadable @Inject constructor(
                 return
             }
             if (!transferable.start()) {
-                Log.d(Config.LOGTAG, "type: " + transferable.javaClass.name)
+                Timber.d("type: ${transferable.javaClass.name}")
                 Toast.makeText(
-                    getActivity(),
+                    activity,
                     R.string.not_connected_try_again,
                     Toast.LENGTH_SHORT
                 ).show()

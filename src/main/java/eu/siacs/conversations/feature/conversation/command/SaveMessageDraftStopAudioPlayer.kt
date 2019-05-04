@@ -1,29 +1,27 @@
 package eu.siacs.conversations.feature.conversation.command
 
-import android.util.Log
-import eu.siacs.conversations.Config
+import eu.siacs.conversations.databinding.FragmentConversationBinding
 import eu.siacs.conversations.ui.ConversationFragment
 import io.aakit.scope.ActivityScope
+import timber.log.Timber
 import javax.inject.Inject
 
 @ActivityScope
 class SaveMessageDraftStopAudioPlayer @Inject constructor(
-    private val fragment: ConversationFragment
+    private val fragment: ConversationFragment,
+    private val binding: FragmentConversationBinding,
+    private val storeNextMessage: StoreNextMessage,
+    private val updateChatState: UpdateChatState,
+    private val toggleInputMethod: ToggleInputMethod
 ) : () -> Unit {
-    override fun invoke() = fragment.run {
-        val previousConversation = this.conversation
-        if (this.activity == null || this.binding == null || previousConversation == null) {
-            return
-        }
-        Log.d(
-            Config.LOGTAG,
-            "ConversationFragment.saveMessageDraftStopAudioPlayer()"
-        )
-        val msg = this.binding!!.textinput.text!!.toString()
+    override fun invoke() {
+        fragment.conversation ?: return
+        Timber.d("ConversationFragment.saveMessageDraftStopAudioPlayer()")
+        val msg = binding.textinput.text!!.toString()
         storeNextMessage(msg)
-        updateChatState(this.conversation!!, msg)
-        messageListAdapter.stopAudioPlayer()
-        mediaPreviewAdapter!!.clearPreviews()
+        updateChatState(fragment.conversation!!, msg)
+        fragment.messageListAdapter.stopAudioPlayer()
+        fragment.mediaPreviewAdapter!!.clearPreviews()
         toggleInputMethod()
     }
 }

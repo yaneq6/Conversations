@@ -2,47 +2,51 @@ package eu.siacs.conversations.feature.conversation.command
 
 import android.app.PendingIntent
 import android.content.DialogInterface
-import android.util.Log
 import android.view.Gravity
 import android.widget.Toast
-import eu.siacs.conversations.Config
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Contact
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
+import eu.siacs.conversations.feature.conversation.REQUEST_ENCRYPT_MESSAGE
 import eu.siacs.conversations.ui.ConversationFragment
+import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.UiCallback
 import io.aakit.scope.ActivityScope
+import timber.log.Timber
 import javax.inject.Inject
 
 @ActivityScope
 class SendPgpMessage @Inject constructor(
     private val fragment: ConversationFragment,
-    private val showNoPGPKeyDialog: ShowNoPGPKeyDialog
+    private val activity: ConversationsActivity,
+    private val showNoPGPKeyDialog: ShowNoPGPKeyDialog,
+    private val startPendingIntent: StartPendingIntent,
+    private val encryptTextMessage: EncryptTextMessage,
+    private val messageSent: MessageSent
 ) : (Message) -> Unit {
-    override fun invoke(message: Message) = fragment.run {
-        val xmppService = activity!!.xmppConnectionService
+    override fun invoke(message: Message) {
+        val conversation = fragment.conversation!!
+        val xmppService = activity.xmppConnectionService
         val contact = message.conversation.contact
-        if (!activity!!.hasPgp()) {
-            activity!!.showInstallPgpDialog()
+        if (!activity.hasPgp()) {
+            activity.showInstallPgpDialog()
             return
         }
-        if (conversation!!.account.pgpSignature == null) {
-            activity!!.announcePgp(conversation!!.account, conversation, null, activity!!.onOpenPGPKeyPublished)
+        if (conversation.account.pgpSignature == null) {
+            activity.announcePgp(conversation.account, conversation, null, activity.onOpenPGPKeyPublished)
             return
         }
-        if (!mSendingPgpMessage.compareAndSet(false, true)) {
-            Log.d(Config.LOGTAG, "sending pgp message already in progress")
+        if (!fragment.sendingPgpMessage.compareAndSet(false, true)) {
+            Timber.d("sending pgp message already in progress")
         }
-        if (conversation!!.mode == Conversation.MODE_SINGLE) {
+        if (conversation.mode == Conversation.MODE_SINGLE) {
             if (contact.pgpKeyId != 0L) {
                 xmppService.pgpEngine!!.hasKey(contact,
                     object : UiCallback<Contact> {
 
                         override fun userInputRequried(pi: PendingIntent, contact: Contact) {
-                            startPendingIntent(pi,
-                                ConversationFragment.REQUEST_ENCRYPT_MESSAGE
-                            )
+                            startPendingIntent(pi, REQUEST_ENCRYPT_MESSAGE)
                         }
 
                         override fun success(contact: Contact) {
@@ -50,20 +54,20 @@ class SendPgpMessage @Inject constructor(
                         }
 
                         override fun error(error: Int, contact: Contact) {
-                            activity!!.runOnUiThread {
+                            activity.runOnUiThread {
                                 Toast.makeText(
                                     activity,
                                     R.string.unable_to_connect_to_keychain,
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
-                            mSendingPgpMessage.set(false)
+                            fragment.sendingPgpMessage.set(false)
                         }
                     })
 
             } else {
                 showNoPGPKeyDialog(false, DialogInterface.OnClickListener { _, _ ->
-                    conversation!!.nextEncryption = Message.ENCRYPTION_NONE
+                    conversation.nextEncryption = Message.ENCRYPTION_NONE
                     xmppService.updateConversation(conversation)
                     message.encryption = Message.ENCRYPTION_NONE
                     xmppService.sendMessage(message)
@@ -71,10 +75,10 @@ class SendPgpMessage @Inject constructor(
                 })
             }
         } else {
-            if (conversation!!.mucOptions.pgpKeysInUse()) {
-                if (!conversation!!.mucOptions.everybodyHasKeys()) {
+            if (conversation.mucOptions.pgpKeysInUse()) {
+                if (!conversation.mucOptions.everybodyHasKeys()) {
                     val warning = Toast.makeText(
-                        getActivity(),
+                        activity,
                         R.string.missing_public_keys,
                         Toast.LENGTH_LONG
                     )
@@ -84,7 +88,7 @@ class SendPgpMessage @Inject constructor(
                 encryptTextMessage(message)
             } else {
                 showNoPGPKeyDialog(true, DialogInterface.OnClickListener { _, _ ->
-                    conversation!!.nextEncryption = Message.ENCRYPTION_NONE
+                    conversation.nextEncryption = Message.ENCRYPTION_NONE
                     message.encryption = Message.ENCRYPTION_NONE
                     xmppService.updateConversation(conversation)
                     xmppService.sendMessage(message)

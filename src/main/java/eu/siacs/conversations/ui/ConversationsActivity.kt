@@ -46,8 +46,9 @@ import eu.siacs.conversations.R
 import eu.siacs.conversations.crypto.OmemoSetting
 import eu.siacs.conversations.databinding.ActivityConversationsBinding
 import eu.siacs.conversations.entities.Conversation
+import eu.siacs.conversations.feature.conversation.getConversation
 import eu.siacs.conversations.feature.conversations.*
-import eu.siacs.conversations.feature.conversations.di.ActivityModule
+import eu.siacs.conversations.feature.di.ActivityModule
 import eu.siacs.conversations.feature.conversations.di.DaggerConversationsComponent
 import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.ui.interfaces.*
@@ -138,7 +139,7 @@ class ConversationsActivity :
         postponedActivityResult.pop()?.let(handleActivityResult)
 
         invalidateActionBarTitle()
-        if (binding!!.secondaryFragment != null && ConversationFragment.getConversation(this) == null) {
+        if (binding!!.secondaryFragment != null && getConversation(this) == null) {
             val conversation = ConversationsOverviewFragment.getSuggestion(this)
             if (conversation != null) {
                 openConversation(conversation)
@@ -167,7 +168,11 @@ class ConversationsActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DaggerConversationsComponent.builder().activityModule(ActivityModule(this)).build()(this)
+        DaggerConversationsComponent.builder().activityModule(
+            ActivityModule(
+                this
+            )
+        ).build()(this)
         ConversationMenuConfigurator.reloadFeatures(this)
         OmemoSetting.load(this)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_conversations)
@@ -192,7 +197,7 @@ class ConversationsActivity :
 
     override fun onConversationSelected(conversation: Conversation) {
         clearPendingViewIntent()
-        if (ConversationFragment.getConversation(this) === conversation) {
+        if (getConversation(this) === conversation) {
             Log.d(Config.LOGTAG, "ignore onConversationSelected() because conversation is already open")
             return
         }

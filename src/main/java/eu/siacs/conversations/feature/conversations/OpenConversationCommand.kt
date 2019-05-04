@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.support.annotation.IdRes
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
-import eu.siacs.conversations.feature.conversation.command.ReInit
 import eu.siacs.conversations.ui.ConversationFragment
 import io.aakit.scope.ActivityScope
 import javax.inject.Inject
@@ -30,12 +29,14 @@ class OpenConversationCommand @Inject constructor(
 
         fun FragmentManager.refreshSecondaryFragment() =
             findConversationFragment(R.id.secondary_fragment)?.run {
+                this.conversation = conversation
                 reInit(conversation, extras)
                 fragmentsInteractor.refresh(R.id.main_fragment)
             }
 
         fun FragmentManager.refreshMainFragment() =
             findConversationFragment(R.id.main_fragment)?.run {
+                this.conversation = conversation
                 reInit(conversation, extras)
                 invalidateActionBarTitle()
             }
@@ -51,7 +52,8 @@ class OpenConversationCommand @Inject constructor(
                     // Leave it unhandled to figure out if it really occurs after refactor & rewrite
                     throw StateLossException()
                 }
-                ReInit(this)(conversation, extras)
+                this.conversation = conversation
+//                reInit(conversation, extras) FIXME
                 invalidateActionBarTitle()
             }
         }

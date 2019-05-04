@@ -24,6 +24,8 @@ import eu.siacs.conversations.utils.IrregularUnicodeDetector;
 import eu.siacs.conversations.utils.UIHelper;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.feature.conversation.UtilsKt.getConversation;
+
 public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapter.ConversationViewHolder> {
 
     private XmppActivity activity;
@@ -55,7 +57,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
             viewHolder.binding.conversationName.setText(EmojiWrapper.transform(name));
         }
 
-        if (conversation == ConversationFragment.getConversation(activity)) {
+        if (conversation == getConversation(activity)) {
             viewHolder.binding.frame.setBackgroundColor(StyledAttributes.getColor(activity, R.attr.color_background_tertiary));
         } else {
             viewHolder.binding.frame.setBackgroundColor(StyledAttributes.getColor(activity, R.attr.color_background_primary));

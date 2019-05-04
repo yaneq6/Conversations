@@ -2,13 +2,11 @@ package eu.siacs.conversations.ui
 
 import android.Manifest
 import android.app.Activity
-import android.app.Fragment
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender.SendIntentException
 import android.net.Uri
 import android.os.Bundle
-import android.support.annotation.IdRes
 import android.support.v13.view.inputmethod.InputConnectionCompat
 import android.util.Log
 import android.view.*
@@ -26,6 +24,8 @@ import eu.siacs.conversations.databinding.FragmentConversationBinding
 import eu.siacs.conversations.entities.Account
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
+import eu.siacs.conversations.feature.conversation.REQUEST_ADD_EDITOR_CONTENT
+import eu.siacs.conversations.feature.conversation.REQUEST_DECRYPT_PGP
 import eu.siacs.conversations.feature.conversation.command.*
 import eu.siacs.conversations.feature.conversation.query.GetIndexOf
 import eu.siacs.conversations.services.XmppConnectionService
@@ -44,8 +44,6 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     MessageAdapter.OnContactPictureClicked {
 
     @Inject
-    lateinit var commitAttachments: CommitAttachments
-    @Inject
     lateinit var getIndexOf: GetIndexOf
     @Inject
     lateinit var toggleScrollDownButton: ToggleScrollDownButton
@@ -56,39 +54,19 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     @Inject
     lateinit var toggleInputMethod: ToggleInputMethod
     @Inject
-    lateinit var appendText: AppendText
-    @Inject
     lateinit var attachEditorContentToConversation: AttachEditorContentToConversation
     @Inject
     lateinit var attachFile: AttachFile
-    @Inject
-    lateinit var cleanUris: CleanUris
-    @Inject
-    lateinit var clearPending: ClearPending
-    @Inject
-    lateinit var createNewConnection: CreateNewConnection
-    @Inject
-    lateinit var encryptTextMessage: EncryptTextMessage
-    @Inject
-    lateinit var extractUris: ExtractUris
     @Inject
     lateinit var findAndReInitByUuidOrArchive: FindAndReInitByUuidOrArchive
     @Inject
     lateinit var fireReadEvent: FireReadEvent
     @Inject
-    lateinit var hasMamSupport: HasMamSupport
-    @Inject
     lateinit var hasPermissions: HasPermissions
     @Inject
     lateinit var hideSnackbar: HideSnackbar
     @Inject
-    lateinit var hideUnreadMessagesCount: HideUnreadMessagesCount
-    @Inject
     lateinit var highlightInConference: HighlightInConference
-    @Inject
-    lateinit var messageSent: MessageSent
-    @Inject
-    lateinit var privateMessageWith: PrivateMessageWith
     @Inject
     lateinit var processExtras: ProcessExtras
     @Inject
@@ -98,41 +76,23 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     @Inject
     lateinit var reInit: ReInit
     @Inject
-    lateinit var resetUnreadMessagesCount: ResetUnreadMessagesCount
-    @Inject
-    lateinit var saveMessageDraftStopAudioPlayer: SaveMessageDraftStopAudioPlayer
-    @Inject
     lateinit var scrolledToBottom: ScrolledToBottom
-    @Inject
-    lateinit var sendPgpMessage: SendPgpMessage
     @Inject
     lateinit var setSelection: SetSelection
     @Inject
-    lateinit var setupIme: SetupIme
-    @Inject
     lateinit var showBlockSubmenu: ShowBlockSubmenu
     @Inject
-    lateinit var showLoadMoreMessages: ShowLoadMoreMessages
-    @Inject
-    lateinit var showSnackbar: ShowSnackbar
-    @Inject
     lateinit var startDownloadable: StartDownloadable
-    @Inject
-    lateinit var startPendingIntent: StartPendingIntent
     @Inject
     lateinit var stopScrolling: StopScrolling
     @Inject
     lateinit var storeNextMessage: StoreNextMessage
     @Inject
-    lateinit var trustKeysIfNeeded: TrustKeysIfNeeded
-    @Inject
-    lateinit var unblockConversation: unblockConversation
+    lateinit var unblockConversation: UnblockConversation
     @Inject
     lateinit var updateChatMsgHint: UpdateChatMsgHint
     @Inject
     lateinit var updateChatState: UpdateChatState
-    @Inject
-    lateinit var updateDateSeparators: UpdateDateSeparators
     @Inject
     lateinit var updateEditablity: UpdateEditablity
     @Inject
@@ -143,10 +103,8 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     lateinit var updateStatusMessages: UpdateStatusMessages
     @Inject
     lateinit var onCreateOptionsMenu: OnCreateOptionsMenu
-    @Inject
-    lateinit var onAttach: OnAttach
-    @Inject
-    lateinit var onCreateView: OnCreateView
+    //    @Inject
+//    lateinit var onCreateView: OnCreateView
     @Inject
     lateinit var onCreateContextMenu: OnCreateContextMenu
     @Inject
@@ -183,6 +141,10 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     lateinit var onContactPictureLongClicked: OnContactPictureLongClicked
     @Inject
     lateinit var onContactPictureClicked: OnContactPictureClicked
+    @Inject
+    lateinit var privateMessageWith: PrivateMessageWith
+
+    private val onAttach = OnAttach()
 
     val messageList = ArrayList<Message>()
     val postponedActivityResult = PendingItem<ActivityResult>()
@@ -193,12 +155,11 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     val pendingScrollState = PendingItem<ScrollState>()
     val pendingLastMessageUuid = PendingItem<String>()
     val pendingMessage = PendingItem<Message>()
-    var mPendingEditorContent: Uri? = null
+    var pendingEditorContent: Uri? = null
     lateinit var messageListAdapter: MessageAdapter
     var mediaPreviewAdapter: MediaPreviewAdapter? = null
     var lastMessageUuid: String? = null
     var conversation: Conversation? = null
-        set
     var binding: FragmentConversationBinding? = null
     var messageLoaderToast: Toast? = null
     var activity: ConversationsActivity? = null
@@ -230,10 +191,10 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             null
         }
     }
-    val mOnScrollListener = object : OnScrollListener {
+    val onScrollListener = object : OnScrollListener {
 
         override fun onScrollStateChanged(view: AbsListView, scrollState: Int) {
-            if (AbsListView.OnScrollListener.SCROLL_STATE_IDLE == scrollState) {
+            if (OnScrollListener.SCROLL_STATE_IDLE == scrollState) {
                 fireReadEvent()
             }
         }
@@ -327,14 +288,14 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             }
         }
     }
-    val mEditorContentListener =
+    val editorContentListener =
         EditMessage.OnCommitContentListener { inputContentInfo, flags, opts, contentMimeTypes ->
             // try to get permission to read the image, if applicable
             if (flags and InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION != 0) {
                 try {
                     inputContentInfo.requestPermission()
                 } catch (e: Exception) {
-                    Log.e(Config.LOGTAG, "InputContentInfoCompat#requestPermission() failed.", e)
+                    Timber.e(e, "InputContentInfoCompat#requestPermission() failed.")
                     Toast.makeText(
                         getActivity(),
                         activity!!.getString(
@@ -354,19 +315,19 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             ) {
                 attachEditorContentToConversation(inputContentInfo.contentUri)
             } else {
-                mPendingEditorContent = inputContentInfo.contentUri
+                pendingEditorContent = inputContentInfo.contentUri
             }
             true
         }
     var selectedMessage: Message? = null
-    val mEnableAccountListener = OnClickListener {
+    val enableAccountListener = OnClickListener {
         val account = if (conversation == null) null else conversation!!.account
         if (account != null) {
             account.setOption(Account.OPTION_DISABLED, false)
             activity!!.xmppConnectionService.updateAccount(account)
         }
     }
-    val mUnblockClickListener = OnClickListener { v ->
+    val unblockClickListener = OnClickListener { v ->
         v.post { v.visibility = View.INVISIBLE }
         if (conversation!!.isDomainBlocked) {
             BlockContactDialog.show(activity, conversation!!)
@@ -374,16 +335,16 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             unblockConversation(conversation)
         }
     }
-    val mBlockClickListener = OnClickListener { this.showBlockSubmenu(it) }
-    val mAddBackClickListener = OnClickListener {
+    val blockClickListener = OnClickListener { showBlockSubmenu(it) }
+    val addBackClickListener = OnClickListener {
         val contact = if (conversation == null) null else conversation!!.contact
         if (contact != null) {
             activity!!.xmppConnectionService.createContact(contact, true)
             activity!!.switchToContactDetails(contact)
         }
     }
-    val mLongPressBlockListener = View.OnLongClickListener { this.showBlockSubmenu(it) }
-    val mAllowPresenceSubscription = OnClickListener {
+    val longPressBlockListener = View.OnLongClickListener { showBlockSubmenu(it) }
+    val allowPresenceSubscription = OnClickListener {
         val contact = if (conversation == null) null else conversation!!.contact
         if (contact != null) {
             activity!!.xmppConnectionService.sendPresencePacket(
@@ -394,7 +355,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
             hideSnackbar()
         }
     }
-    var clickToDecryptListener: OnClickListener = OnClickListener {
+    val clickToDecryptListener: OnClickListener = OnClickListener {
         val pendingIntent = conversation!!.account.pgpDecryptionService.pendingIntent
         if (pendingIntent != null) {
             try {
@@ -417,8 +378,8 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
         }
         updateSnackBar(conversation!!)
     }
-    val mSendingPgpMessage = AtomicBoolean(false)
-    val mEditorActionListener = OnEditorActionListener { v, actionId, event ->
+    val sendingPgpMessage = AtomicBoolean(false)
+    val editorActionListener = OnEditorActionListener { v, actionId, event ->
         if (actionId == EditorInfo.IME_ACTION_SEND) {
             val imm =
                 activity!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -430,11 +391,11 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
         } else
             false
     }
-    val mScrollButtonListener = OnClickListener {
+    val scrollButtonListener = OnClickListener {
         stopScrolling()
         setSelection(binding!!.messagesView.count - 1, true)
     }
-    val mSendButtonListener = OnClickListener { v ->
+    val sendButtonListener = OnClickListener { v ->
         val tag = v.tag
         if (tag is SendButtonAction) {
             when (tag) {
@@ -464,7 +425,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     var incomplete: String? = null
     var lastCompletionCursor: Int = 0
     var firstWord = false
-    var mPendingDownloadableMessage: Message? = null
+    var pendingDownloadableMessage: Message? = null
 
     val scrollPosition: ScrollState?
         get() {
@@ -538,23 +499,32 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
     override fun onCreateOptionsMenu(
         menu: Menu,
         menuInflater: MenuInflater
-    ) = onCreateOptionsMenu.invoke(menu, menuInflater)
+    ) {
+        onCreateOptionsMenu.invoke(menu, menuInflater)
+        super.onCreateOptionsMenu(menu, menuInflater)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = onCreateView.invoke(inflater, container)
+    ): View? = OnCreateView(
+        activity = activity!!,
+        fragment = this
+    ).invoke(inflater, container, savedInstanceState)
 
     override fun onCreateContextMenu(
         menu: ContextMenu,
-        v: View,
+        view: View,
         menuInfo: ContextMenuInfo
-    ) = onCreateContextMenu.invoke(menu, v, menuInfo)
+    ) {
+        super.onCreateContextMenu(menu, view, menuInfo)
+        onCreateContextMenu.invoke(menu, view, menuInfo)
+    }
 
     override fun onContextItemSelected(
         item: MenuItem
-    ): Boolean = onContextItemSelected.invoke(item)
+    ): Boolean = onContextItemSelected.invoke(item) || super.onContextItemSelected(item)
 
     override fun onOptionsItemSelected(
         item: MenuItem
@@ -572,7 +542,7 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
 
     override fun onResume() {
         super.onResume()
-        binding!!.messagesView.post { this.fireReadEvent() }
+        onResume.invoke()
     }
 
     override fun startActivityForResult(intent: Intent, requestCode: Int) {
@@ -637,119 +607,5 @@ class ConversationFragment : XmppFragment(), EditMessage.KeyboardListener,
 
     override fun onContactPictureClicked(message: Message) {
         onContactPictureClicked.invoke(message)
-    }
-
-    companion object {
-
-
-        const val REQUEST_SEND_MESSAGE = 0x0201
-        const val REQUEST_DECRYPT_PGP = 0x0202
-        const val REQUEST_ENCRYPT_MESSAGE = 0x0207
-        const val REQUEST_TRUST_KEYS_TEXT = 0x0208
-        const val REQUEST_TRUST_KEYS_ATTACHMENTS = 0x0209
-        const val REQUEST_START_DOWNLOAD = 0x0210
-        const val REQUEST_ADD_EDITOR_CONTENT = 0x0211
-        const val REQUEST_COMMIT_ATTACHMENTS = 0x0212
-        const val ATTACHMENT_CHOICE_CHOOSE_IMAGE = 0x0301
-        const val ATTACHMENT_CHOICE_TAKE_PHOTO = 0x0302
-        const val ATTACHMENT_CHOICE_CHOOSE_FILE = 0x0303
-        const val ATTACHMENT_CHOICE_RECORD_VOICE = 0x0304
-        const val ATTACHMENT_CHOICE_LOCATION = 0x0305
-        const val ATTACHMENT_CHOICE_INVALID = 0x0306
-        const val ATTACHMENT_CHOICE_RECORD_VIDEO = 0x0307
-
-        const val RECENTLY_USED_QUICK_ACTION = "recently_used_quick_action"
-        val STATE_CONVERSATION_UUID = ConversationFragment::class.java.name + ".uuid"
-        val STATE_SCROLL_POSITION = ConversationFragment::class.java.name + ".scroll_position"
-        val STATE_PHOTO_URI = ConversationFragment::class.java.name + ".media_previews"
-        val STATE_MEDIA_PREVIEWS = ConversationFragment::class.java.name + ".take_photo_uri"
-        const val STATE_LAST_MESSAGE_UUID = "state_last_message_uuid"
-
-        @JvmStatic
-        fun findConversationFragment(activity: Activity): ConversationFragment? {
-            var fragment: Fragment? = activity.fragmentManager.findFragmentById(R.id.main_fragment)
-            if (fragment != null && fragment is ConversationFragment) {
-                return fragment
-            }
-            fragment = activity.fragmentManager.findFragmentById(R.id.secondary_fragment)
-            return if (fragment != null && fragment is ConversationFragment) {
-                fragment
-            } else null
-        }
-
-        @JvmStatic
-        fun startStopPending(activity: Activity) {
-            val fragment = findConversationFragment(activity)
-            fragment?.messageListAdapter?.startStopPending()
-        }
-
-        @JvmStatic
-        fun downloadFile(activity: Activity, message: Message) {
-            val fragment = findConversationFragment(activity)
-            fragment?.startDownloadable?.invoke(message)
-        }
-
-        @JvmStatic
-        fun registerPendingMessage(activity: Activity, message: Message) {
-            val fragment = findConversationFragment(activity)
-            fragment?.pendingMessage?.push(message)
-        }
-
-        @JvmStatic
-        fun openPendingMessage(activity: Activity) {
-            val fragment = findConversationFragment(activity)
-            if (fragment != null) {
-                val message = fragment.pendingMessage.pop()
-                if (message != null) {
-                    fragment.messageListAdapter.openDownloadable(message)
-                }
-            }
-        }
-
-        @JvmStatic
-        fun getConversation(activity: Activity): Conversation? {
-            return getConversation(activity, R.id.secondary_fragment)
-        }
-
-        @JvmStatic
-        fun getConversation(activity: Activity, @IdRes res: Int): Conversation? {
-            val fragment = activity.fragmentManager.findFragmentById(res)
-            return if (fragment != null && fragment is ConversationFragment) {
-                fragment.conversation
-            } else {
-                null
-            }
-        }
-
-        @JvmStatic
-        operator fun get(activity: Activity): ConversationFragment? {
-            val fragmentManager = activity.fragmentManager
-            var fragment: Fragment? = fragmentManager.findFragmentById(R.id.main_fragment)
-            if (fragment != null && fragment is ConversationFragment) {
-                return fragment
-            } else {
-                fragment = fragmentManager.findFragmentById(R.id.secondary_fragment)
-                return if (fragment != null && fragment is ConversationFragment) fragment else null
-            }
-        }
-
-        @JvmStatic
-        fun getConversationReliable(activity: Activity): Conversation? {
-            val conversation = getConversation(activity, R.id.secondary_fragment)
-            return conversation ?: getConversation(activity, R.id.main_fragment)
-        }
-
-        @JvmStatic
-        fun scrolledToBottom(listView: AbsListView): Boolean {
-            val count = listView.count
-            if (count == 0) {
-                return true
-            } else if (listView.lastVisiblePosition == count - 1) {
-                val lastChild = listView.getChildAt(listView.childCount - 1)
-                return lastChild != null && lastChild.bottom <= listView.height
-            } else {
-                return false
-            }
-        }
     }
 }

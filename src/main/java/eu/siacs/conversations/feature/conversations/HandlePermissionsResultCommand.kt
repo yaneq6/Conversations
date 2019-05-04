@@ -1,7 +1,8 @@
 package eu.siacs.conversations.feature.conversations
 
 import android.content.pm.PackageManager
-import eu.siacs.conversations.ui.ConversationFragment
+import eu.siacs.conversations.feature.conversation.openPendingMessage
+import eu.siacs.conversations.feature.conversation.startStopPending
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.ConversationsActivity.Companion.REQUEST_OPEN_MESSAGE
 import eu.siacs.conversations.ui.ConversationsActivity.Companion.REQUEST_PLAY_PAUSE
@@ -21,9 +22,9 @@ class HandlePermissionsResultCommand @Inject constructor(
                 when (requestCode) {
                     REQUEST_OPEN_MESSAGE -> {
                         activity.refreshUiReal()
-                        ConversationFragment.openPendingMessage(activity)
+                        openPendingMessage(activity)
                     }
-                    REQUEST_PLAY_PAUSE -> ConversationFragment.startStopPending(activity)
+                    REQUEST_PLAY_PAUSE -> startStopPending(activity)
                 }
             }
         }

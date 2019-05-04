@@ -6,7 +6,6 @@ import android.widget.Toast
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
-import eu.siacs.conversations.feature.conversation.hidePrepareFileToast
 import eu.siacs.conversations.ui.UiInformableCallback
 import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
@@ -14,10 +13,11 @@ import javax.inject.Inject
 
 @ActivityScope
 class AttachFileToConversation @Inject constructor(
-    private val activity: XmppActivity
+    private val activity: XmppActivity,
+    private val hidePrepareFileToast: HidePrepareFileToast
 ) : (Conversation?, Uri, String) -> Unit {
 
-    override fun invoke(conversation: Conversation?, uri: Uri, type: String) = activity.run {
+    override fun invoke(conversation: Conversation?, uri: Uri, type: String) {
         if (conversation == null) {
             return
         }
@@ -27,25 +27,25 @@ class AttachFileToConversation @Inject constructor(
             Toast.LENGTH_LONG
         )
         prepareFileToast.show()
-        delegateUriPermissionsToService(uri)
-        xmppConnectionService.attachFileToConversation(
+        activity.delegateUriPermissionsToService(uri)
+        activity.xmppConnectionService.attachFileToConversation(
             conversation,
             uri,
             type,
             object : UiInformableCallback<Message> {
                 override fun inform(text: String) {
                     hidePrepareFileToast(prepareFileToast)
-                    runOnUiThread { replaceToast(text) }
+                    activity.runOnUiThread { activity.replaceToast(text) }
                 }
 
                 override fun success(message: Message) {
-                    runOnUiThread { hideToast() }
+                    activity.runOnUiThread { activity.hideToast() }
                     hidePrepareFileToast(prepareFileToast)
                 }
 
                 override fun error(errorCode: Int, message: Message) {
                     hidePrepareFileToast(prepareFileToast)
-                    runOnUiThread { replaceToast(getString(errorCode)) }
+                    activity.runOnUiThread { activity.replaceToast(activity.getString(errorCode)) }
 
                 }
 

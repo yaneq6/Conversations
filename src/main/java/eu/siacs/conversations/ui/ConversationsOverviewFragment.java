@@ -68,6 +68,7 @@ import eu.siacs.conversations.utils.ThemeHelper;
 
 import static android.support.v7.widget.helper.ItemTouchHelper.LEFT;
 import static android.support.v7.widget.helper.ItemTouchHelper.RIGHT;
+import static eu.siacs.conversations.feature.conversation.UtilsKt.getConversation;
 
 public class ConversationsOverviewFragment extends XmppFragment {
 
@@ -130,7 +131,7 @@ public class ConversationsOverviewFragment extends XmppFragment {
 				activity.xmppConnectionService.archiveConversation(c);
 				return;
 			}
-			final boolean formerlySelected = ConversationFragment.getConversation(getActivity()) == swipedConversation.peek();
+			final boolean formerlySelected = getConversation(getActivity()) == swipedConversation.peek();
 			if (activity instanceof OnConversationArchived) {
 				((OnConversationArchived) activity).onConversationArchived(swipedConversation.peek());
 			}

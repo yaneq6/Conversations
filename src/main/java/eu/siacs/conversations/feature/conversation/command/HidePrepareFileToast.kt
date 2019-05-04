@@ -10,8 +10,8 @@ class HidePrepareFileToast @Inject constructor(
     private val activity: XmppActivity
 ) : (Toast?) -> Unit {
     override fun invoke(prepareFileToast: Toast?) {
-        if (prepareFileToast != null) {
-            activity.runOnUiThread { prepareFileToast.cancel() }
+        prepareFileToast?.run {
+            activity.runOnUiThread { cancel() }
         }
     }
 }

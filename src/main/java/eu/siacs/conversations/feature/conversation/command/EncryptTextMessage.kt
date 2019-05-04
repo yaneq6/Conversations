@@ -4,7 +4,7 @@ import android.app.PendingIntent
 import android.widget.Toast
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Message
-import eu.siacs.conversations.ui.ConversationFragment
+import eu.siacs.conversations.feature.conversation.REQUEST_SEND_MESSAGE
 import eu.siacs.conversations.ui.UiCallback
 import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
@@ -25,7 +25,7 @@ class EncryptTextMessage @Inject constructor(
                 override fun userInputRequried(pi: PendingIntent, message: Message) {
                     startPendingIntent(
                         pi,
-                        ConversationFragment.REQUEST_SEND_MESSAGE
+                        REQUEST_SEND_MESSAGE
                     )
                 }
 

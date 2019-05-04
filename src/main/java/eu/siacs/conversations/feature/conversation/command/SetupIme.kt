@@ -1,14 +1,14 @@
 package eu.siacs.conversations.feature.conversation.command
 
-import eu.siacs.conversations.ui.ConversationFragment
+import eu.siacs.conversations.databinding.FragmentConversationBinding
 import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
 @ActivityScope
 class SetupIme @Inject constructor(
-    private val fragment: ConversationFragment
+    private val binding: FragmentConversationBinding
 ) : () -> Unit {
-    override fun invoke() = fragment.run {
-        this.binding!!.textinput.refreshIme()
+    override fun invoke() {
+        binding.textinput.refreshIme()
     }
 }

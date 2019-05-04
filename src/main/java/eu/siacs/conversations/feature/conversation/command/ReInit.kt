@@ -1,102 +1,105 @@
 package eu.siacs.conversations.feature.conversation.command
 
 import android.os.Bundle
-import android.util.Log
-import eu.siacs.conversations.Config
 import eu.siacs.conversations.R
+import eu.siacs.conversations.databinding.FragmentConversationBinding
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Conversational
+import eu.siacs.conversations.feature.conversation.query.GetIndexOf
 import eu.siacs.conversations.ui.ConversationFragment
+import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.utils.QuickLoader
 import io.aakit.scope.ActivityScope
+import timber.log.Timber
 import javax.inject.Inject
 
 @ActivityScope
 class ReInit @Inject constructor(
-    private val fragment: ConversationFragment
+    private val fragment: ConversationFragment,
+    private val activity: ConversationsActivity,
+    private val binding: FragmentConversationBinding,
+    private val saveMessageDraftStopAudioPlayer: SaveMessageDraftStopAudioPlayer,
+    private val clearPending: ClearPending,
+    private val processExtras: ProcessExtras,
+    private val resetUnreadMessagesCount: ResetUnreadMessagesCount,
+    private val stopScrolling: StopScrolling,
+    private val setupIme: SetupIme,
+    private val refresh: Refresh,
+    private val getIndexOf: GetIndexOf,
+    private val setSelection: SetSelection,
+    private val fireReadEvent: FireReadEvent
 ) {
 
-    operator fun invoke(conversation: Conversation) = fragment.run {
-        reInit(conversation, false)
+    operator fun invoke(conversation: Conversation) {
+        invoke(conversation, false)
     }
 
-    operator fun invoke(conversation: Conversation, extras: Bundle?) = fragment.run {
+    operator fun invoke(conversation: Conversation, extras: Bundle?) {
         QuickLoader.set(conversation.uuid)
         this.saveMessageDraftStopAudioPlayer()
         this.clearPending()
-        if (this.reInit(conversation, extras != null)) {
+        if (invoke(conversation, extras != null)) {
             if (extras != null) {
                 processExtras(extras)
             }
-            this.reInitRequiredOnStart = false
+            fragment.reInitRequiredOnStart = false
         } else {
-            this.reInitRequiredOnStart = true
-            pendingExtras.push(extras)
+            fragment.reInitRequiredOnStart = true
+            fragment.pendingExtras.push(extras)
         }
         resetUnreadMessagesCount()
     }
 
-    operator fun invoke(conversation: Conversation?, hasExtras: Boolean): Boolean = fragment.run {
-        if (conversation == null) {
-            return false
-        }
-        this.conversation = conversation
-        //once we set the conversation all is good and it will automatically do the right thing in onStart()
-        if (this.activity == null || this.binding == null) {
-            return false
-        }
+    operator fun invoke(conversation: Conversation?, hasExtras: Boolean): Boolean {
+        conversation ?: return false
 
-        if (!activity!!.xmppConnectionService.isConversationStillOpen(this.conversation)) {
-            activity!!.onConversationArchived(this.conversation!!)
+        fragment.conversation = conversation
+        //once we set the conversation all is good and it will automatically do the right thing in onStart()
+
+        if (!activity.xmppConnectionService.isConversationStillOpen(conversation)) {
+            activity.onConversationArchived(conversation)
             return false
         }
 
         stopScrolling()
-        Log.d(
-            Config.LOGTAG,
-            "reInit(hasExtras=" + java.lang.Boolean.toString(hasExtras) + ")"
-        )
+        Timber.d("reInit(hasExtras=$hasExtras")
 
-        if (this.conversation!!.isRead && hasExtras) {
-            Log.d(Config.LOGTAG, "trimming conversation")
-            this.conversation!!.trim()
+        if (conversation.isRead && hasExtras) {
+            Timber.d("trimming conversation")
+            conversation.trim()
         }
 
         setupIme()
 
-        val scrolledToBottomAndNoPending = this.scrolledToBottom() && pendingScrollState.peek() == null
+        val scrolledToBottomAndNoPending = fragment.scrolledToBottom() && fragment.pendingScrollState.peek() == null
 
-        this.binding!!.textSendButton.contentDescription =
-            activity!!.getString(R.string.send_message_to_x, conversation.name)
-        this.binding!!.textinput.setKeyboardListener(null)
-        this.binding!!.textinput.setText("")
+        binding.textSendButton.contentDescription = activity.getString(R.string.send_message_to_x, conversation.name)
+        binding.textinput.setKeyboardListener(null)
+        binding.textinput.setText("")
         val participating =
             conversation.mode == Conversational.MODE_SINGLE || conversation.mucOptions.participating()
         if (participating) {
-            this.binding!!.textinput.append(this.conversation!!.nextMessage)
+            binding.textinput.append(conversation.nextMessage)
         }
-        this.binding!!.textinput.setKeyboardListener(this)
-        messageListAdapter.updatePreferences()
+        binding.textinput.setKeyboardListener(fragment)
+        fragment.messageListAdapter.updatePreferences()
         refresh(false)
-        this.conversation!!.messagesLoaded.set(true)
-        Log.d(
-            Config.LOGTAG,
-            "scrolledToBottomAndNoPending=" + java.lang.Boolean.toString(scrolledToBottomAndNoPending)
-        )
+        conversation.messagesLoaded.set(true)
+        Timber.d("scrolledToBottomAndNoPending=$scrolledToBottomAndNoPending")
 
         if (hasExtras || scrolledToBottomAndNoPending) {
             resetUnreadMessagesCount()
-            synchronized(this.messageList) {
-                Log.d(Config.LOGTAG, "jump to first unread message")
+            synchronized(fragment.messageList) {
+                Timber.d( "jump to first unread message")
                 val first = conversation.firstUnreadMessage
-                val bottom = Math.max(0, this.messageList.size - 1)
+                val bottom = Math.max(0, fragment.messageList.size - 1)
                 val pos: Int
                 val jumpToBottom: Boolean
                 if (first == null) {
                     pos = bottom
                     jumpToBottom = true
                 } else {
-                    val i = getIndexOf(first.uuid, this.messageList)
+                    val i = getIndexOf(first.uuid, fragment.messageList)
                     pos = if (i < 0) bottom else i
                     jumpToBottom = false
                 }
@@ -105,9 +108,9 @@ class ReInit @Inject constructor(
         }
 
 
-        this.binding!!.messagesView.post { this.fireReadEvent() }
+        binding.messagesView.post { fireReadEvent() }
         //TODO if we only do this when this fragment is running on main it won't *bing* in tablet layout which might be unnecessary since we can *see* it
-        activity!!.xmppConnectionService.notificationService.setOpenConversation(this.conversation)
+        activity.xmppConnectionService.notificationService.setOpenConversation(conversation)
         return true
     }
 }

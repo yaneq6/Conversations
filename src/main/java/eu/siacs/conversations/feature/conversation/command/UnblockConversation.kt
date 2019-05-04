@@ -6,10 +6,10 @@ import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
 @ActivityScope
-class unblockConversation @Inject constructor(
+class UnblockConversation @Inject constructor(
     private val activity: XmppActivity
 ): (Blockable?) -> Unit {
     override fun invoke(conversation: Blockable?) {
-        activity.xmppConnectionService.sendUnblockRequest(conversation)
+        activity.xmppConnectionService!!.sendUnblockRequest(conversation)
     }
 }

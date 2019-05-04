@@ -13,19 +13,18 @@ class DeleteFile @Inject constructor(
     private val fragment: ConversationFragment,
     private val activity: ConversationsActivity
 ) : (Message?) -> Unit {
-    override fun invoke(message: Message?) {
-        val builder = AlertDialog.Builder(activity)
-        builder.setNegativeButton(R.string.cancel, null)
-        builder.setTitle(R.string.delete_file_dialog)
-        builder.setMessage(R.string.delete_file_dialog_msg)
-        builder.setPositiveButton(R.string.confirm) { dialog, which ->
+    
+    override fun invoke(message: Message?) = AlertDialog.Builder(activity).run {
+        setNegativeButton(R.string.cancel, null)
+        setTitle(R.string.delete_file_dialog)
+        setMessage(R.string.delete_file_dialog_msg)
+        setPositiveButton(R.string.confirm) { dialog, which ->
             if (activity.xmppConnectionService.fileBackend.deleteFile(message)) {
                 message?.isDeleted = true
                 activity.xmppConnectionService.updateMessage(message, false)
                 activity.onConversationsListItemUpdated()
                 fragment.refresh()
             }
-        }
-        builder.create().show()
+        }.create().show()
     }
 }

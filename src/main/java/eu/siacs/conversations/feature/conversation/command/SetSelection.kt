@@ -1,25 +1,24 @@
 package eu.siacs.conversations.feature.conversation.command
 
-import eu.siacs.conversations.ui.ConversationFragment
+import eu.siacs.conversations.databinding.FragmentConversationBinding
 import eu.siacs.conversations.ui.util.ListViewUtils
 import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
 @ActivityScope
 class SetSelection @Inject constructor(
-    private val fragment: ConversationFragment
+    private val binding: FragmentConversationBinding,
+    private val fireReadEvent: FireReadEvent
 ) : (Int, Boolean) -> Unit {
-    override fun invoke(pos: Int, jumpToBottom: Boolean) = fragment.run {
-        ListViewUtils.setSelection(this.binding!!.messagesView, pos, jumpToBottom)
-        this.binding!!.messagesView.post {
+    override fun invoke(pos: Int, jumpToBottom: Boolean) {
+        ListViewUtils.setSelection(binding.messagesView, pos, jumpToBottom)
+        binding.messagesView.post {
             ListViewUtils.setSelection(
-                this.binding!!.messagesView,
+                binding.messagesView,
                 pos,
                 jumpToBottom
             )
         }
-        this.binding!!.messagesView.post { this.fireReadEvent() }
-        Unit
+        binding.messagesView.post { fireReadEvent() }
     }
-
 }

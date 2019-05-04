@@ -25,6 +25,8 @@ import eu.siacs.conversations.ui.MucUsersActivity;
 import eu.siacs.conversations.ui.XmppActivity;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.feature.conversation.UtilsKt.get;
+
 
 public final class MucDetailsContextMenuHelper {
 
@@ -170,7 +172,7 @@ public final class MucDetailsContextMenuHelper {
                 return true;
             case R.id.send_private_message:
                 if (activity instanceof ConversationsActivity) {
-                    ConversationFragment conversationFragment = ConversationFragment.get(activity);
+                    ConversationFragment conversationFragment = get(activity);
                     if (conversationFragment != null) {
                         conversationFragment.privateMessageWith.invoke(user.getFullJid());
                         return true;

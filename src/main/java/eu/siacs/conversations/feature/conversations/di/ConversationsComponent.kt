@@ -5,8 +5,7 @@ import android.content.Intent
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import eu.siacs.conversations.ActivityNavigator
-import eu.siacs.conversations.activityNavigator
+import eu.siacs.conversations.feature.di.ActivityModule
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.util.PendingItem
 import io.aakit.scope.ActivityScope
@@ -31,30 +30,4 @@ class ConversationsModule {
     @Provides
     @ActivityScope
     fun redirectInProcess() = AtomicBoolean()
-}
-
-@Module
-class ActivityModule(
-    private val activity: Activity
-) {
-
-    @Provides
-    @ActivityScope
-    fun activity() = activity
-
-    @Provides
-    @ActivityScope
-    fun fragmentManager(activity: Activity) = activity.fragmentManager!!
-
-    @Provides
-    @ActivityScope
-    fun contentResolver() = activity.contentResolver!!
-
-    @Provides
-    @ActivityScope
-    fun navigator(): ActivityNavigator = activity.activityNavigator()
-
-    @Provides
-    @ActivityScope
-    fun resources() = activity.resources!!
 }

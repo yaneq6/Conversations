@@ -1,15 +1,10 @@
 package eu.siacs.conversations.feature.conversation.query
 
 import eu.siacs.conversations.entities.Message
-import eu.siacs.conversations.ui.ConversationFragment
-import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
-@ActivityScope
-class GetIndexOf @Inject constructor(
-    val fragment: ConversationFragment
-) : (String?, List<Message>) -> Int {
-    override fun invoke(uuid: String?, messages: List<Message>): Int = fragment.run {
+class GetIndexOf @Inject constructor() : (String?, List<Message>) -> Int {
+    override fun invoke(uuid: String?, messages: List<Message>): Int {
         if (uuid == null) {
             return messages.size - 1
         }

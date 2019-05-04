@@ -10,8 +10,8 @@ class UpdateDateSeparators @Inject constructor(
     private val fragment: ConversationFragment
 ) : () -> Unit {
     override fun invoke() = fragment.run {
-        synchronized(this.messageList) {
-            DateSeparator.addAll(this.messageList)
+        synchronized(messageList) {
+            DateSeparator.addAll(messageList)
         }
     }
 }

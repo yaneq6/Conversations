@@ -1,5 +1,6 @@
 package eu.siacs.conversations.feature.conversation.command
 
+import android.app.Activity
 import android.view.ContextMenu
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
@@ -18,27 +19,28 @@ import javax.inject.Inject
 
 @ActivityScope
 class PopulateContextMenu @Inject constructor(
-    private val fragment: ConversationFragment
+    private val fragment: ConversationFragment,
+    private val activity: Activity
 ) : (ContextMenu) -> Unit {
-    override fun invoke(menu: ContextMenu) = fragment.run {
-        val m = this.selectedMessage
-        val t = m!!.transferable
-        var relevantForCorrection = m
-        while (relevantForCorrection!!.mergeable(relevantForCorrection.next())) {
+    override fun invoke(menu: ContextMenu) {
+        val message = fragment.selectedMessage!!
+        val t = message.transferable
+        var relevantForCorrection = message
+        while (relevantForCorrection.mergeable(relevantForCorrection.next())) {
             relevantForCorrection = relevantForCorrection.next()
         }
-        if (m.type != Message.TYPE_STATUS) {
+        if (message.type != Message.TYPE_STATUS) {
 
-            if (m.encryption == Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE || m.encryption == Message.ENCRYPTION_AXOLOTL_FAILED) {
+            if (message.encryption == Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE || message.encryption == Message.ENCRYPTION_AXOLOTL_FAILED) {
                 return
             }
 
-            val deleted = m.isDeleted
+            val deleted = message.isDeleted
             val encrypted =
-                m.encryption == Message.ENCRYPTION_DECRYPTION_FAILED || m.encryption == Message.ENCRYPTION_PGP
+                message.encryption == Message.ENCRYPTION_DECRYPTION_FAILED || message.encryption == Message.ENCRYPTION_PGP
             val receiving =
-                m.status == Message.STATUS_RECEIVED && (t is JingleConnection || t is HttpDownloadConnection)
-            activity!!.menuInflater.inflate(R.menu.message_context, menu)
+                message.status == Message.STATUS_RECEIVED && (t is JingleConnection || t is HttpDownloadConnection)
+            activity.menuInflater.inflate(R.menu.message_context, menu)
             menu.setHeaderTitle(R.string.message_options)
             val openWith = menu.findItem(R.id.open_with)
             val copyMessage = menu.findItem(R.id.copy_message)
@@ -54,11 +56,11 @@ class PopulateContextMenu @Inject constructor(
             val deleteFile = menu.findItem(R.id.delete_file)
             val showErrorMessage = menu.findItem(R.id.show_error_message)
             val showError =
-                m.status == Message.STATUS_SEND_FAILED && m.errorMessage != null && Message.ERROR_MESSAGE_CANCELLED != m.errorMessage
-            if (!m.isFileOrImage && !encrypted && !m.isGeoUri && !m.treatAsDownloadable()) {
+                message.status == Message.STATUS_SEND_FAILED && message.errorMessage != null && Message.ERROR_MESSAGE_CANCELLED != message.errorMessage
+            if (!message.isFileOrImage && !encrypted && !message.isGeoUri && !message.treatAsDownloadable()) {
                 copyMessage.isVisible = true
-                quoteMessage.isVisible = !showError && MessageUtils.prepareQuote(m).length > 0
-                val body = m.mergedBody.toString()
+                quoteMessage.isVisible = !showError && MessageUtils.prepareQuote(message).isNotEmpty()
+                val body = message.mergedBody.toString()
                 if (ShareUtil.containsXmppUri(body)) {
                     copyLink.setTitle(R.string.copy_jabber_id)
                     copyLink.isVisible = true
@@ -66,67 +68,67 @@ class PopulateContextMenu @Inject constructor(
                     copyLink.isVisible = true
                 }
             }
-            if (m.encryption == Message.ENCRYPTION_DECRYPTION_FAILED && !deleted) {
+            if (message.encryption == Message.ENCRYPTION_DECRYPTION_FAILED && !deleted) {
                 retryDecryption.isVisible = true
             }
             if (!showError
                 && relevantForCorrection.type == Message.TYPE_TEXT
-                && !m.isGeoUri
+                && !message.isGeoUri
                 && relevantForCorrection.isLastCorrectableMessage
-                && m.conversation is Conversation
+                && message.conversation is Conversation
             ) {
                 correctMessage.isVisible = true
             }
-            if (m.isFileOrImage && !deleted && !receiving || m.type == Message.TYPE_TEXT && !m.treatAsDownloadable()) {
+            if (message.isFileOrImage && !deleted && !receiving || message.type == Message.TYPE_TEXT && !message.treatAsDownloadable()) {
                 shareWith.isVisible = true
             }
-            if (m.status == Message.STATUS_SEND_FAILED) {
+            if (message.status == Message.STATUS_SEND_FAILED) {
                 sendAgain.isVisible = true
             }
-            if (m.hasFileOnRemoteHost()
-                || m.isGeoUri
-                || m.treatAsDownloadable()
+            if (message.hasFileOnRemoteHost()
+                || message.isGeoUri
+                || message.treatAsDownloadable()
                 || t is HttpDownloadConnection
             ) {
                 copyUrl.isVisible = true
             }
-            if (m.isFileOrImage && deleted && m.hasFileOnRemoteHost()) {
+            if (message.isFileOrImage && deleted && message.hasFileOnRemoteHost()) {
                 downloadFile.isVisible = true
                 downloadFile.title =
-                    activity!!.getString(
+                    activity.getString(
                         R.string.download_x_file,
-                        UIHelper.getFileDescriptionString(activity, m)
+                        UIHelper.getFileDescriptionString(activity, message)
                     )
             }
-            val waitingOfferedSending = (m.status == Message.STATUS_WAITING
-                    || m.status == Message.STATUS_UNSEND
-                    || m.status == Message.STATUS_OFFERED)
-            val cancelable = t != null && !deleted || waitingOfferedSending && m.needsUploading()
+            val waitingOfferedSending = (message.status == Message.STATUS_WAITING
+                    || message.status == Message.STATUS_UNSEND
+                    || message.status == Message.STATUS_OFFERED)
+            val cancelable = t != null && !deleted || waitingOfferedSending && message.needsUploading()
             if (cancelable) {
                 cancelTransmission.isVisible = true
             }
-            if (m.isFileOrImage && !deleted && !cancelable) {
-                val path = m.relativeFilePath
+            if (message.isFileOrImage && !deleted && !cancelable) {
+                val path = message.relativeFilePath
                 if (path == null || !path.startsWith("/") || FileBackend.isInDirectoryThatShouldNotBeScanned(
-                        getActivity(),
+                        activity,
                         path
                     )
                 ) {
                     deleteFile.isVisible = true
                     deleteFile.title =
-                        activity!!.getString(
+                        activity.getString(
                             R.string.delete_x_file,
-                            UIHelper.getFileDescriptionString(activity, m)
+                            UIHelper.getFileDescriptionString(activity, message)
                         )
                 }
             }
             if (showError) {
                 showErrorMessage.isVisible = true
             }
-            val mime = if (m.isFileOrImage) m.mimeType else null
-            if (m.isGeoUri && GeoHelper.openInOsmAnd(
-                    getActivity(),
-                    m
+            val mime = if (message.isFileOrImage) message.mimeType else null
+            if (message.isGeoUri && GeoHelper.openInOsmAnd(
+                    activity,
+                    message
                 ) || mime != null && mime.startsWith("audio/")
             ) {
                 openWith.isVisible = true

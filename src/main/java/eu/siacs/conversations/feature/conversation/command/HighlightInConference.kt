@@ -1,5 +1,6 @@
 package eu.siacs.conversations.feature.conversation.command
 
+import eu.siacs.conversations.databinding.FragmentConversationBinding
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.utils.NickValidityChecker
 import io.aakit.scope.ActivityScope
@@ -8,10 +9,10 @@ import javax.inject.Inject
 
 @ActivityScope
 class HighlightInConference @Inject constructor(
-    private val fragment: ConversationFragment
+    private val fragment: ConversationFragment,
+    private val binding: FragmentConversationBinding
 ) : (String) -> Unit {
     override fun invoke(nick: String) {
-        val binding = fragment.binding!!
         val conversation = fragment.conversation!!
         val editable = binding.textinput.text!!
         val oldString = editable.toString().trim { it <= ' ' }

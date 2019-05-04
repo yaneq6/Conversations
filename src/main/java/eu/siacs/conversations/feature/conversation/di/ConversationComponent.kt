@@ -4,7 +4,7 @@ import android.app.Activity
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import eu.siacs.conversations.feature.conversations.di.ActivityModule
+import eu.siacs.conversations.feature.di.ActivityModule
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.XmppActivity

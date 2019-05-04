@@ -8,12 +8,8 @@ import javax.inject.Inject
 @ActivityScope
 class QuoteMessage @Inject constructor(
     private val quoteText: QuoteText
-) : (Message?) -> Unit {
-    override fun invoke(message: Message?) {
-        quoteText(
-            MessageUtils.prepareQuote(
-                message!!
-            )
-        )
+) : (Message) -> Unit {
+    override fun invoke(message: Message) {
+        quoteText(MessageUtils.prepareQuote(message))
     }
 }

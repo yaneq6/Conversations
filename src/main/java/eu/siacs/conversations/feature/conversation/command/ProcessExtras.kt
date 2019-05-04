@@ -7,26 +7,37 @@ import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.util.Attachment
 import io.aakit.scope.ActivityScope
 import rocks.xmpp.addr.Jid
-import java.util.ArrayList
+import java.util.*
 import javax.inject.Inject
 
 @ActivityScope
 class ProcessExtras @Inject constructor(
-    private val fragment: ConversationFragment
+    private val fragment: ConversationFragment,
+    private val activity: ConversationsActivity,
+    private val extractUris: ExtractUris,
+    private val cleanUris: CleanUris,
+    private val toggleInputMethod: ToggleInputMethod,
+    private val privateMessageWith: PrivateMessageWith,
+    private val highlightInConference: HighlightInConference,
+    private val quoteText: QuoteText,
+    private val appendText: AppendText,
+    private val startDownloadable: StartDownloadable
 ) : (Bundle) -> Unit {
-    override fun invoke(extras: Bundle) = fragment.run {
+
+    override fun invoke(extras: Bundle) {
         val downloadUuid = extras.getString(ConversationsActivity.EXTRA_DOWNLOAD_UUID)
         val text = extras.getString(Intent.EXTRA_TEXT)
         val nick = extras.getString(ConversationsActivity.EXTRA_NICK)
         val asQuote = extras.getBoolean(ConversationsActivity.EXTRA_AS_QUOTE)
         val pm = extras.getBoolean(ConversationsActivity.EXTRA_IS_PRIVATE_MESSAGE, false)
         val doNotAppend = extras.getBoolean(ConversationsActivity.EXTRA_DO_NOT_APPEND, false)
+        val conversation = fragment.conversation!!
         val uris = extractUris(extras)
-        if (uris != null && uris.isNotEmpty()) {
+        if (!uris.isNullOrEmpty()) {
             val cleanedUris = cleanUris(ArrayList(uris))
-            mediaPreviewAdapter!!.addMediaPreviews(
+            fragment.mediaPreviewAdapter!!.addMediaPreviews(
                 Attachment.of(
-                    getActivity(),
+                    activity,
                     cleanedUris
                 )
             )
@@ -35,7 +46,7 @@ class ProcessExtras @Inject constructor(
         }
         if (nick != null) {
             if (pm) {
-                val jid = conversation!!.jid
+                val jid = conversation.jid
                 try {
                     val next = Jid.of(jid.local, jid.domain, nick)
                     privateMessageWith(next)
@@ -44,8 +55,8 @@ class ProcessExtras @Inject constructor(
                 }
 
             } else {
-                val mucOptions = conversation!!.mucOptions
-                if (mucOptions.participating() || conversation!!.nextCounterpart != null) {
+                val mucOptions = conversation.mucOptions
+                if (mucOptions.participating() || conversation.nextCounterpart != null) {
                     highlightInConference(nick)
                 }
             }
@@ -56,7 +67,7 @@ class ProcessExtras @Inject constructor(
                 appendText(text, doNotAppend)
             }
         }
-        val message = if (downloadUuid == null) null else conversation!!.findMessageWithFileAndUuid(downloadUuid)
+        val message = if (downloadUuid == null) null else conversation.findMessageWithFileAndUuid(downloadUuid)
         if (message != null) {
             startDownloadable(message)
         }

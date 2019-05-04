@@ -18,9 +18,10 @@ class MessageSent @Inject constructor(
     private val updateChatMsgHint: UpdateChatMsgHint,
     private val scrolledToBottom: ScrolledToBottom
 ) : () -> Unit {
+
     override fun invoke() {
         val conversation = fragment.conversation!!
-        fragment.mSendingPgpMessage.set(false)
+        fragment.sendingPgpMessage.set(false)
         binding.textinput.setText("")
         if (conversation.setCorrectingMessage(null)) {
             binding.textinput.append(conversation.draftMessage)

@@ -1,6 +1,7 @@
 package eu.siacs.conversations.feature.conversation.command
 
 import android.view.View
+import eu.siacs.conversations.databinding.FragmentConversationBinding
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
 import io.aakit.scope.ActivityScope
@@ -10,7 +11,14 @@ import javax.inject.Inject
 @ActivityScope
 class Refresh @Inject constructor(
     private val activity: ConversationsActivity,
-    private val fragment: ConversationFragment
+    private val fragment: ConversationFragment,
+    private val updateSnackBar: UpdateSnackBar,
+    private val updateStatusMessages: UpdateStatusMessages,
+    private val binding: FragmentConversationBinding,
+    private val fireReadEvent: FireReadEvent,
+    private val updateChatMsgHint: UpdateChatMsgHint,
+    private val updateSendButton: UpdateSendButton,
+    private val updateEditablity: UpdateEditablity
 ) : (Boolean) -> Unit {
 
     operator fun invoke() = fragment.binding?.let {
@@ -24,28 +32,26 @@ class Refresh @Inject constructor(
         invoke(true)
     } ?: Timber.d("ConversationFragment.refresh() skipped updated because view binding was null")
 
-    override fun invoke(notifyConversationRead: Boolean) = fragment.run {
-        synchronized(this.messageList) {
-            if (this.conversation != null) {
-                conversation!!.populateWithMessages(this.messageList)
-                updateSnackBar(conversation!!)
+    override fun invoke(notifyConversationRead: Boolean) {
+        synchronized(fragment.messageList) {
+            fragment.conversation?.let { conversation ->
+                conversation.populateWithMessages(fragment.messageList)
+                updateSnackBar(conversation)
                 updateStatusMessages()
-                if (conversation!!.getReceivedMessagesCountSinceUuid(lastMessageUuid) != 0) {
-                    binding!!.unreadCountCustomView.visibility = View.VISIBLE
-                    binding!!.unreadCountCustomView.setUnreadCount(
-                        conversation!!.getReceivedMessagesCountSinceUuid(
-                            lastMessageUuid
-                        )
+                if (conversation.getReceivedMessagesCountSinceUuid(fragment.lastMessageUuid) != 0) {
+                    binding.unreadCountCustomView.visibility = View.VISIBLE
+                    binding.unreadCountCustomView.setUnreadCount(
+                        conversation.getReceivedMessagesCountSinceUuid(fragment.lastMessageUuid)
                     )
                 }
-                this.messageListAdapter.notifyDataSetChanged()
+                fragment.messageListAdapter.notifyDataSetChanged()
                 updateChatMsgHint()
-                if (notifyConversationRead && activity != null) {
-                    binding!!.messagesView.post { this.fireReadEvent() }
+                if (notifyConversationRead) {
+                    binding.messagesView.post { this.fireReadEvent() }
                 }
                 updateSendButton()
                 updateEditablity()
-                activity!!.invalidateOptionsMenu()
+                activity.invalidateOptionsMenu()
             }
         }
     }
