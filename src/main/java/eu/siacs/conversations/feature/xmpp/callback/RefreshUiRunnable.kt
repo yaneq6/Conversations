@@ -7,12 +7,13 @@ import javax.inject.Inject
 
 @ActivityScope
 class RefreshUiRunnable @Inject constructor(
-    private val activity: XmppActivity,
-    private val refreshUiReal: RefreshUiRunnable
+    private val activity: XmppActivity
 ): () -> Unit {
 
     override fun invoke() {
-        activity.mLastUiRefresh = SystemClock.elapsedRealtime()
-        refreshUiReal()
+        activity.run {
+            mLastUiRefresh = SystemClock.elapsedRealtime()
+            refreshUiReal()
+        }
     }
 }

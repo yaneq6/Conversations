@@ -157,6 +157,11 @@ abstract class XmppActivity : ActionBarActivity() {
     @JvmField
     val mRefreshUiHandler = Handler()
 
+
+    val preferences: SharedPreferences by lazy {
+        PreferenceManager.getDefaultSharedPreferences(this)
+    }
+
     val getBooleanPreference: GetBooleanPreference by lazy {
         GetBooleanPreference(
             activity = this,
@@ -198,9 +203,6 @@ abstract class XmppActivity : ActionBarActivity() {
                 return false
             }
         }
-
-    val preferences: SharedPreferences
-        get() = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
     val shareableUri: String?
         get() = getShareableUri(false)

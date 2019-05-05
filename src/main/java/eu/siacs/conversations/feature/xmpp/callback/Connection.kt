@@ -3,7 +3,6 @@ package eu.siacs.conversations.feature.xmpp.callback
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
-import eu.siacs.conversations.feature.conversation.command.OnBackendConnected
 import eu.siacs.conversations.feature.xmpp.command.RegisterListeners
 import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.ui.XmppActivity
@@ -13,8 +12,7 @@ import javax.inject.Inject
 @ActivityScope
 class Connection @Inject constructor(
     private val activity: XmppActivity,
-    private val registerListeners: RegisterListeners,
-    private val onBackendConnected: OnBackendConnected
+    private val registerListeners: RegisterListeners
 ): ServiceConnection {
 
     override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -24,7 +22,7 @@ class Connection @Inject constructor(
             xmppConnectionServiceBound = true
         }
         registerListeners()
-        onBackendConnected()
+        activity.onBackendConnected()
     }
 
     override fun onServiceDisconnected(arg0: ComponentName) {

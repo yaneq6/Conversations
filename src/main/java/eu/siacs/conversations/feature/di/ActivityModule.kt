@@ -1,6 +1,8 @@
 package eu.siacs.conversations.feature.di
 
 import android.app.Activity
+import android.content.SharedPreferences
+import android.preference.PreferenceManager
 import dagger.Module
 import dagger.Provides
 import eu.siacs.conversations.ActivityNavigator
@@ -35,4 +37,8 @@ class ActivityModule(
     @Provides
     @ActivityScope
     fun packageManager() = activity.packageManager
+
+    @Provides
+    @ActivityScope
+    fun preferences(activity: Activity): SharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
 }
