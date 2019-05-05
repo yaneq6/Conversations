@@ -232,7 +232,7 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
         super.onCreateOptionsMenu(menu);
         final Intent i = getIntent();
         boolean showEnterJid = i != null && i.getBooleanExtra(EXTRA_SHOW_ENTER_JID, false);
-        menu.findItem(R.id.action_scan_qr_code).setVisible(isCameraFeatureAvailable() && showEnterJid);
+        menu.findItem(R.id.action_scan_qr_code).setVisible(isCameraFeatureAvailable && showEnterJid);
         MenuItem mMenuSearchView = menu.findItem(R.id.action_search);
         if (startSearching) {
             mMenuSearchView.expandActionView();
@@ -354,7 +354,7 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         filterContacts();
         this.mActivatedAccounts.clear();
         for (Account account : xmppConnectionService.getAccounts()) {

@@ -24,12 +24,12 @@ public class WelcomeActivity extends XmppActivity {
     private static final int REQUEST_IMPORT_BACKUP = 0x63fb;
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
 
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
 
     }
 

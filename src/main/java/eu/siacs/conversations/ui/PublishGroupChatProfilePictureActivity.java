@@ -56,12 +56,12 @@ public class PublishGroupChatProfilePictureActivity extends XmppActivity impleme
     private Uri uri;
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
 
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         String uuid = pendingConversationUuid.pop();
         if (uuid != null) {
             this.conversation = xmppConnectionService.findConversationByUuid(uuid);

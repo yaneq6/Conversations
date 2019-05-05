@@ -57,10 +57,10 @@ import eu.siacs.conversations.ui.adapter.MessageAdapter;
 import eu.siacs.conversations.ui.interfaces.OnSearchResultsAvailable;
 import eu.siacs.conversations.ui.util.ChangeWatcher;
 import eu.siacs.conversations.ui.util.DateSeparator;
-import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.ui.util.ListViewUtils;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.ui.util.ShareUtil;
+import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.utils.FtsUtils;
 import eu.siacs.conversations.utils.MessageUtils;
 
@@ -198,12 +198,12 @@ public class SearchActivity extends XmppActivity implements TextWatcher, OnSearc
 	}
 
 	@Override
-	protected void refreshUiReal() {
+	public void refreshUiReal() {
 
 	}
 
 	@Override
-	void onBackendConnected() {
+	public void onBackendConnected() {
 		final List<String> searchTerm = pendingSearch.pop();
 		if (searchTerm != null && currentSearch.watch(searchTerm)) {
 			xmppConnectionService.search(searchTerm, this);

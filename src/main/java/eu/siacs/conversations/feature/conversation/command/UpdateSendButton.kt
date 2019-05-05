@@ -36,7 +36,7 @@ class UpdateSendButton @Inject constructor(
             }
         val status: Presence.Status =
             if (useSendButtonToIndicateStatus && conversation.account.status == Account.State.ONLINE) {
-                if (activity.xmppConnectionService != null
+                if (activity.xmppConnectionServiceBound
                     && activity.xmppConnectionService.messageArchiveService.isCatchingUp(conversation)
                 ) {
                     Presence.Status.OFFLINE

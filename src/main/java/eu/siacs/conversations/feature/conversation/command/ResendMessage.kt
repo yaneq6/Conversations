@@ -9,6 +9,7 @@ import eu.siacs.conversations.entities.Conversational
 import eu.siacs.conversations.entities.Message
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
+import eu.siacs.conversations.ui.util.PresenceSelector
 import eu.siacs.conversations.utils.Compatibility
 import io.aakit.scope.ActivityScope
 import javax.inject.Inject
@@ -35,14 +36,14 @@ class ResendMessage @Inject constructor(
                     && conversation.mode == Conversational.MODE_SINGLE
                     && !xmppConnection.features.httpUpload(message.fileParams.size)
                 ) {
-                    activity.selectPresence(conversation) {
+                    activity.selectPresence(conversation, PresenceSelector.OnPresenceSelected {
                         message.counterpart = conversation.nextCounterpart
                         activity.xmppConnectionService.resendFailedMessages(message)
                         Handler().post {
                             val size = fragment.messageList.size
                             binding.messagesView.setSelection(size - 1)
                         }
-                    }
+                    })
                     return
                 }
             } else if (!Compatibility.hasStoragePermission(activity)) {

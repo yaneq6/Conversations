@@ -623,7 +623,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 		AccountUtils.showHideMenuItems(menu);
 		MenuItem menuHideOffline = menu.findItem(R.id.action_hide_offline);
 		MenuItem qrCodeScanMenuItem = menu.findItem(R.id.action_scan_qr_code);
-		qrCodeScanMenuItem.setVisible(isCameraFeatureAvailable());
+		qrCodeScanMenuItem.setVisible(isCameraFeatureAvailable);
 		if (QuickConversationsService.isQuicksy()) {
 			menuHideOffline.setVisible(false);
 		} else {
@@ -774,7 +774,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 	}
 
 	@Override
-	protected void onBackendConnected() {
+	public void onBackendConnected() {
 
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
 			xmppConnectionService.getQuickConversationsService().considerSyncBackground(false);
@@ -945,7 +945,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 	}
 
 	@Override
-	protected void refreshUiReal() {
+	public void refreshUiReal() {
 		if (mSearchEditText != null) {
 			filter(mSearchEditText.getText().toString());
 		}

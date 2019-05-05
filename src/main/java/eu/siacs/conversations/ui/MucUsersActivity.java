@@ -40,11 +40,11 @@ public class MucUsersActivity extends XmppActivity implements XmppConnectionServ
     private ArrayList<MucOptions.User> allUsers = new ArrayList<>();
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         final Intent intent = getIntent();
         final String uuid = intent == null ? null : intent.getStringExtra("uuid");
         if (uuid != null) {

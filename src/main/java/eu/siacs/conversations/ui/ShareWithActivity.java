@@ -20,7 +20,6 @@ import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.adapter.ConversationAdapter;
-import eu.siacs.conversations.ui.service.EmojiService;
 import rocks.xmpp.addr.Jid;
 
 public class ShareWithActivity extends XmppActivity implements XmppConnectionService.OnConversationUpdate {
@@ -145,7 +144,7 @@ public class ShareWithActivity extends XmppActivity implements XmppConnectionSer
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         if (xmppConnectionServiceBound && share != null && ((share.contact != null && share.account != null))) {
             share();
             return;

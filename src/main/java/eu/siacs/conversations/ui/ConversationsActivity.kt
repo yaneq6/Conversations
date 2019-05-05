@@ -48,10 +48,13 @@ import eu.siacs.conversations.databinding.ActivityConversationsBinding
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.feature.conversation.getConversation
 import eu.siacs.conversations.feature.conversations.*
-import eu.siacs.conversations.feature.di.ActivityModule
 import eu.siacs.conversations.feature.conversations.di.DaggerConversationsComponent
+import eu.siacs.conversations.feature.di.ActivityModule
 import eu.siacs.conversations.services.XmppConnectionService
-import eu.siacs.conversations.ui.interfaces.*
+import eu.siacs.conversations.ui.interfaces.OnConversationArchived
+import eu.siacs.conversations.ui.interfaces.OnConversationRead
+import eu.siacs.conversations.ui.interfaces.OnConversationSelected
+import eu.siacs.conversations.ui.interfaces.OnConversationsListItemUpdated
 import eu.siacs.conversations.ui.util.ActivityResult
 import eu.siacs.conversations.ui.util.ConversationMenuConfigurator
 import eu.siacs.conversations.ui.util.PendingItem
@@ -115,9 +118,9 @@ class ConversationsActivity :
     lateinit var batteryOptimizationPreferenceKey: BatteryOptimizationPreferenceKeyQuery
 
 
-    public override fun refreshUiReal() = fragments.refresh()
+    override fun refreshUiReal() = fragments.refresh()
 
-    internal override fun onBackendConnected() {
+    override fun onBackendConnected() {
         if (performRedirectIfNecessary(true)) {
             return
         }

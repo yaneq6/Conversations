@@ -73,12 +73,12 @@ public class EnterPhoneNumberActivity extends XmppActivity implements QuickConve
     private boolean requestingVerification = false;
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
 
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         xmppConnectionService.getQuickConversationsService().addOnVerificationRequestedListener(this);
         final Account account = AccountUtils.getFirst(xmppConnectionService);
         if (account != null) {

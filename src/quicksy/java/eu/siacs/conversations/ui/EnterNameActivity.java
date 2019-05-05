@@ -55,12 +55,12 @@ public class EnterNameActivity extends XmppActivity implements XmppConnectionSer
     }
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
         checkSuggestPreviousNick();
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         this.account = AccountUtils.getFirst(xmppConnectionService);
         checkSuggestPreviousNick();
     }

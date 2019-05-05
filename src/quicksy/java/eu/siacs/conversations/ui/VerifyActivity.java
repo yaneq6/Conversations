@@ -182,12 +182,12 @@ public class VerifyActivity extends XmppActivity implements ClipboardManager.OnP
     }
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
 
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         xmppConnectionService.getQuickConversationsService().addOnVerificationListener(this);
         xmppConnectionService.getQuickConversationsService().addOnVerificationRequestedListener(this);
         this.account = AccountUtils.getFirst(xmppConnectionService);

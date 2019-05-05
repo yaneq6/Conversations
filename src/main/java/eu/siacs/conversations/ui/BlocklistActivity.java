@@ -87,7 +87,7 @@ public class BlocklistActivity extends AbstractSearchableListItemActivity implem
 		dialog.show(ft, "dialog");
 	}
 
-	protected void refreshUiReal() {
+	public void refreshUiReal() {
 		final Editable editable = getSearchEditText().getText();
 		if (editable != null) {
 			filterContacts(editable.toString());

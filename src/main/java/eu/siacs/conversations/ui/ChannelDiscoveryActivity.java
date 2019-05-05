@@ -2,7 +2,6 @@ package eu.siacs.conversations.ui;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -46,12 +45,12 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
     private boolean optedIn = false;
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
 
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         if (optedIn) {
             String query;
             if (mMenuSearchView != null && mMenuSearchView.isActionViewExpanded()) {

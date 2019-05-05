@@ -9,11 +9,10 @@ import android.support.v7.widget.Toolbar;
 import java.util.List;
 
 import eu.siacs.conversations.R;
+import eu.siacs.conversations.databinding.ActivityMediaBrowserBinding;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
-
-import eu.siacs.conversations.databinding.ActivityMediaBrowserBinding;
 import eu.siacs.conversations.ui.adapter.MediaAdapter;
 import eu.siacs.conversations.ui.interfaces.OnMediaLoaded;
 import eu.siacs.conversations.ui.util.Attachment;
@@ -39,12 +38,12 @@ public class MediaBrowserActivity extends XmppActivity implements OnMediaLoaded 
     }
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
 
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         Intent intent = getIntent();
         String account = intent == null ? null : intent.getStringExtra("account");
         String jid = intent == null ? null : intent.getStringExtra("jid");

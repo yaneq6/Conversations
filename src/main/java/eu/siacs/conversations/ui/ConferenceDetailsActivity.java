@@ -3,7 +3,6 @@ package eu.siacs.conversations.ui;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender.SendIntentException;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
@@ -23,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
-import eu.siacs.conversations.crypto.PgpEngine;
 import eu.siacs.conversations.databinding.ActivityMucDetailsBinding;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Bookmark;
@@ -153,7 +151,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
     }
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
         updateView();
     }
 
@@ -320,7 +318,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
 
 
     @Override
-    protected String getShareableUri(boolean http) {
+    public String getShareableUri(boolean http) {
         if (mConversation != null) {
             if (http) {
                 return "https://conversations.im/j/" + XmppUri.lameUrlEncode(mConversation.getJid().asBareJid().toEscapedString());
@@ -404,7 +402,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         if (mPendingConferenceInvite != null) {
             mPendingConferenceInvite.execute(this);
             mPendingConferenceInvite = null;
@@ -483,7 +481,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
             this.binding.mucRole.setText(getStatus(self));
             if (mucOptions.getSelf().getAffiliation().ranks(MucOptions.Affiliation.OWNER)) {
                 this.binding.mucSettings.setVisibility(View.VISIBLE);
-                this.binding.mucConferenceType.setText(MucConfiguration.describe(this,mucOptions));
+                this.binding.mucConferenceType.setText(MucConfiguration.describe(this, mucOptions));
             } else if (!mucOptions.isPrivateAndNonAnonymous() && mucOptions.nonanonymous()) {
                 this.binding.mucSettings.setVisibility(View.VISIBLE);
                 this.binding.mucConferenceType.setText(R.string.group_chat_will_make_your_jabber_id_public);

@@ -74,12 +74,14 @@ class HandlePositiveActivityResult @Inject constructor(
                 val invite = XmppActivity.ConferenceInvite.parse(data)
                 if (invite != null) {
                     if (invite.execute(activity)) {
-                        activity.mToast = Toast.makeText(
+                        Toast.makeText(
                             activity,
                             R.string.creating_conference,
                             Toast.LENGTH_LONG
-                        )
-                        activity.mToast.show()
+                        ).apply {
+                            activity.mToast = this
+                            show()
+                        }
                     }
                 }
             }

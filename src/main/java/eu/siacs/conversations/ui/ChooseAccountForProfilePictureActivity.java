@@ -3,7 +3,6 @@ package eu.siacs.conversations.ui;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -11,9 +10,7 @@ import java.util.List;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
-import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.ui.adapter.AccountAdapter;
-import rocks.xmpp.addr.Jid;
 
 public class ChooseAccountForProfilePictureActivity extends XmppActivity {
 
@@ -22,7 +19,7 @@ public class ChooseAccountForProfilePictureActivity extends XmppActivity {
     protected AccountAdapter mAccountAdapter;
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
         loadEnabledAccounts();
         mAccountAdapter.notifyDataSetChanged();
     }
@@ -52,7 +49,7 @@ public class ChooseAccountForProfilePictureActivity extends XmppActivity {
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         loadEnabledAccounts();
         if (accountList.size() == 1) {
             goToProfilePictureActivity(accountList.get(0));

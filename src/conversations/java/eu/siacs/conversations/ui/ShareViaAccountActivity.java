@@ -1,10 +1,6 @@
 package eu.siacs.conversations.ui;
 
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -25,7 +21,7 @@ public class ShareViaAccountActivity extends XmppActivity {
     protected AccountAdapter mAccountAdapter;
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
         synchronized (this.accountList) {
             accountList.clear();
             accountList.addAll(xmppConnectionService.getAccounts());
@@ -70,7 +66,7 @@ public class ShareViaAccountActivity extends XmppActivity {
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         final int numAccounts = xmppConnectionService.getAccounts().size();
 
         if (numAccounts == 1) {

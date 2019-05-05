@@ -14,9 +14,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -61,7 +59,7 @@ public class ManageAccountActivity extends XmppActivity implements OnAccountUpda
     }
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
         synchronized (this.accountList) {
             accountList.clear();
             accountList.addAll(xmppConnectionService.getAccounts());
@@ -137,7 +135,7 @@ public class ManageAccountActivity extends XmppActivity implements OnAccountUpda
     }
 
     @Override
-    void onBackendConnected() {
+    public void onBackendConnected() {
         if (selectedAccountJid != null) {
             this.selectedAccount = xmppConnectionService.findAccountByJid(selectedAccountJid);
         }

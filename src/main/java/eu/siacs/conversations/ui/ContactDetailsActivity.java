@@ -164,13 +164,13 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
     }
 
     @Override
-    protected void refreshUiReal() {
+    public void refreshUiReal() {
         invalidateOptionsMenu();
         populateView();
     }
 
     @Override
-    protected String getShareableUri(boolean http) {
+    public String getShareableUri(boolean http) {
         if (http) {
             return "https://conversations.im/i/" + XmppUri.lameUrlEncode(contact.getJid().asBareJid().toEscapedString());
         } else {
@@ -450,7 +450,7 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
         } else {
             binding.showInactiveDevices.setVisibility(View.GONE);
         }
-        binding.scanButton.setVisibility(hasKeys && isCameraFeatureAvailable() ? View.VISIBLE : View.GONE);
+        binding.scanButton.setVisibility(hasKeys && isCameraFeatureAvailable ? View.VISIBLE : View.GONE);
         if (hasKeys) {
             binding.scanButton.setOnClickListener((v) -> ScanActivity.scan(this));
         }

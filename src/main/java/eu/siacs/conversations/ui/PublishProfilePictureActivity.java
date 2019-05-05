@@ -149,7 +149,7 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
     }
 
     @Override
-    protected void onBackendConnected() {
+    public void onBackendConnected() {
         this.account = extractAccount(getIntent());
         if (this.account != null) {
             reloadAvatar();

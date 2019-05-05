@@ -8,7 +8,7 @@ import android.provider.Settings
 import android.widget.Toast
 import eu.siacs.conversations.R
 import eu.siacs.conversations.ui.ConversationsActivity
-import eu.siacs.conversations.ui.XmppActivity.REQUEST_BATTERY_OP
+import eu.siacs.conversations.ui.XmppActivity.Companion.REQUEST_BATTERY_OP
 import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 

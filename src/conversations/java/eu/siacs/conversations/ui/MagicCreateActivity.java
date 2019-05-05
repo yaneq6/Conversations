@@ -25,12 +25,12 @@ public class MagicCreateActivity extends XmppActivity implements TextWatcher {
 	private EditText mUsername;
 
 	@Override
-	protected void refreshUiReal() {
+	public void refreshUiReal() {
 
 	}
 
 	@Override
-	void onBackendConnected() {
+	public void onBackendConnected() {
 
 	}
 

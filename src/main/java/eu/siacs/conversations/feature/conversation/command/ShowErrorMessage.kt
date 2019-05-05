@@ -23,7 +23,7 @@ class ShowErrorMessage @Inject constructor(
             ?.toTypedArray()
             ?: arrayOfNulls<String>(0)
 
-        val displayError: String? = errorMessageParts.getOrNull(1) ?: errorMessage
+        val displayError: String = errorMessageParts.getOrNull(1) ?: errorMessage
 
         builder.setMessage(displayError)
         builder.setNegativeButton(R.string.copy_to_clipboard) { _, _ ->
