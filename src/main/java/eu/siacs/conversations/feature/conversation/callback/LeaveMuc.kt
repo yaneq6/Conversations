@@ -12,6 +12,6 @@ class LeaveMuc @Inject constructor(
     private val activity: ConversationsActivity
 ) : View.OnClickListener {
     override fun onClick(view: View) {
-        activity.xmppConnectionService.archiveConversation(fragment.conversation)
+        activity.xmppConnectionService.archiveConversation(fragment.conversation!!)
     }
 }

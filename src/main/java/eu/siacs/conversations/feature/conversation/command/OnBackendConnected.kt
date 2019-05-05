@@ -23,7 +23,7 @@ class OnBackendConnected @Inject constructor(
                 return
             }
         } else {
-            if (!activity.xmppConnectionService.isConversationStillOpen(conversation)) {
+            if (!activity.xmppConnectionService.isConversationStillOpen(conversation!!)) {
                 clearPending()
                 activity.onConversationArchived(conversation!!)
                 return

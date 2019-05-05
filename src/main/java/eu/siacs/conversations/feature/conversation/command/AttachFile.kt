@@ -67,7 +67,7 @@ class AttachFile @Inject constructor(
         if (encryption == Message.ENCRYPTION_PGP) {
             if (hasPgp()) {
                 if (mode == Conversation.MODE_SINGLE && conversation.contact.pgpKeyId != 0L) {
-                    activity.xmppConnectionService.pgpEngine.hasKey(
+                    activity.xmppConnectionService.pgpEngine!!.hasKey(
                         conversation.contact,
                         object : UiCallback<Contact> {
 

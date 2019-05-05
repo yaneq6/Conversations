@@ -15,6 +15,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -164,12 +166,6 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
     }
 
     @Override
-    public void onChannelSearchResultsFound(List<MuclumbusService.Room> results) {
-        runOnUiThread(() -> adapter.submitList(results));
-
-    }
-
-    @Override
     public void onChannelSearchResult(final MuclumbusService.Room result) {
         List<String> accounts = AccountUtils.getEnabledAccounts(xmppConnectionService);
         if (accounts.size() == 1) {
@@ -191,4 +187,10 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
         final Conversation conversation = xmppConnectionService.findOrCreateConversation(account, result.getRoom(), true, true, true);
         switchToConversation(conversation);
     }
+
+    @Override
+    public void onChannelSearchResultsFound(@NotNull List<? extends MuclumbusService.Room> results) {
+        runOnUiThread(() -> adapter.submitList((List<MuclumbusService.Room>) results));
+    }
+
 }

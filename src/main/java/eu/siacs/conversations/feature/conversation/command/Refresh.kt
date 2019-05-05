@@ -24,7 +24,7 @@ class Refresh @Inject constructor(
     operator fun invoke() = fragment.binding?.let {
         val conversation = fragment.conversation
         if (conversation != null && activity.xmppConnectionService != null) {
-            if (!activity.xmppConnectionService.isConversationStillOpen(fragment.conversation)) {
+            if (!activity.xmppConnectionService.isConversationStillOpen(fragment.conversation!!)) {
                 activity.onConversationArchived(fragment.conversation!!)
                 return
             }

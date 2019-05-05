@@ -21,7 +21,7 @@ class DeleteFile @Inject constructor(
         setPositiveButton(R.string.confirm) { dialog, which ->
             if (activity.xmppConnectionService.fileBackend.deleteFile(message)) {
                 message?.isDeleted = true
-                activity.xmppConnectionService.updateMessage(message, false)
+                activity.xmppConnectionService.updateMessage(message!!, false)
                 activity.onConversationsListItemUpdated()
                 fragment.refresh()
             }

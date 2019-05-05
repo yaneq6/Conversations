@@ -12,10 +12,10 @@ class HasAccountWithoutPushQuery @Inject constructor(
 
     private val hasAccountWithPush: Account.() -> Boolean = {
         status == Account.State.ONLINE && activity.xmppConnectionService
-            ?.pushManagementService
-            ?.available(this)
-            ?.not() ?: false
+            .pushManagementService
+            .available(this)
+            .not()
     }
 
-    override fun invoke() = activity.xmppConnectionService.accounts.any(hasAccountWithPush)
+    override fun invoke() = activity.xmppConnectionService.accounts?.any(hasAccountWithPush) ?: false
 }

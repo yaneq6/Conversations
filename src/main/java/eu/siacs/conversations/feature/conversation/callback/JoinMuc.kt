@@ -12,6 +12,6 @@ class JoinMuc @Inject constructor(
     private val activity: ConversationsActivity
 ) : View.OnClickListener {
     override fun onClick(view: View) {
-        activity.xmppConnectionService.joinMuc(fragment.conversation)
+        activity.xmppConnectionService.joinMuc(fragment.conversation!!)
     }
 }
