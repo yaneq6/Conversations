@@ -4,6 +4,8 @@ import android.app.Activity
 import eu.siacs.conversations.feature.conversation.REQUEST_DECRYPT_PGP
 import eu.siacs.conversations.feature.conversation.getConversationReliable
 import eu.siacs.conversations.feature.xmpp.XmppConst
+import eu.siacs.conversations.feature.xmpp.command.AnnouncePgp
+import eu.siacs.conversations.feature.xmpp.command.ChoosePgpSignId
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.util.ActivityResult
 import io.aakit.scope.ActivityScope
@@ -13,7 +15,9 @@ import javax.inject.Inject
 
 @ActivityScope
 class HandleActivityResultCommand @Inject constructor(
-    private val activity: ConversationsActivity
+    private val activity: ConversationsActivity,
+    private val announcePgp: AnnouncePgp,
+    private val choosePgpSignId: ChoosePgpSignId
 ) : (ActivityResult) -> Unit {
 
     override fun invoke(activityResult: ActivityResult): Unit = activityResult.run {
@@ -26,12 +30,12 @@ class HandleActivityResultCommand @Inject constructor(
                     val id = data.getLongExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, 0)
                     if (id != 0L) {
                         account.setPgpSignId(id)
-                        activity.announcePgp(account, null, null, activity.onOpenPGPKeyPublished)
+                        announcePgp(account, null, null, activity.onOpenPGPKeyPublished)
                     } else {
-                        activity.choosePgpSignId(account)
+                        choosePgpSignId(account)
                     }
                 }
-                XmppConst.REQUEST_ANNOUNCE_PGP -> activity.announcePgp(
+                XmppConst.REQUEST_ANNOUNCE_PGP -> announcePgp(
                     account,
                     this,
                     data,

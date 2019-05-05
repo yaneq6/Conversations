@@ -5,6 +5,7 @@ import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
 import eu.siacs.conversations.feature.conversation.REQUEST_COMMIT_ATTACHMENTS
 import eu.siacs.conversations.feature.conversation.REQUEST_TRUST_KEYS_ATTACHMENTS
+import eu.siacs.conversations.feature.xmpp.command.SelectPresence
 import eu.siacs.conversations.persistance.FileBackend
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.XmppActivity
@@ -24,7 +25,8 @@ class CommitAttachments @Inject constructor(
     private val attachLocationToConversation: AttachLocationToConversation,
     private val attachImageToConversation: AttachImageToConversation,
     private val attachFileToConversation: AttachFileToConversation,
-    private val toggleInputMethod: ToggleInputMethod
+    private val toggleInputMethod: ToggleInputMethod,
+    private val selectPresence: SelectPresence
 ) : () -> Unit {
 
     override fun invoke() {
@@ -71,7 +73,7 @@ class CommitAttachments @Inject constructor(
         ) {
             callback.onPresenceSelected()
         } else {
-            activity.selectPresence(conversation, callback)
+            selectPresence(conversation, callback)
         }
     }
 }

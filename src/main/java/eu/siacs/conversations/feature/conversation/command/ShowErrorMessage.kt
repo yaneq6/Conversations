@@ -4,13 +4,15 @@ import android.support.v7.app.AlertDialog
 import android.widget.Toast
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Message
+import eu.siacs.conversations.feature.xmpp.command.CopyTextToClipboard
 import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
 @ActivityScope
 class ShowErrorMessage @Inject constructor(
-    private val activity: XmppActivity
+    private val activity: XmppActivity,
+    private val copyTextToClipboard: CopyTextToClipboard
 ) : (Message) -> Unit {
     override fun invoke(message: Message) {
         val builder = AlertDialog.Builder(activity)
@@ -27,7 +29,7 @@ class ShowErrorMessage @Inject constructor(
 
         builder.setMessage(displayError)
         builder.setNegativeButton(R.string.copy_to_clipboard) { _, _ ->
-            activity.copyTextToClipboard(displayError, R.string.error_message)
+            copyTextToClipboard(displayError, R.string.error_message)
             Toast.makeText(
                 activity,
                 R.string.error_message_copied_to_clipboard,

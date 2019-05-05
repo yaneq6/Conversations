@@ -9,6 +9,9 @@ import eu.siacs.conversations.entities.Contact
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
 import eu.siacs.conversations.feature.conversation.REQUEST_ENCRYPT_MESSAGE
+import eu.siacs.conversations.feature.xmpp.command.AnnouncePgp
+import eu.siacs.conversations.feature.xmpp.command.ShowInstallPgpDialog
+import eu.siacs.conversations.feature.xmpp.query.HasPgp
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.UiCallback
@@ -23,18 +26,22 @@ class SendPgpMessage @Inject constructor(
     private val showNoPGPKeyDialog: ShowNoPGPKeyDialog,
     private val startPendingIntent: StartPendingIntent,
     private val encryptTextMessage: EncryptTextMessage,
-    private val messageSent: MessageSent
+    private val messageSent: MessageSent,
+    private val hasPgp: HasPgp,
+    private val showInstallPgpDialog: ShowInstallPgpDialog,
+    private val announcePgp: AnnouncePgp
 ) : (Message) -> Unit {
+
     override fun invoke(message: Message) {
         val conversation = fragment.conversation!!
         val xmppService = activity.xmppConnectionService
         val contact = message.conversation.contact
-        if (!activity.hasPgp()) {
-            activity.showInstallPgpDialog()
+        if (!hasPgp()) {
+            showInstallPgpDialog()
             return
         }
         if (conversation.account.pgpSignature == null) {
-            activity.announcePgp(conversation.account, conversation, null, activity.onOpenPGPKeyPublished)
+            announcePgp(conversation.account, conversation, null, activity.onOpenPGPKeyPublished)
             return
         }
         if (!fragment.sendingPgpMessage.compareAndSet(false, true)) {

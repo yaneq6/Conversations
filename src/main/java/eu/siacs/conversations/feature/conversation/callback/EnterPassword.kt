@@ -1,6 +1,7 @@
 package eu.siacs.conversations.feature.conversation.callback
 
 import android.view.View
+import eu.siacs.conversations.feature.xmpp.command.QuickPasswordEdit
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
 import io.aakit.scope.ActivityScope
@@ -9,7 +10,8 @@ import javax.inject.Inject
 @ActivityScope
 class EnterPassword @Inject constructor(
     private val fragment: ConversationFragment,
-    private val activity: ConversationsActivity
+    private val activity: ConversationsActivity,
+    private val quickPasswordEdit: QuickPasswordEdit
 ) : View.OnClickListener {
     override fun onClick(view: View) {
         val conversation = fragment.conversation!!
@@ -18,7 +20,7 @@ class EnterPassword @Inject constructor(
         if (password == null) {
             password = ""
         }
-        activity.quickPasswordEdit(password) { value ->
+        quickPasswordEdit(password) { value ->
             activity.xmppConnectionService.providePasswordForMuc(conversation, value)
             null
         }

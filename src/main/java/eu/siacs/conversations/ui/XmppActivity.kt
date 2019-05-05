@@ -2,7 +2,6 @@ package eu.siacs.conversations.ui
 
 import android.content.Intent
 import android.content.SharedPreferences
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.preference.PreferenceManager
@@ -25,7 +24,6 @@ import eu.siacs.conversations.feature.xmpp.di.DaggerXmppActivityComponent
 import eu.siacs.conversations.feature.xmpp.query.*
 import eu.siacs.conversations.services.AvatarService
 import eu.siacs.conversations.services.XmppConnectionService
-import eu.siacs.conversations.ui.util.PresenceSelector
 import eu.siacs.conversations.utils.ThemeHelper
 import javax.inject.Inject
 
@@ -194,8 +192,6 @@ abstract class XmppActivity : ActionBarActivity() {
         onStart.invoke()
     }
 
-    fun connectToBackend() = connectToBackend.invoke()
-
     override fun onStop() {
         super.onStop()
         onStop.invoke()
@@ -206,19 +202,10 @@ abstract class XmppActivity : ActionBarActivity() {
 
     fun showInstallPgpDialog() = showInstallPgpDialog.invoke()
 
-    fun registerListeners() = registerListeners.invoke()
-
-    fun unregisterListeners() = unregisterListeners.invoke()
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         onOptionsItemSelected.invoke(item)
         return super.onOptionsItemSelected(item)
     }
-
-    fun selectPresence(
-        conversation: Conversation,
-        listener: PresenceSelector.OnPresenceSelected
-    ) = selectPresence.invoke(conversation, listener)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -275,17 +262,6 @@ abstract class XmppActivity : ActionBarActivity() {
         privateMsgInMuc.invoke(conversation, nick)
     }
 
-    fun switchToConversation(
-        conversation: Conversation,
-        text: String?,
-        asQuote: Boolean,
-        nick: String?,
-        pm: Boolean,
-        doNotAppend: Boolean
-    ) {
-        switchToConversation.invoke(conversation, text, asQuote, nick, pm, doNotAppend)
-    }
-
     @JvmOverloads
     fun switchToContactDetails(
         contact: Contact,
@@ -301,11 +277,6 @@ abstract class XmppActivity : ActionBarActivity() {
     @JvmOverloads
     fun switchToAccount(account: Account, init: Boolean = false, fingerprint: String? = null) {
         switchToAccount.invoke(account, init, fingerprint)
-    }
-
-    fun delegateUriPermissionsToService(uri: Uri) {
-        delegateUriPermissionsToService.invoke(uri)
-
     }
 
     fun inviteToConversation(conversation: Conversation) {
@@ -344,13 +315,6 @@ abstract class XmppActivity : ActionBarActivity() {
         permitEmpty: Boolean
     ) {
         quickEdit.invoke(previousValue, hint, callback, permitEmpty)
-    }
-
-    fun quickPasswordEdit(
-        previousValue: String,
-        callback: (String) -> String?
-    ) {
-        quickPasswordEdit.invoke(previousValue, callback)
     }
 
     fun hasStoragePermission(requestCode: Int): Boolean =

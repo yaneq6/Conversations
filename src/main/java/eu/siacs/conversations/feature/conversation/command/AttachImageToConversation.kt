@@ -6,6 +6,7 @@ import android.widget.Toast
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
+import eu.siacs.conversations.feature.xmpp.command.DelegateUriPermissionsToService
 import eu.siacs.conversations.ui.UiCallback
 import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
@@ -14,7 +15,8 @@ import javax.inject.Inject
 @ActivityScope
 class AttachImageToConversation @Inject constructor(
     private val activity: XmppActivity,
-    private val hidePrepareFileToast: HidePrepareFileToast
+    private val hidePrepareFileToast: HidePrepareFileToast,
+    private val delegateUriPermissionsToService: DelegateUriPermissionsToService
 ) : (Conversation?, Uri) -> Unit {
 
     override fun invoke(conversation: Conversation?, uri: Uri) {
@@ -27,7 +29,7 @@ class AttachImageToConversation @Inject constructor(
             Toast.LENGTH_LONG
         )
         prepareFileToast.show()
-        activity.delegateUriPermissionsToService(uri)
+        delegateUriPermissionsToService(uri)
         activity.xmppConnectionService.attachImageToConversation(
             conversation,
             uri,

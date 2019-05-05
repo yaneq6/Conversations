@@ -6,6 +6,9 @@ import android.widget.Toast
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
+import eu.siacs.conversations.feature.xmpp.command.DelegateUriPermissionsToService
+import eu.siacs.conversations.feature.xmpp.command.HideToast
+import eu.siacs.conversations.feature.xmpp.command.ReplaceToast
 import eu.siacs.conversations.ui.UiInformableCallback
 import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
@@ -14,7 +17,10 @@ import javax.inject.Inject
 @ActivityScope
 class AttachFileToConversation @Inject constructor(
     private val activity: XmppActivity,
-    private val hidePrepareFileToast: HidePrepareFileToast
+    private val hidePrepareFileToast: HidePrepareFileToast,
+    private val replaceToast: ReplaceToast,
+    private val hideToast: HideToast,
+    private val delegateUriPermissionsToService: DelegateUriPermissionsToService
 ) : (Conversation?, Uri, String) -> Unit {
 
     override fun invoke(conversation: Conversation?, uri: Uri, type: String) {
@@ -27,7 +33,7 @@ class AttachFileToConversation @Inject constructor(
             Toast.LENGTH_LONG
         )
         prepareFileToast.show()
-        activity.delegateUriPermissionsToService(uri)
+        delegateUriPermissionsToService(uri)
         activity.xmppConnectionService.attachFileToConversation(
             conversation,
             uri,
@@ -35,17 +41,17 @@ class AttachFileToConversation @Inject constructor(
             object : UiInformableCallback<Message> {
                 override fun inform(text: String) {
                     hidePrepareFileToast(prepareFileToast)
-                    activity.runOnUiThread { activity.replaceToast(text) }
+                    activity.runOnUiThread { replaceToast(text) }
                 }
 
                 override fun success(message: Message) {
-                    activity.runOnUiThread { activity.hideToast() }
+                    activity.runOnUiThread { hideToast() }
                     hidePrepareFileToast(prepareFileToast)
                 }
 
                 override fun error(errorCode: Int, message: Message) {
                     hidePrepareFileToast(prepareFileToast)
-                    activity.runOnUiThread { activity.replaceToast(activity.getString(errorCode)) }
+                    activity.runOnUiThread { replaceToast(activity.getString(errorCode)) }
 
                 }
 

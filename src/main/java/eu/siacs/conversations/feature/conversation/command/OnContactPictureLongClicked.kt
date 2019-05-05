@@ -5,6 +5,8 @@ import android.widget.PopupMenu
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
+import eu.siacs.conversations.feature.xmpp.command.ShowQrCode
+import eu.siacs.conversations.feature.xmpp.command.SwitchToAccount
 import eu.siacs.conversations.services.QuickConversationsService
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.ConversationsActivity
@@ -16,7 +18,9 @@ import javax.inject.Inject
 @ActivityScope
 class OnContactPictureLongClicked @Inject constructor(
     private val activity: ConversationsActivity,
-    private val fragment: ConversationFragment
+    private val fragment: ConversationFragment,
+    private val switchToAccount: SwitchToAccount,
+    private val showQrCode: ShowQrCode
 ) {
     operator fun invoke(v: View, message: Message) {
         val fingerprint = if (message.encryption == Message.ENCRYPTION_PGP
@@ -66,7 +70,7 @@ class OnContactPictureLongClicked @Inject constructor(
                             message.contact,
                             fingerprint
                         )
-                        R.id.action_show_qr_code -> activity.showQrCode("xmpp:" + message.contact!!.jid.asBareJid().toEscapedString())
+                        R.id.action_show_qr_code -> showQrCode("xmpp:" + message.contact!!.jid.asBareJid().toEscapedString())
                     }
                     true
                 }
@@ -78,8 +82,8 @@ class OnContactPictureLongClicked @Inject constructor(
                 QuickConversationsService.isConversations()
             popupMenu.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
-                    R.id.action_show_qr_code -> activity.showQrCode(conversation.account.shareableUri)
-                    R.id.action_account_details -> activity.switchToAccount(
+                    R.id.action_show_qr_code -> showQrCode(conversation.account.shareableUri)
+                    R.id.action_account_details -> switchToAccount(
                         message.conversation.account,
                         fingerprint
                     )

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.provider.MediaStore
 import eu.siacs.conversations.R
 import eu.siacs.conversations.feature.conversation.*
+import eu.siacs.conversations.feature.xmpp.command.SelectPresence
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.RecordingActivity
 import eu.siacs.conversations.ui.XmppActivity
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @ActivityScope
 class SelectPresenceToAttachFile @Inject constructor(
     private val fragment: ConversationFragment,
-    private val activity: XmppActivity
+    private val activity: XmppActivity,
+    private val selectPresence: SelectPresence
 ) : (Int) -> Unit {
 
     override fun invoke(attachmentChoice: Int) {
@@ -70,7 +72,7 @@ class SelectPresenceToAttachFile @Inject constructor(
             conversation.nextCounterpart = null
             callback.onPresenceSelected()
         } else {
-            activity.selectPresence(conversation, callback)
+            selectPresence(conversation, callback)
         }
     }
 }

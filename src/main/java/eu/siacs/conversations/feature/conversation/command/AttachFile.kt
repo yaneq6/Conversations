@@ -10,6 +10,8 @@ import eu.siacs.conversations.entities.Contact
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
 import eu.siacs.conversations.feature.conversation.*
+import eu.siacs.conversations.feature.xmpp.command.ShowInstallPgpDialog
+import eu.siacs.conversations.feature.xmpp.query.HasPgp
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.UiCallback
 import eu.siacs.conversations.ui.XmppActivity
@@ -24,7 +26,9 @@ class AttachFile @Inject constructor(
     private val hasPermissions: HasPermissions,
     private val showNoPGPKeyDialog: ShowNoPGPKeyDialog,
     private val startPendingIntent: StartPendingIntent,
-    private val selectPresenceToAttachFile: SelectPresenceToAttachFile
+    private val selectPresenceToAttachFile: SelectPresenceToAttachFile,
+    private val hasPgp: HasPgp,
+    private val showInstallPgpDialog: ShowInstallPgpDialog
 ) : (Int) -> Unit {
 
     override fun invoke(attachmentChoice: Int) {
@@ -61,7 +65,7 @@ class AttachFile @Inject constructor(
         val encryption = conversation.nextEncryption
         val mode = conversation.mode
         if (encryption == Message.ENCRYPTION_PGP) {
-            if (activity.hasPgp()) {
+            if (hasPgp()) {
                 if (mode == Conversation.MODE_SINGLE && conversation.contact.pgpKeyId != 0L) {
                     activity.xmppConnectionService.pgpEngine.hasKey(
                         conversation.contact,
@@ -98,7 +102,7 @@ class AttachFile @Inject constructor(
                     })
                 }
             } else {
-                activity.showInstallPgpDialog()
+                showInstallPgpDialog()
             }
         } else {
             selectPresenceToAttachFile(attachmentChoice)

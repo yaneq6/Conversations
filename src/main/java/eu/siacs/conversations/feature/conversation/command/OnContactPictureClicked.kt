@@ -4,7 +4,8 @@ import android.widget.Toast
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
-import eu.siacs.conversations.ui.*
+import eu.siacs.conversations.feature.xmpp.command.SwitchToAccount
+import eu.siacs.conversations.ui.ConversationsActivity
 import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
@@ -12,7 +13,8 @@ import javax.inject.Inject
 @ActivityScope
 class OnContactPictureClicked @Inject constructor(
     private val activity: ConversationsActivity,
-    private val highlightInConference: HighlightInConference
+    private val highlightInConference: HighlightInConference,
+    private val switchToAccount: SwitchToAccount
 ) {
     operator fun invoke(message: Message) {
         val fingerprint: String
@@ -56,6 +58,6 @@ class OnContactPictureClicked @Inject constructor(
                 }
             }
         }
-        activity.switchToAccount(message.conversation.account, fingerprint)
+        switchToAccount(message.conversation.account, fingerprint)
     }
 }
