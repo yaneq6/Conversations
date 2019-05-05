@@ -24,7 +24,9 @@ import eu.siacs.conversations.entities.Account
 import eu.siacs.conversations.entities.Contact
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
-import eu.siacs.conversations.feature.xmpp.*
+import eu.siacs.conversations.feature.xmpp.callback.*
+import eu.siacs.conversations.feature.xmpp.command.*
+import eu.siacs.conversations.feature.xmpp.query.*
 import eu.siacs.conversations.services.AvatarService
 import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.services.XmppConnectionService.XmppConnectionBinder
@@ -67,12 +69,6 @@ abstract class XmppActivity : ActionBarActivity() {
     @Inject
     lateinit var usingEnterKey: UsingEnterKey
 
-    val getBooleanPreference: GetBooleanPreference by lazy {
-        GetBooleanPreference(
-            activity = this,
-            resources = resources
-        )
-    }
     @Inject
     lateinit var switchToConversation: SwitchToConversation
     @Inject
@@ -116,8 +112,6 @@ abstract class XmppActivity : ActionBarActivity() {
     @Inject
     lateinit var manuallyChangePresence: ManuallyChangePresence
     @Inject
-    lateinit var getShareableUri: GetShareableUri
-    @Inject
     lateinit var shareLink: ShareLink
     @Inject
     lateinit var launchOpenKeyChain: LaunchOpenKeyChain
@@ -134,6 +128,12 @@ abstract class XmppActivity : ActionBarActivity() {
 
     lateinit var xmppConnectionService: XmppConnectionService
 
+    val getBooleanPreference: GetBooleanPreference by lazy {
+        GetBooleanPreference(
+            activity = this,
+            resources = resources
+        )
+    }
 
     val onCreate
         get() = OnCreate(
@@ -147,25 +147,28 @@ abstract class XmppActivity : ActionBarActivity() {
 
     @JvmField
     var xmppConnectionServiceBound = false
-
     @JvmField
     var isCameraFeatureAvailable = false
-
-
     @JvmField
     var mTheme: Int = 0
-
     @JvmField
     var mUsingEnterKey = false
     @JvmField
     var mToast: Toast? = null
     @JvmField
+    var mPendingConferenceInvite: ConferenceInvite? = null
+    @JvmField
+    var metrics: DisplayMetrics? = null
+    @JvmField
+    var mLastUiRefresh: Long = 0
+    val mRefreshUiHandler = Handler()
+
+
+    @JvmField
     val onOpenPGPKeyPublished = Runnable {
         Toast.makeText(this@XmppActivity, R.string.openpgp_has_been_published, Toast.LENGTH_SHORT)
             .show()
     }
-    @JvmField
-    var mPendingConferenceInvite: ConferenceInvite? = null
     @JvmField
     var mConnection: ServiceConnection = object : ServiceConnection {
 
@@ -181,11 +184,6 @@ abstract class XmppActivity : ActionBarActivity() {
             xmppConnectionServiceBound = false
         }
     }
-    @JvmField
-    var metrics: DisplayMetrics? = null
-    @JvmField
-    var mLastUiRefresh: Long = 0
-    val mRefreshUiHandler = Handler()
     val mRefreshUiRunnable = {
         mLastUiRefresh = SystemClock.elapsedRealtime()
         refreshUiReal()
