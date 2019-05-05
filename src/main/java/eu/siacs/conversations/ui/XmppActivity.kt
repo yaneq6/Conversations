@@ -29,6 +29,7 @@ import javax.inject.Inject
 
 abstract class XmppActivity : ActionBarActivity() {
 
+    lateinit var xmppConnectionService: XmppConnectionService
     @Inject
     lateinit var hideToast: HideToast
     @Inject
@@ -38,21 +39,13 @@ abstract class XmppActivity : ActionBarActivity() {
     @Inject
     lateinit var onStart: OnStart
     @Inject
-    lateinit var connectToBackend: ConnectToBackend
-    @Inject
     lateinit var onStop: OnStop
     @Inject
     lateinit var hasPgp: HasPgp
     @Inject
     lateinit var showInstallPgpDialog: ShowInstallPgpDialog
     @Inject
-    lateinit var registerListeners: RegisterListeners
-    @Inject
-    lateinit var unregisterListeners: UnregisterListeners
-    @Inject
     lateinit var onOptionsItemSelected: OnOptionsItemSelected
-    @Inject
-    lateinit var selectPresence: SelectPresence
     @Inject
     lateinit var getThemeResource: GetThemeResource
     @Inject
@@ -70,8 +63,6 @@ abstract class XmppActivity : ActionBarActivity() {
     @Inject
     lateinit var switchToAccount: SwitchToAccount
     @Inject
-    lateinit var delegateUriPermissionsToService: DelegateUriPermissionsToService
-    @Inject
     lateinit var inviteToConversation: InviteToConversation
     @Inject
     lateinit var announcePgp: AnnouncePgp
@@ -81,8 +72,6 @@ abstract class XmppActivity : ActionBarActivity() {
     lateinit var showAddToRosterDialog: ShowAddToRosterDialog
     @Inject
     lateinit var quickEdit: QuickEdit
-    @Inject
-    lateinit var quickPasswordEdit: QuickPasswordEdit
     @Inject
     lateinit var hasStoragePermission: HasStoragePermission
     @Inject
@@ -112,7 +101,6 @@ abstract class XmppActivity : ActionBarActivity() {
     @Inject
     lateinit var adhocCallback: AdhocCallback
 
-    lateinit var xmppConnectionService: XmppConnectionService
     @JvmField
     var xmppConnectionServiceBound = false
     @JvmField
@@ -181,10 +169,10 @@ abstract class XmppActivity : ActionBarActivity() {
 
     open fun replaceToast(msg: String) = replaceToast.invoke(msg)
 
-    fun replaceToast(msg: String, showlong: Boolean) = replaceToast.invoke(msg, showlong)
+    open fun getShareableUri(http: Boolean): String? = null
 
-    fun refreshUi() {
-        refreshUi.invoke()
+    open fun switchToConversation(conversation: Conversation) {
+        switchToConversation.invoke(conversation, null)
     }
 
     override fun onStart() {
@@ -197,35 +185,47 @@ abstract class XmppActivity : ActionBarActivity() {
         onStop.invoke()
     }
 
-
-    fun hasPgp() = hasPgp.invoke()
-
-    fun showInstallPgpDialog() = showInstallPgpDialog.invoke()
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         onOptionsItemSelected.invoke(item)
         return super.onOptionsItemSelected(item)
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         onCreate.invoke(savedInstanceState)
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        onActivityResult.invoke(requestCode, resultCode, data)
+    }
+
+    override fun onMenuOpened(id: Int, menu: Menu?): Boolean {
+        onMenuOpened.invoke(id, menu)
+        return super.onMenuOpened(id, menu)
+    }
+
+    fun replaceToast(msg: String, showlong: Boolean) = replaceToast.invoke(msg, showlong)
+
+    fun refreshUi() {
+        refreshUi.invoke()
+    }
+
+    fun hasPgp() = hasPgp.invoke()
+
+    fun showInstallPgpDialog() = showInstallPgpDialog.invoke()
+
     fun getThemeResource(
         r_attr_name: Int,
         r_drawable_def: Int
     ): Int = getThemeResource.invoke(r_attr_name, r_drawable_def)
 
+
     fun getBooleanPreference(
         name: String,
         @BoolRes res: Int
     ): Boolean = getBooleanPreference.invoke(name, res)
-
-    open fun switchToConversation(conversation: Conversation) {
-        switchToConversation.invoke(conversation, null)
-    }
-
 
     fun switchToConversationAndQuote(
         conversation: Conversation,
@@ -320,15 +320,8 @@ abstract class XmppActivity : ActionBarActivity() {
     fun hasStoragePermission(requestCode: Int): Boolean =
         hasStoragePermission.invoke(requestCode)
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        onActivityResult.invoke(requestCode, resultCode, data)
-    }
-
     fun copyTextToClipboard(text: String, labelResId: Int): Boolean =
         copyTextToClipboard.invoke(text, labelResId)
-
-    open fun getShareableUri(http: Boolean): String? = null
 
     fun shareLink(http: Boolean) {
         shareLink.invoke(http)
@@ -339,11 +332,6 @@ abstract class XmppActivity : ActionBarActivity() {
     }
 
     fun findTheme(): Int = ThemeHelper.find(this)
-
-    override fun onMenuOpened(id: Int, menu: Menu?): Boolean {
-        onMenuOpened.invoke(id, menu)
-        return super.onMenuOpened(id, menu)
-    }
 
     @JvmOverloads
     fun showQrCode(uri: String? = shareableUri) {
