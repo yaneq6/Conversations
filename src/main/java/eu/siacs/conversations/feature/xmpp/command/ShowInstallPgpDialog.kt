@@ -23,7 +23,7 @@ class ShowInstallPgpDialog @Inject constructor(
             getString(R.string.restart)
         ) { dialog, which ->
             if (xmppConnectionServiceBound) {
-                unbindService(mConnection)
+                unbindService(connection)
                 xmppConnectionServiceBound = false
             }
             stopService(

@@ -2,8 +2,10 @@ package eu.siacs.conversations.ui
 
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
-import android.app.PendingIntent
-import android.content.*
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -19,7 +21,6 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
-import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Account
 import eu.siacs.conversations.entities.Contact
 import eu.siacs.conversations.entities.Conversation
@@ -29,7 +30,6 @@ import eu.siacs.conversations.feature.xmpp.command.*
 import eu.siacs.conversations.feature.xmpp.query.*
 import eu.siacs.conversations.services.AvatarService
 import eu.siacs.conversations.services.XmppConnectionService
-import eu.siacs.conversations.services.XmppConnectionService.XmppConnectionBinder
 import eu.siacs.conversations.ui.util.PresenceSelector
 import eu.siacs.conversations.utils.ThemeHelper
 import rocks.xmpp.addr.Jid
@@ -125,6 +125,15 @@ abstract class XmppActivity : ActionBarActivity() {
     @Inject
     lateinit var loadBitmap: LoadBitmap
 
+    @Inject
+    lateinit var onOpenPGPKeyPublished : OnOpenPGPKeyPublished
+    @Inject
+    lateinit var connection: Connection
+    @Inject
+    lateinit var refreshUiRunnable: RefreshUiRunnable
+    @Inject
+    lateinit var adhocCallback: AdhocCallback
+
     lateinit var xmppConnectionService: XmppConnectionService
 
     @JvmField
@@ -147,48 +156,6 @@ abstract class XmppActivity : ActionBarActivity() {
     var mSkipBackgroundBinding = false
     @JvmField
     val mRefreshUiHandler = Handler()
-
-
-    @JvmField
-    val onOpenPGPKeyPublished = Runnable {
-        Toast.makeText(this@XmppActivity, R.string.openpgp_has_been_published, Toast.LENGTH_SHORT)
-            .show()
-    }
-    @JvmField
-    var mConnection: ServiceConnection = object : ServiceConnection {
-
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            val binder = service as XmppConnectionBinder
-            xmppConnectionService = binder.service
-            xmppConnectionServiceBound = true
-            registerListeners()
-            onBackendConnected()
-        }
-
-        override fun onServiceDisconnected(arg0: ComponentName) {
-            xmppConnectionServiceBound = false
-        }
-    }
-    val mRefreshUiRunnable = {
-        mLastUiRefresh = SystemClock.elapsedRealtime()
-        refreshUiReal()
-    }
-    val adhocCallback = object : UiCallback<Conversation> {
-        override fun success(conversation: Conversation) {
-            runOnUiThread {
-                switchToConversation(conversation)
-                hideToast()
-            }
-        }
-
-        override fun error(errorCode: Int, `object`: Conversation) {
-            runOnUiThread { replaceToast(getString(errorCode)) }
-        }
-
-        override fun userInputRequried(pi: PendingIntent, `object`: Conversation) {
-
-        }
-    }
 
     val getBooleanPreference: GetBooleanPreference by lazy {
         GetBooleanPreference(

@@ -10,6 +10,7 @@ import javax.inject.Inject
 
 @ActivityScope
 class ConnectToBackend @Inject constructor(private val activity: XmppActivity) {
+
     operator fun invoke(): Unit = activity.run {
         val intent = Intent(
             activity,
@@ -22,6 +23,6 @@ class ConnectToBackend @Inject constructor(private val activity: XmppActivity) {
             Timber.w("unable to start service from " + javaClass.simpleName)
         }
 
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE)
+        bindService(intent, connection, Context.BIND_AUTO_CREATE)
     }
 }
