@@ -4,7 +4,9 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.widget.ImageView
 import eu.siacs.conversations.entities.Message
-import eu.siacs.conversations.ui.*
+import eu.siacs.conversations.feature.xmpp.BitmapWorkerTask
+import eu.siacs.conversations.ui.AsyncDrawable
+import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
 import java.io.IOException
 import java.util.concurrent.RejectedExecutionException
@@ -36,8 +38,8 @@ class LoadBitmap @Inject constructor(
             if (XmppActivity.cancelPotentialWork(message, imageView)) {
                 imageView.setBackgroundColor(-0xcccccd)
                 imageView.setImageDrawable(null)
-                val task = XmppActivity.BitmapWorkerTask(imageView)
-                val asyncDrawable = XmppActivity.AsyncDrawable(
+                val task = BitmapWorkerTask(imageView)
+                val asyncDrawable = AsyncDrawable(
                     resources, null, task
                 )
                 imageView.setImageDrawable(asyncDrawable)

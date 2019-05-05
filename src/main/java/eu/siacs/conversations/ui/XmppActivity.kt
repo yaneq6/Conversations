@@ -1,16 +1,9 @@
 package eu.siacs.conversations.ui
 
-import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.res.Resources
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
-import android.os.AsyncTask
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.preference.PreferenceManager
@@ -27,6 +20,8 @@ import eu.siacs.conversations.entities.Contact
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
 import eu.siacs.conversations.feature.di.ActivityModule
+import eu.siacs.conversations.feature.xmpp.BitmapWorkerTask
+import eu.siacs.conversations.feature.xmpp.ConferenceInvite
 import eu.siacs.conversations.feature.xmpp.callback.*
 import eu.siacs.conversations.feature.xmpp.command.*
 import eu.siacs.conversations.feature.xmpp.di.DaggerXmppActivityComponent
@@ -35,10 +30,7 @@ import eu.siacs.conversations.services.AvatarService
 import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.ui.util.PresenceSelector
 import eu.siacs.conversations.utils.ThemeHelper
-import rocks.xmpp.addr.Jid
-import java.io.IOException
 import java.lang.ref.WeakReference
-import java.util.*
 import javax.inject.Inject
 
 abstract class XmppActivity : ActionBarActivity() {
@@ -183,13 +175,15 @@ abstract class XmppActivity : ActionBarActivity() {
 
     val isDarkTheme: Boolean get() = IsDarkTheme(this)()
 
-    val isOptimizingBattery: Boolean get() = IsOptimizingBattery(
-        this
-    )()
+    val isOptimizingBattery: Boolean
+        get() = IsOptimizingBattery(
+            this
+        )()
 
-    val isAffectedByDataSaver: Boolean get() = IsAffectedByDataSaver(
-        this
-    )()
+    val isAffectedByDataSaver: Boolean
+        get() = IsAffectedByDataSaver(
+            this
+        )()
 
     val shareableUri: String? get() = getShareableUri(false)
 
@@ -198,7 +192,7 @@ abstract class XmppActivity : ActionBarActivity() {
 
     abstract fun onBackendConnected()
 
-    open fun injectDependencies()  {
+    open fun injectDependencies() {
         DaggerXmppActivityComponent
             .builder()
             .activityModule(ActivityModule(this))
@@ -350,25 +344,12 @@ abstract class XmppActivity : ActionBarActivity() {
         announcePgp.invoke(account, conversation, intent, onSuccess)
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    fun setListItemBackgroundOnView(view: View) {
-        setListItemBackgroundOnView.invoke(view)
-    }
-
     fun choosePgpSignId(account: Account) {
         choosePgpSignId.invoke(account)
     }
 
-    fun displayErrorDialog(errorCode: Int) {
-        displayErrorDialog.invoke(errorCode)
-    }
-
     fun showAddToRosterDialog(contact: Contact) {
         showAddToRosterDialog.invoke(contact)
-    }
-
-    fun showAskForPresenceDialog(contact: Contact) {
-        showAskForPresenceDialog.invoke(contact)
     }
 
     fun quickEdit(
@@ -395,37 +376,18 @@ abstract class XmppActivity : ActionBarActivity() {
         quickPasswordEdit.invoke(previousValue, callback)
     }
 
-    @SuppressLint("InflateParams")
-    fun quickEdit(
-        previousValue: String?,
-        onValueEdited: (String) -> String?,
-        @StringRes hint: Int,
-        password: Boolean,
-        permitEmpty: Boolean
-    ) {
-        quickEdit.invoke(previousValue, onValueEdited, hint, password, permitEmpty)
-    }
-
-    fun hasStoragePermission(requestCode: Int): Boolean {
-        return hasStoragePermission.invoke(requestCode)
-    }
+    fun hasStoragePermission(requestCode: Int): Boolean =
+        hasStoragePermission.invoke(requestCode)
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         onActivityResult.invoke(requestCode, resultCode, data)
     }
 
-    fun copyTextToClipboard(text: String, labelResId: Int): Boolean {
-        return copyTextToClipboard.invoke(text, labelResId)
-    }
+    fun copyTextToClipboard(text: String, labelResId: Int): Boolean =
+        copyTextToClipboard.invoke(text, labelResId)
 
-    fun manuallyChangePresence(): Boolean {
-        return manuallyChangePresence.invoke()
-    }
-
-    open fun getShareableUri(http: Boolean): String? {
-        return null
-    }
+    open fun getShareableUri(http: Boolean): String? = null
 
     fun shareLink(http: Boolean) {
         shareLink.invoke(http)
@@ -457,93 +419,6 @@ abstract class XmppActivity : ActionBarActivity() {
 
     interface OnValueEdited : (String) -> String?
 
-    class ConferenceInvite {
-        var uuid: String? = null
-        val jids = ArrayList<Jid>()
-
-        fun execute(activity: XmppActivity): Boolean {
-            val service = activity.xmppConnectionService
-            val conversation = service!!.findConversationByUuid(this.uuid) ?: return false
-            if (conversation.mode == Conversation.MODE_MULTI) {
-                for (jid in jids) {
-                    service.invite(conversation, jid)
-                }
-                return false
-            } else {
-                jids.add(conversation.jid.asBareJid())
-                return service.createAdhocConference(
-                    conversation.account,
-                    null,
-                    jids,
-                    activity.adhocCallback
-                )
-            }
-        }
-
-        companion object {
-
-            fun parse(data: Intent): ConferenceInvite? {
-                val invite = ConferenceInvite()
-                invite.uuid = data.getStringExtra(ChooseContactActivity.EXTRA_CONVERSATION)
-                if (invite.uuid == null) {
-                    return null
-                }
-                invite.jids.addAll(ChooseContactActivity.extractJabberIds(data))
-                return invite
-            }
-        }
-    }
-
-    class BitmapWorkerTask constructor(imageView: ImageView) :
-        AsyncTask<Message, Void, Bitmap>() {
-        private val imageViewReference: WeakReference<ImageView> = WeakReference(imageView)
-        var message: Message? = null
-
-        override fun doInBackground(vararg params: Message): Bitmap? {
-            if (isCancelled) {
-                return null
-            }
-            message = params[0]
-            return try {
-                val activity = find(imageViewReference)
-                if (activity?.xmppConnectionService != null) {
-                    activity.xmppConnectionService.fileBackend.getThumbnail(
-                        message,
-                        (activity.metrics!!.density * 288).toInt(),
-                        false
-                    )
-                } else {
-                    null
-                }
-            } catch (e: IOException) {
-                null
-            }
-
-        }
-
-        override fun onPostExecute(bitmap: Bitmap?) {
-            if (!isCancelled) {
-                val imageView = imageViewReference.get()
-                if (imageView != null) {
-                    imageView.setImageBitmap(bitmap)
-                    imageView.setBackgroundColor(if (bitmap == null) -0xcccccd else 0x00000000)
-                }
-            }
-        }
-    }
-
-    class AsyncDrawable constructor(
-        res: Resources,
-        bitmap: Bitmap?,
-        bitmapWorkerTask: BitmapWorkerTask
-    ) : BitmapDrawable(res, bitmap) {
-
-        private val bitmapWorkerTaskReference = WeakReference(bitmapWorkerTask)
-
-        val bitmapWorkerTask: BitmapWorkerTask
-            get() = bitmapWorkerTaskReference.get()!!
-
-    }
 
     companion object {
 
