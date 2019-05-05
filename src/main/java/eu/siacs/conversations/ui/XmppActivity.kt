@@ -68,7 +68,6 @@ abstract class XmppActivity : ActionBarActivity() {
     lateinit var getThemeResource: GetThemeResource
     @Inject
     lateinit var usingEnterKey: UsingEnterKey
-
     @Inject
     lateinit var switchToConversation: SwitchToConversation
     @Inject
@@ -128,23 +127,6 @@ abstract class XmppActivity : ActionBarActivity() {
 
     lateinit var xmppConnectionService: XmppConnectionService
 
-    val getBooleanPreference: GetBooleanPreference by lazy {
-        GetBooleanPreference(
-            activity = this,
-            resources = resources
-        )
-    }
-
-    val onCreate
-        get() = OnCreate(
-            activity = this,
-            resources = resources,
-            packageManager = packageManager,
-            usingEnterKey = UsingEnterKey(
-                getBooleanPreference = getBooleanPreference
-            )
-        )
-
     @JvmField
     var xmppConnectionServiceBound = false
     @JvmField
@@ -161,6 +143,9 @@ abstract class XmppActivity : ActionBarActivity() {
     var metrics: DisplayMetrics? = null
     @JvmField
     var mLastUiRefresh: Long = 0
+    @JvmField
+    var mSkipBackgroundBinding = false
+    @JvmField
     val mRefreshUiHandler = Handler()
 
 
@@ -204,8 +189,23 @@ abstract class XmppActivity : ActionBarActivity() {
 
         }
     }
-    @JvmField
-    var mSkipBackgroundBinding = false
+
+    val getBooleanPreference: GetBooleanPreference by lazy {
+        GetBooleanPreference(
+            activity = this,
+            resources = resources
+        )
+    }
+
+    val onCreate
+        get() = OnCreate(
+            activity = this,
+            resources = resources,
+            packageManager = packageManager,
+            usingEnterKey = UsingEnterKey(
+                getBooleanPreference = getBooleanPreference
+            )
+        )
 
     val isDarkTheme: Boolean
         get() = ThemeHelper.isDark(mTheme)
