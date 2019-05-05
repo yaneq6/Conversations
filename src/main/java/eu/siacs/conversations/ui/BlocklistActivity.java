@@ -15,6 +15,9 @@ import eu.siacs.conversations.ui.interfaces.OnBackendConnected;
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.feature.xmpp.XmppConst.EXTRA_ACCOUNT;
+import static eu.siacs.conversations.feature.xmpp.XmppConst.FRAGMENT_TAG_DIALOG;
+
 public class BlocklistActivity extends AbstractSearchableListItemActivity implements OnUpdateBlocklist {
 
 	private Account account = null;

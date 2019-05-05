@@ -8,6 +8,7 @@ import eu.siacs.conversations.Config
 import eu.siacs.conversations.R
 import eu.siacs.conversations.feature.conversation.*
 import eu.siacs.conversations.feature.xmpp.ConferenceInvite
+import eu.siacs.conversations.feature.xmpp.XmppConst
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.XmppActivity
 import eu.siacs.conversations.ui.util.Attachment
@@ -71,7 +72,7 @@ class HandlePositiveActivityResult @Inject constructor(
                 )
                 toggleInputMethod()
             }
-            XmppActivity.REQUEST_INVITE_TO_CONVERSATION -> {
+            XmppConst.REQUEST_INVITE_TO_CONVERSATION -> {
                 val invite = ConferenceInvite.parse(data)
                 if (invite != null) {
                     if (invite.execute(activity)) {

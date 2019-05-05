@@ -77,6 +77,9 @@ import eu.siacs.conversations.xmpp.forms.Data;
 import eu.siacs.conversations.xmpp.pep.Avatar;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.feature.xmpp.XmppConst.EXTRA_ACCOUNT;
+import static eu.siacs.conversations.feature.xmpp.XmppConst.REQUEST_BATTERY_OP;
+
 public class EditAccountActivity extends OmemoActivity implements OnAccountUpdate, OnUpdateBlocklist,
         OnKeyStatusUpdated, OnCaptchaRequested, KeyChainAliasCallback, XmppConnectionService.OnShowErrorToast, XmppConnectionService.OnMamPreferencesFetched {
 

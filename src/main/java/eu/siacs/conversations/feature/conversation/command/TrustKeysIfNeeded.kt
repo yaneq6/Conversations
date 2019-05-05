@@ -3,9 +3,9 @@ package eu.siacs.conversations.feature.conversation.command
 import android.app.Activity
 import android.content.Intent
 import eu.siacs.conversations.crypto.axolotl.FingerprintStatus
+import eu.siacs.conversations.feature.xmpp.XmppConst
 import eu.siacs.conversations.ui.ConversationFragment
 import eu.siacs.conversations.ui.TrustKeysActivity
-import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
 import javax.inject.Inject
 
@@ -32,7 +32,7 @@ class TrustKeysIfNeeded @Inject constructor(
                 contacts[i] = targets[i].toString()
             }
             intent.putExtra("contacts", contacts)
-            intent.putExtra(XmppActivity.EXTRA_ACCOUNT, conversation.account.jid.asBareJid().toString())
+            intent.putExtra(XmppConst.EXTRA_ACCOUNT, conversation.account.jid.asBareJid().toString())
             intent.putExtra("conversation", conversation.uuid)
             activity.startActivityForResult(intent, requestCode)
             return true

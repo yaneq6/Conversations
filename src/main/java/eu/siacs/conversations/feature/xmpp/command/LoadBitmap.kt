@@ -31,11 +31,11 @@ class LoadBitmap @Inject constructor(
         }
 
         if (bm != null) {
-            XmppActivity.cancelPotentialWork(message, imageView)
+            cancelPotentialWork(message, imageView)
             imageView.setImageBitmap(bm)
             imageView.setBackgroundColor(0x00000000)
         } else {
-            if (XmppActivity.cancelPotentialWork(message, imageView)) {
+            if (cancelPotentialWork(message, imageView)) {
                 imageView.setBackgroundColor(-0xcccccd)
                 imageView.setImageDrawable(null)
                 val task = BitmapWorkerTask(imageView)
@@ -51,4 +51,29 @@ class LoadBitmap @Inject constructor(
             }
         }
     }
+}
+
+private fun cancelPotentialWork(message: Message, imageView: ImageView): Boolean {
+    val bitmapWorkerTask = getBitmapWorkerTask(imageView)
+
+    if (bitmapWorkerTask != null) {
+        val oldMessage = bitmapWorkerTask.message
+        if (oldMessage == null || message !== oldMessage) {
+            bitmapWorkerTask.cancel(true)
+        } else {
+            return false
+        }
+    }
+    return true
+}
+
+
+private fun getBitmapWorkerTask(imageView: ImageView?): BitmapWorkerTask? {
+    if (imageView != null) {
+        val drawable = imageView.drawable
+        if (drawable is AsyncDrawable) {
+            return drawable.bitmapWorkerTask
+        }
+    }
+    return null
 }

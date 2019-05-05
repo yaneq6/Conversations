@@ -41,6 +41,9 @@ import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.utils.XmppUri;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.feature.xmpp.XmppConst.EXTRA_ACCOUNT;
+import static eu.siacs.conversations.feature.xmpp.XmppConst.FRAGMENT_TAG_DIALOG;
+
 public class ChooseContactActivity extends AbstractSearchableListItemActivity implements MultiChoiceModeListener, AdapterView.OnItemClickListener {
     public static final String EXTRA_TITLE_RES_ID = "extra_title_res_id";
     public static final String EXTRA_GROUP_CHAT_NAME = "extra_group_chat_name";

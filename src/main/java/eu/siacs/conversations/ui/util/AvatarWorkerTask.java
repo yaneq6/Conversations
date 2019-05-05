@@ -11,11 +11,10 @@ import android.widget.ImageView;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.RejectedExecutionException;
 
-import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.ui.XmppActivity;
-import eu.siacs.conversations.ui.adapter.AccountAdapter;
-import eu.siacs.conversations.utils.UIHelper;
+
+import static eu.siacs.conversations.feature.xmpp.UtilsKt.find;
 
 public class AvatarWorkerTask extends AsyncTask<AvatarService.Avatarable, Void, Bitmap> {
     private final WeakReference<ImageView> imageViewReference;
@@ -30,7 +29,7 @@ public class AvatarWorkerTask extends AsyncTask<AvatarService.Avatarable, Void, 
     @Override
     protected Bitmap doInBackground(AvatarService.Avatarable... params) {
         this.avatarable = params[0];
-        final XmppActivity activity = XmppActivity.find(imageViewReference);
+        final XmppActivity activity = find(imageViewReference);
         if (activity == null) {
             return null;
         }
@@ -75,7 +74,7 @@ public class AvatarWorkerTask extends AsyncTask<AvatarService.Avatarable, Void, 
 
     public static void loadAvatar(final AvatarService.Avatarable avatarable, final ImageView imageView, final @DimenRes int size) {
         if (cancelPotentialWork(avatarable, imageView)) {
-            final XmppActivity activity = XmppActivity.find(imageView);
+            final XmppActivity activity = find(imageView);
             if (activity == null) {
                 return;
             }

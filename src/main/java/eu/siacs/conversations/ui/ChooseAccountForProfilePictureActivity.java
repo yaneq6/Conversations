@@ -12,6 +12,8 @@ import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.ui.adapter.AccountAdapter;
 
+import static eu.siacs.conversations.feature.xmpp.XmppConst.EXTRA_ACCOUNT;
+
 public class ChooseAccountForProfilePictureActivity extends XmppActivity {
 
     protected final List<Account> accountList = new ArrayList<>();

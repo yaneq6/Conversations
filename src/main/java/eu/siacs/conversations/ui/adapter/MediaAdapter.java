@@ -28,6 +28,8 @@ import eu.siacs.conversations.ui.util.Attachment;
 import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.ui.util.ViewUtil;
 
+import static eu.siacs.conversations.feature.xmpp.UtilsKt.find;
+
 public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaViewHolder> {
 
     private static final List<String> DOCUMENT_MIMES = Arrays.asList(
@@ -212,7 +214,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaViewHol
         @Override
         protected Bitmap doInBackground(Attachment... params) {
             this.attachment = params[0];
-            final XmppActivity activity = XmppActivity.find(imageViewReference);
+            final XmppActivity activity = find(imageViewReference);
             if (activity == null) {
                 return null;
             }

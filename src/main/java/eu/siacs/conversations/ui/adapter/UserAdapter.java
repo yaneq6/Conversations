@@ -26,6 +26,8 @@ import eu.siacs.conversations.ui.util.AvatarWorkerTask;
 import eu.siacs.conversations.ui.util.MucDetailsContextMenuHelper;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.feature.xmpp.UtilsKt.find;
+
 public class UserAdapter extends ListAdapter<MucOptions.User, UserAdapter.ViewHolder> implements View.OnCreateContextMenuListener {
 
     static final DiffUtil.ItemCallback<MucOptions.User> DIFF = new DiffUtil.ItemCallback<MucOptions.User>() {
@@ -68,7 +70,7 @@ public class UserAdapter extends ListAdapter<MucOptions.User, UserAdapter.ViewHo
         final MucOptions.User user = getItem(position);
         AvatarWorkerTask.loadAvatar(user, viewHolder.binding.contactPhoto, R.dimen.avatar);
         viewHolder.binding.getRoot().setOnClickListener(v -> {
-            final XmppActivity activity = XmppActivity.find(v);
+            final XmppActivity activity = find(v);
             if (activity != null) {
                 activity.highlightInMuc(user.getConversation(), user.getName());
             }
@@ -96,7 +98,7 @@ public class UserAdapter extends ListAdapter<MucOptions.User, UserAdapter.ViewHo
         if (advancedMode && user.getPgpKeyId() != 0) {
             viewHolder.binding.key.setVisibility(View.VISIBLE);
             viewHolder.binding.key.setOnClickListener(v -> {
-                final XmppActivity activity = XmppActivity.find(v);
+                final XmppActivity activity = find(v);
                 final XmppConnectionService service = activity == null ? null : activity.xmppConnectionService;
                 final PgpEngine pgpEngine = service == null ? null : service.getPgpEngine();
                 if (pgpEngine != null) {

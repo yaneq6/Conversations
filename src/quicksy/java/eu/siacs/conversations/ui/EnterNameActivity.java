@@ -41,7 +41,7 @@ public class EnterNameActivity extends XmppActivity implements XmppConnectionSer
             xmppConnectionService.publishDisplayName(account);
 
             Intent intent = new Intent(this, PublishProfilePictureActivity.class);
-            intent.putExtra(PublishProfilePictureActivity.EXTRA_ACCOUNT, account.getJid().asBareJid().toEscapedString());
+            intent.putExtra(Xmpp.EXTRA_ACCOUNT, account.getJid().asBareJid().toEscapedString());
             intent.putExtra("setup", true);
             startActivity(intent);
         }

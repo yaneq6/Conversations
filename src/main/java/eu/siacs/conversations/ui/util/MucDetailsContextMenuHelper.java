@@ -26,12 +26,13 @@ import eu.siacs.conversations.ui.XmppActivity;
 import rocks.xmpp.addr.Jid;
 
 import static eu.siacs.conversations.feature.conversation.UtilsKt.get;
+import static eu.siacs.conversations.feature.xmpp.UtilsKt.find;
 
 
 public final class MucDetailsContextMenuHelper {
 
     public static void onCreateContextMenu(ContextMenu menu, View v) {
-        final XmppActivity activity = XmppActivity.find(v);
+        final XmppActivity activity = find(v);
         final Object tag = v.getTag();
         if (tag instanceof MucOptions.User && activity != null) {
             activity.getMenuInflater().inflate(R.menu.muc_details_context, menu);

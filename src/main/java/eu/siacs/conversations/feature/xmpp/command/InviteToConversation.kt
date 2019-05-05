@@ -1,6 +1,7 @@
 package eu.siacs.conversations.feature.xmpp.command
 
 import eu.siacs.conversations.entities.Conversation
+import eu.siacs.conversations.feature.xmpp.XmppConst
 import eu.siacs.conversations.ui.ChooseContactActivity
 import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
@@ -13,7 +14,7 @@ class InviteToConversation @Inject constructor(
     operator fun invoke(conversation: Conversation) {
         activity.startActivityForResult(
             ChooseContactActivity.create(activity, conversation),
-            XmppActivity.REQUEST_INVITE_TO_CONVERSATION
+            XmppConst.REQUEST_INVITE_TO_CONVERSATION
         )
     }
 }

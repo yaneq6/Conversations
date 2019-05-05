@@ -6,6 +6,7 @@ import android.content.IntentSender
 import eu.siacs.conversations.entities.Account
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
+import eu.siacs.conversations.feature.xmpp.XmppConst
 import eu.siacs.conversations.feature.xmpp.query.ManuallyChangePresence
 import eu.siacs.conversations.ui.UiCallback
 import eu.siacs.conversations.ui.XmppActivity
@@ -46,7 +47,7 @@ class AnnouncePgp @Inject constructor(
                         try {
                             activity.startIntentSenderForResult(
                                 pi.intentSender,
-                                XmppActivity.REQUEST_ANNOUNCE_PGP,
+                                XmppConst.REQUEST_ANNOUNCE_PGP,
                                 null,
                                 0,
                                 0,

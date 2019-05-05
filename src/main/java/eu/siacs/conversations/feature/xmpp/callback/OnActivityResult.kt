@@ -5,6 +5,7 @@ import android.content.Intent
 import android.widget.Toast
 import eu.siacs.conversations.R
 import eu.siacs.conversations.feature.xmpp.ConferenceInvite
+import eu.siacs.conversations.feature.xmpp.XmppConst
 import eu.siacs.conversations.ui.XmppActivity
 import io.aakit.scope.ActivityScope
 import javax.inject.Inject
@@ -14,7 +15,7 @@ class OnActivityResult @Inject constructor(
     private val activity: XmppActivity
 ) {
     operator fun invoke(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == XmppActivity.REQUEST_INVITE_TO_CONVERSATION && resultCode == Activity.RESULT_OK) {
+        if (requestCode == XmppConst.REQUEST_INVITE_TO_CONVERSATION && resultCode == Activity.RESULT_OK) {
             activity.mPendingConferenceInvite =
                 ConferenceInvite.parse(data!!)
             if (activity.xmppConnectionServiceBound && activity.mPendingConferenceInvite != null) {

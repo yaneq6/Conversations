@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.os.AsyncTask
 import android.widget.ImageView
 import eu.siacs.conversations.entities.Message
-import eu.siacs.conversations.ui.XmppActivity
 import java.io.IOException
 import java.lang.ref.WeakReference
 
@@ -19,7 +18,7 @@ class BitmapWorkerTask constructor(imageView: ImageView) :
         }
         message = params[0]
         return try {
-            val activity = XmppActivity.find(imageViewReference)
+            val activity = find(imageViewReference)
             if (activity?.xmppConnectionService != null) {
                 activity.xmppConnectionService.fileBackend.getThumbnail(
                     message,

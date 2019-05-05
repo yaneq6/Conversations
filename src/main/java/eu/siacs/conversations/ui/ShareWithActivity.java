@@ -22,6 +22,8 @@ import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.adapter.ConversationAdapter;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.feature.xmpp.XmppConst.EXTRA_ACCOUNT;
+
 public class ShareWithActivity extends XmppActivity implements XmppConnectionService.OnConversationUpdate {
 
     private static final int REQUEST_STORAGE_PERMISSION = 0x733f32;

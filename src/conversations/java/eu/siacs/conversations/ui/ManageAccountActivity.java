@@ -34,6 +34,9 @@ import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.xmpp.XmppConnection;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.feature.xmpp.XmppConst.EXTRA_ACCOUNT;
+import static eu.siacs.conversations.feature.xmpp.XmppConst.REQUEST_ANNOUNCE_PGP;
+import static eu.siacs.conversations.feature.xmpp.XmppConst.REQUEST_CHOOSE_PGP_ID;
 import static eu.siacs.conversations.utils.PermissionUtils.allGranted;
 import static eu.siacs.conversations.utils.PermissionUtils.writeGranted;
 

@@ -8,6 +8,7 @@ import android.support.v7.app.AlertDialog
 import android.text.InputType
 import eu.siacs.conversations.R
 import eu.siacs.conversations.databinding.DialogQuickeditBinding
+import eu.siacs.conversations.feature.xmpp.callback.OnValueEdited
 import eu.siacs.conversations.ui.XmppActivity
 import eu.siacs.conversations.ui.util.SoftKeyboardUtils
 import io.aakit.scope.ActivityScope
@@ -20,7 +21,7 @@ class QuickEdit @Inject constructor(
     operator fun invoke(
         previousValue: String,
         @StringRes hint: Int,
-        callback: XmppActivity.OnValueEdited
+        callback: OnValueEdited
     ) {
         invoke(previousValue, callback, hint, password = false, permitEmpty = false)
     }

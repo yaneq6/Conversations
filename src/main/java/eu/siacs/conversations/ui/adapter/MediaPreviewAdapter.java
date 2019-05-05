@@ -12,16 +12,19 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
+
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.MediaPreviewBinding;
 import eu.siacs.conversations.ui.ConversationFragment;
 import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.ui.util.Attachment;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.RejectedExecutionException;
+import static eu.siacs.conversations.feature.xmpp.UtilsKt.find;
 
 public class MediaPreviewAdapter extends RecyclerView.Adapter<MediaPreviewAdapter.MediaPreviewViewHolder> {
 
@@ -163,7 +166,7 @@ public class MediaPreviewAdapter extends RecyclerView.Adapter<MediaPreviewAdapte
         @Override
         protected Bitmap doInBackground(Attachment... params) {
             this.attachment = params[0];
-            final XmppActivity activity = XmppActivity.find(imageViewReference);
+            final XmppActivity activity = find(imageViewReference);
             if (activity == null) {
                 return null;
             }

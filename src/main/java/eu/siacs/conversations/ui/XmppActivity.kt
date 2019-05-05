@@ -1,6 +1,5 @@
 package eu.siacs.conversations.ui
 
-import android.content.ContextWrapper
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
@@ -12,7 +11,6 @@ import android.support.annotation.StringRes
 import android.util.DisplayMetrics
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import eu.siacs.conversations.entities.Account
@@ -20,7 +18,6 @@ import eu.siacs.conversations.entities.Contact
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
 import eu.siacs.conversations.feature.di.ActivityModule
-import eu.siacs.conversations.feature.xmpp.BitmapWorkerTask
 import eu.siacs.conversations.feature.xmpp.ConferenceInvite
 import eu.siacs.conversations.feature.xmpp.callback.*
 import eu.siacs.conversations.feature.xmpp.command.*
@@ -30,7 +27,6 @@ import eu.siacs.conversations.services.AvatarService
 import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.ui.util.PresenceSelector
 import eu.siacs.conversations.utils.ThemeHelper
-import java.lang.ref.WeakReference
 import javax.inject.Inject
 
 abstract class XmppActivity : ActionBarActivity() {
@@ -62,8 +58,6 @@ abstract class XmppActivity : ActionBarActivity() {
     @Inject
     lateinit var getThemeResource: GetThemeResource
     @Inject
-    lateinit var usingEnterKey: UsingEnterKey
-    @Inject
     lateinit var switchToConversation: SwitchToConversation
     @Inject
     lateinit var switchToConversationAndQuote: SwitchToConversationAndQuote
@@ -84,15 +78,9 @@ abstract class XmppActivity : ActionBarActivity() {
     @Inject
     lateinit var announcePgp: AnnouncePgp
     @Inject
-    lateinit var setListItemBackgroundOnView: SetListItemBackgroundOnView
-    @Inject
     lateinit var choosePgpSignId: ChoosePgpSignId
     @Inject
-    lateinit var displayErrorDialog: DisplayErrorDialog
-    @Inject
     lateinit var showAddToRosterDialog: ShowAddToRosterDialog
-    @Inject
-    lateinit var showAskForPresenceDialog: ShowAskForPresenceDialog
     @Inject
     lateinit var quickEdit: QuickEdit
     @Inject
@@ -103,8 +91,6 @@ abstract class XmppActivity : ActionBarActivity() {
     lateinit var onActivityResult: OnActivityResult
     @Inject
     lateinit var copyTextToClipboard: CopyTextToClipboard
-    @Inject
-    lateinit var manuallyChangePresence: ManuallyChangePresence
     @Inject
     lateinit var shareLink: ShareLink
     @Inject
@@ -129,7 +115,6 @@ abstract class XmppActivity : ActionBarActivity() {
     lateinit var adhocCallback: AdhocCallback
 
     lateinit var xmppConnectionService: XmppConnectionService
-
     @JvmField
     var xmppConnectionServiceBound = false
     @JvmField
@@ -175,15 +160,9 @@ abstract class XmppActivity : ActionBarActivity() {
 
     val isDarkTheme: Boolean get() = IsDarkTheme(this)()
 
-    val isOptimizingBattery: Boolean
-        get() = IsOptimizingBattery(
-            this
-        )()
+    val isOptimizingBattery: Boolean get() = IsOptimizingBattery(this)()
 
-    val isAffectedByDataSaver: Boolean
-        get() = IsAffectedByDataSaver(
-            this
-        )()
+    val isAffectedByDataSaver: Boolean get() = IsAffectedByDataSaver(this)()
 
     val shareableUri: String? get() = getShareableUri(false)
 
@@ -250,8 +229,6 @@ abstract class XmppActivity : ActionBarActivity() {
         r_attr_name: Int,
         r_drawable_def: Int
     ): Int = getThemeResource.invoke(r_attr_name, r_drawable_def)
-
-    fun usingEnterKey(): Boolean = usingEnterKey.invoke()
 
     fun getBooleanPreference(
         name: String,
@@ -415,62 +392,5 @@ abstract class XmppActivity : ActionBarActivity() {
 
     fun loadBitmap(message: Message, imageView: ImageView) {
         loadBitmap.invoke(message, imageView)
-    }
-
-    interface OnValueEdited : (String) -> String?
-
-
-    companion object {
-
-        const val EXTRA_ACCOUNT = "account"
-        const val REQUEST_ANNOUNCE_PGP = 0x0101
-        const val REQUEST_INVITE_TO_CONVERSATION = 0x0102
-        const val REQUEST_CHOOSE_PGP_ID = 0x0103
-        const val REQUEST_BATTERY_OP = 0x49ff
-        const val FRAGMENT_TAG_DIALOG = "dialog"
-
-        @JvmStatic
-        fun cancelPotentialWork(message: Message, imageView: ImageView): Boolean {
-            val bitmapWorkerTask = getBitmapWorkerTask(imageView)
-
-            if (bitmapWorkerTask != null) {
-                val oldMessage = bitmapWorkerTask.message
-                if (oldMessage == null || message !== oldMessage) {
-                    bitmapWorkerTask.cancel(true)
-                } else {
-                    return false
-                }
-            }
-            return true
-        }
-
-        @JvmStatic
-        fun getBitmapWorkerTask(imageView: ImageView?): BitmapWorkerTask? {
-            if (imageView != null) {
-                val drawable = imageView.drawable
-                if (drawable is AsyncDrawable) {
-                    return drawable.bitmapWorkerTask
-                }
-            }
-            return null
-        }
-
-        @JvmStatic
-        fun find(viewWeakReference: WeakReference<ImageView>): XmppActivity? {
-            val view = viewWeakReference.get()
-            return if (view == null) null else find(view)
-        }
-
-        @JvmStatic
-        fun find(view: View): XmppActivity? {
-            var context = view.context
-            while (context is ContextWrapper) {
-                if (context is XmppActivity) {
-                    return context
-                }
-                context = context.baseContext
-            }
-            return null
-        }
     }
 }

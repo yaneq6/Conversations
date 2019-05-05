@@ -4,15 +4,10 @@ import android.app.Activity
 import android.app.Fragment
 import android.support.annotation.IdRes
 import android.widget.AbsListView
-import android.widget.Toast
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
 import eu.siacs.conversations.ui.ConversationFragment
-
-fun Activity.hidePrepareFileToast(prepareFileToast: Toast?) {
-    prepareFileToast?.run { runOnUiThread { cancel() } }
-}
 
 
 const val REQUEST_SEND_MESSAGE = 0x0201

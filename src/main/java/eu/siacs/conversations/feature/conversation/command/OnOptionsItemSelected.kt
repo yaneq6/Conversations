@@ -4,6 +4,7 @@ import android.content.Intent
 import android.view.MenuItem
 import eu.siacs.conversations.R
 import eu.siacs.conversations.entities.Conversation
+import eu.siacs.conversations.feature.xmpp.XmppConst
 import eu.siacs.conversations.ui.*
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil
 import io.aakit.scope.ActivityScope
@@ -56,7 +57,7 @@ class OnOptionsItemSelected @Inject constructor(
 
         R.id.action_invite -> fragment.startActivityForResult(
             ChooseContactActivity.create(activity, conversation),
-            XmppActivity.REQUEST_INVITE_TO_CONVERSATION
+            XmppConst.REQUEST_INVITE_TO_CONVERSATION
         )
 
         R.id.action_clear_history -> clearHistoryDialog(conversation)

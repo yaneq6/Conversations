@@ -63,6 +63,7 @@ import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.ListItem;
 import eu.siacs.conversations.entities.Presence;
+import eu.siacs.conversations.feature.xmpp.XmppConst;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.services.XmppConnectionService.OnRosterUpdate;
@@ -78,6 +79,8 @@ import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist;
 import eu.siacs.conversations.xmpp.XmppConnection;
 import rocks.xmpp.addr.Jid;
+
+import static eu.siacs.conversations.feature.xmpp.XmppConst.FRAGMENT_TAG_DIALOG;
 
 public class StartConversationActivity extends XmppActivity implements XmppConnectionService.OnConversationUpdate, OnRosterUpdate, OnUpdateBlocklist, CreatePrivateGroupChatDialog.CreateConferenceDialogListener, JoinConferenceDialog.JoinConferenceDialogListener, SwipeRefreshLayout.OnRefreshListener, CreatePublicChannelDialog.CreatePublicChannelDialogListener {
 
@@ -986,7 +989,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 		intent.putExtra(ChooseContactActivity.EXTRA_SHOW_ENTER_JID, false);
 		intent.putExtra(ChooseContactActivity.EXTRA_SELECT_MULTIPLE, true);
 		intent.putExtra(ChooseContactActivity.EXTRA_GROUP_CHAT_NAME, name.trim());
-		intent.putExtra(ChooseContactActivity.EXTRA_ACCOUNT, account.getJid().asBareJid().toString());
+		intent.putExtra(XmppConst.EXTRA_ACCOUNT, account.getJid().asBareJid().toString());
 		intent.putExtra(ChooseContactActivity.EXTRA_TITLE_RES_ID, R.string.choose_participants);
 		startActivityForResult(intent, REQUEST_CREATE_CONFERENCE);
 	}

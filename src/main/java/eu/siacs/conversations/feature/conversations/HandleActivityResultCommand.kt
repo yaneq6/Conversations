@@ -3,8 +3,8 @@ package eu.siacs.conversations.feature.conversations
 import android.app.Activity
 import eu.siacs.conversations.feature.conversation.REQUEST_DECRYPT_PGP
 import eu.siacs.conversations.feature.conversation.getConversationReliable
+import eu.siacs.conversations.feature.xmpp.XmppConst
 import eu.siacs.conversations.ui.ConversationsActivity
-import eu.siacs.conversations.ui.XmppActivity
 import eu.siacs.conversations.ui.util.ActivityResult
 import io.aakit.scope.ActivityScope
 import org.openintents.openpgp.util.OpenPgpApi
@@ -22,7 +22,7 @@ class HandleActivityResultCommand @Inject constructor(
         )?.run {
             when (requestCode) {
                 REQUEST_DECRYPT_PGP -> account.pgpDecryptionService.continueDecryption(data)
-                XmppActivity.REQUEST_CHOOSE_PGP_ID -> {
+                XmppConst.REQUEST_CHOOSE_PGP_ID -> {
                     val id = data.getLongExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, 0)
                     if (id != 0L) {
                         account.setPgpSignId(id)
@@ -31,7 +31,7 @@ class HandleActivityResultCommand @Inject constructor(
                         activity.choosePgpSignId(account)
                     }
                 }
-                XmppActivity.REQUEST_ANNOUNCE_PGP -> activity.announcePgp(
+                XmppConst.REQUEST_ANNOUNCE_PGP -> activity.announcePgp(
                     account,
                     this,
                     data,
@@ -47,7 +47,7 @@ class HandleActivityResultCommand @Inject constructor(
                 ?.pgpDecryptionService
                 ?.giveUpCurrentDecryption()
 
-            XmppActivity.REQUEST_BATTERY_OP -> activity.setNeverAskForBatteryOptimizationsAgain()
+            XmppConst.REQUEST_BATTERY_OP -> activity.setNeverAskForBatteryOptimizationsAgain()
         }
     }
 }

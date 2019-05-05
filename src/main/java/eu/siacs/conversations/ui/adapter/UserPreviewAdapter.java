@@ -16,6 +16,8 @@ import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.ui.util.AvatarWorkerTask;
 import eu.siacs.conversations.ui.util.MucDetailsContextMenuHelper;
 
+import static eu.siacs.conversations.feature.xmpp.UtilsKt.find;
+
 public class UserPreviewAdapter extends ListAdapter<MucOptions.User, UserPreviewAdapter.ViewHolder> implements View.OnCreateContextMenuListener {
 
     private MucOptions.User selectedUser = null;
@@ -35,7 +37,7 @@ public class UserPreviewAdapter extends ListAdapter<MucOptions.User, UserPreview
         final MucOptions.User user = getItem(position);
         AvatarWorkerTask.loadAvatar(user, viewHolder.binding.avatar, R.dimen.media_size);
         viewHolder.binding.getRoot().setOnClickListener(v -> {
-            final XmppActivity activity = XmppActivity.find(v);
+            final XmppActivity activity = find(v);
             if (activity != null) {
                 activity.highlightInMuc(user.getConversation(), user.getName());
             }

@@ -13,7 +13,7 @@ class ConferenceInvite {
 
     fun execute(activity: XmppActivity): Boolean {
         val service = activity.xmppConnectionService
-        val conversation = service!!.findConversationByUuid(this.uuid) ?: return false
+        val conversation = service.findConversationByUuid(this.uuid) ?: return false
         if (conversation.mode == Conversation.MODE_MULTI) {
             for (jid in jids) {
                 service.invite(conversation, jid)
