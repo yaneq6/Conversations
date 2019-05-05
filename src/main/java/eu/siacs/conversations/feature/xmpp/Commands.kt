@@ -34,7 +34,6 @@ import eu.siacs.conversations.entities.Account
 import eu.siacs.conversations.entities.Contact
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
-import eu.siacs.conversations.services.AvatarService
 import eu.siacs.conversations.services.BarcodeProvider
 import eu.siacs.conversations.services.XmppConnectionService
 import eu.siacs.conversations.ui.*
@@ -57,7 +56,7 @@ import javax.inject.Inject
 
 @ActivityScope
 class HideToast @Inject constructor(private val activity: XmppActivity) {
-    operator fun invoke() = activity.run {
+    operator fun invoke(): Unit = activity.run {
         if (mToast != null) {
             mToast!!.cancel()
         }
@@ -81,7 +80,7 @@ class ReplaceToast @Inject constructor(private val activity: XmppActivity) {
 
 @ActivityScope
 class RefreshUi @Inject constructor(private val activity: XmppActivity) {
-    operator fun invoke() = activity.run {
+    operator fun invoke(): Unit = activity.run {
         val diff = SystemClock.elapsedRealtime() - mLastUiRefresh
         if (diff > Config.REFRESH_UI_INTERVAL) {
             mRefreshUiHandler.removeCallbacks(mRefreshUiRunnable)
@@ -96,8 +95,7 @@ class RefreshUi @Inject constructor(private val activity: XmppActivity) {
 
 @ActivityScope
 class OnStart @Inject constructor(private val activity: XmppActivity) {
-    operator fun invoke() = activity.run {
-        //        super.onStart()
+    operator fun invoke(): Unit = activity.run {
         if (!xmppConnectionServiceBound) {
             if (activity.mSkipBackgroundBinding) {
                 Timber.d("skipping background binding")
@@ -113,7 +111,7 @@ class OnStart @Inject constructor(private val activity: XmppActivity) {
 
 @ActivityScope
 class ConnectToBackend @Inject constructor(private val activity: XmppActivity) {
-    operator fun invoke() = activity.run {
+    operator fun invoke(): Unit = activity.run {
         val intent = Intent(activity, XmppConnectionService::class.java)
         intent.action = "ui"
         try {
@@ -128,8 +126,7 @@ class ConnectToBackend @Inject constructor(private val activity: XmppActivity) {
 
 @ActivityScope
 class OnStop @Inject constructor(private val activity: XmppActivity) {
-    operator fun invoke() = activity.run {
-        //        super.onStop()
+    operator fun invoke(): Unit = activity.run {
         if (xmppConnectionServiceBound) {
             activity.unregisterListeners()
             unbindService(mConnection)
@@ -139,11 +136,11 @@ class OnStop @Inject constructor(private val activity: XmppActivity) {
 }
 
 @ActivityScope
-class HasPgp(
+class HasPgp @Inject constructor(
     private val activity: XmppActivity
-) {
-    operator fun invoke(): Boolean = activity.run {
-        xmppConnectionService!!.pgpEngine != null
+) : () -> Boolean {
+    override fun invoke(): Boolean = activity.run {
+        xmppConnectionService.pgpEngine != null
     }
 }
 
@@ -151,7 +148,7 @@ class HasPgp(
 class ShowInstallPgpDialog @Inject constructor(
     private val activity: XmppActivity
 ) {
-    operator fun invoke() = activity.run {
+    operator fun invoke(): Unit = activity.run {
         val builder = AlertDialog.Builder(activity)
         builder.setTitle(getString(R.string.openkeychain_required))
         builder.setIconAttribute(android.R.attr.alertDialogIcon)
@@ -181,10 +178,8 @@ class ShowInstallPgpDialog @Inject constructor(
                 Intent.ACTION_VIEW,
                 uri
             )
-            val manager = applicationContext
-                .packageManager
-            val infos = manager
-                .queryIntentActivities(marketIntent, 0)
+            val manager = applicationContext.packageManager
+            val infos = manager.queryIntentActivities(marketIntent, 0)
             if (infos.size > 0) {
                 startActivity(marketIntent)
             } else {
@@ -204,30 +199,30 @@ class ShowInstallPgpDialog @Inject constructor(
 class RegisterListeners @Inject constructor(
     private val activity: XmppActivity
 ) {
-    operator fun invoke() = activity.run {
+    operator fun invoke(): Unit = activity.run {
         if (activity is XmppConnectionService.OnConversationUpdate) {
-            activity.xmppConnectionService!!.setOnConversationListChangedListener(activity as XmppConnectionService.OnConversationUpdate)
+            activity.xmppConnectionService.setOnConversationListChangedListener(activity as XmppConnectionService.OnConversationUpdate)
         }
         if (activity is XmppConnectionService.OnAccountUpdate) {
-            activity.xmppConnectionService!!.setOnAccountListChangedListener(activity as XmppConnectionService.OnAccountUpdate)
+            activity.xmppConnectionService.setOnAccountListChangedListener(activity as XmppConnectionService.OnAccountUpdate)
         }
         if (activity is XmppConnectionService.OnCaptchaRequested) {
-            activity.xmppConnectionService!!.setOnCaptchaRequestedListener(activity as XmppConnectionService.OnCaptchaRequested)
+            activity.xmppConnectionService.setOnCaptchaRequestedListener(activity as XmppConnectionService.OnCaptchaRequested)
         }
         if (activity is XmppConnectionService.OnRosterUpdate) {
-            activity.xmppConnectionService!!.setOnRosterUpdateListener(activity as XmppConnectionService.OnRosterUpdate)
+            activity.xmppConnectionService.setOnRosterUpdateListener(activity as XmppConnectionService.OnRosterUpdate)
         }
         if (activity is XmppConnectionService.OnMucRosterUpdate) {
-            activity.xmppConnectionService!!.setOnMucRosterUpdateListener(activity as XmppConnectionService.OnMucRosterUpdate)
+            activity.xmppConnectionService.setOnMucRosterUpdateListener(activity as XmppConnectionService.OnMucRosterUpdate)
         }
         if (activity is OnUpdateBlocklist) {
-            activity.xmppConnectionService!!.setOnUpdateBlocklistListener(activity as OnUpdateBlocklist)
+            activity.xmppConnectionService.setOnUpdateBlocklistListener(activity as OnUpdateBlocklist)
         }
         if (activity is XmppConnectionService.OnShowErrorToast) {
-            activity.xmppConnectionService!!.setOnShowErrorToastListener(activity as XmppConnectionService.OnShowErrorToast)
+            activity.xmppConnectionService.setOnShowErrorToastListener(activity as XmppConnectionService.OnShowErrorToast)
         }
         if (activity is OnKeyStatusUpdated) {
-            activity.xmppConnectionService!!.setOnKeyStatusUpdatedListener(activity as OnKeyStatusUpdated)
+            activity.xmppConnectionService.setOnKeyStatusUpdatedListener(activity as OnKeyStatusUpdated)
         }
     }
 }
@@ -236,37 +231,38 @@ class RegisterListeners @Inject constructor(
 class UnregisterListeners @Inject constructor(
     private val activity: XmppActivity
 ) {
-    operator fun invoke() = activity.run {
+    operator fun invoke(): Unit = activity.run {
         if (activity is XmppConnectionService.OnConversationUpdate) {
-            activity.xmppConnectionService!!.removeOnConversationListChangedListener(activity as XmppConnectionService.OnConversationUpdate)
+            activity.xmppConnectionService.removeOnConversationListChangedListener(activity as XmppConnectionService.OnConversationUpdate)
         }
         if (activity is XmppConnectionService.OnAccountUpdate) {
-            activity.xmppConnectionService!!.removeOnAccountListChangedListener(activity as XmppConnectionService.OnAccountUpdate)
+            activity.xmppConnectionService.removeOnAccountListChangedListener(activity as XmppConnectionService.OnAccountUpdate)
         }
         if (activity is XmppConnectionService.OnCaptchaRequested) {
-            activity.xmppConnectionService!!.removeOnCaptchaRequestedListener(activity as XmppConnectionService.OnCaptchaRequested)
+            activity.xmppConnectionService.removeOnCaptchaRequestedListener(activity as XmppConnectionService.OnCaptchaRequested)
         }
         if (activity is XmppConnectionService.OnRosterUpdate) {
-            activity.xmppConnectionService!!.removeOnRosterUpdateListener(activity as XmppConnectionService.OnRosterUpdate)
+            activity.xmppConnectionService.removeOnRosterUpdateListener(activity as XmppConnectionService.OnRosterUpdate)
         }
         if (activity is XmppConnectionService.OnMucRosterUpdate) {
-            activity.xmppConnectionService!!.removeOnMucRosterUpdateListener(activity as XmppConnectionService.OnMucRosterUpdate)
+            activity.xmppConnectionService.removeOnMucRosterUpdateListener(activity as XmppConnectionService.OnMucRosterUpdate)
         }
         if (activity is OnUpdateBlocklist) {
-            activity.xmppConnectionService!!.removeOnUpdateBlocklistListener(activity as OnUpdateBlocklist)
+            activity.xmppConnectionService.removeOnUpdateBlocklistListener(activity as OnUpdateBlocklist)
         }
         if (activity is XmppConnectionService.OnShowErrorToast) {
-            activity.xmppConnectionService!!.removeOnShowErrorToastListener(activity as XmppConnectionService.OnShowErrorToast)
+            activity.xmppConnectionService.removeOnShowErrorToastListener(activity as XmppConnectionService.OnShowErrorToast)
         }
         if (activity is OnKeyStatusUpdated) {
-            activity.xmppConnectionService!!.removeOnNewKeysAvailableListener(activity as OnKeyStatusUpdated)
+            activity.xmppConnectionService.removeOnNewKeysAvailableListener(activity as OnKeyStatusUpdated)
         }
     }
 }
 
 @ActivityScope
 class OnOptionsItemSelected @Inject constructor(
-    private val activity: XmppActivity
+    private val activity: XmppActivity,
+    private val showQrCode: ShowQrCode
 ) {
     operator fun invoke(item: MenuItem): Boolean {
         return when (item.itemId) {
@@ -279,21 +275,22 @@ class OnOptionsItemSelected @Inject constructor(
             R.id.action_accounts -> AccountUtils.launchManageAccounts(activity)
             R.id.action_account -> AccountUtils.launchManageAccount(activity)
             android.R.id.home -> activity.finish()
-            R.id.action_show_qr_code -> activity.showQrCode()
+            R.id.action_show_qr_code -> showQrCode()
             else -> null
         } != null
     }
-    //        return super.onOptionsItemSelected(item)
 }
 
 @ActivityScope
 class SelectPresence @Inject constructor(
-    private val activity: XmppActivity
+    private val activity: XmppActivity,
+    private val showAddToRosterDialog: ShowAddToRosterDialog,
+    private val showAskForPresenceDialog: ShowAskForPresenceDialog
 ) {
     operator fun invoke(conversation: Conversation, listener: PresenceSelector.OnPresenceSelected) {
         val contact = conversation.contact
         if (!contact.showInRoster()) {
-            activity.showAddToRosterDialog(conversation.contact)
+            showAddToRosterDialog(conversation.contact)
         } else {
             val presences = contact.presences
             if (presences.size() == 0) {
@@ -301,7 +298,7 @@ class SelectPresence @Inject constructor(
                     && !contact.getOption(Contact.Options.ASKING)
                     && contact.account.status == Account.State.ONLINE
                 ) {
-                    activity.showAskForPresenceDialog(contact)
+                    showAskForPresenceDialog(contact)
                 } else if (!contact.getOption(Contact.Options.TO) || !contact.getOption(Contact.Options.FROM)) {
                     PresenceSelector.warnMutualPresenceSubscription(
                         activity,
@@ -333,10 +330,10 @@ class SelectPresence @Inject constructor(
 class OnCreate @Inject constructor(
     private val activity: XmppActivity,
     private val resources: Resources,
-    private val packageManager: PackageManager
+    private val packageManager: PackageManager,
+    private val usingEnterKey: UsingEnterKey
 ) {
 
-    //        super.onCreate(savedInstanceState)
     operator fun invoke(savedInstanceState: Bundle?) {
         activity.volumeControlStream = AudioManager.STREAM_NOTIFICATION
         activity.metrics = resources.displayMetrics
@@ -347,7 +344,7 @@ class OnCreate @Inject constructor(
         activity.mTheme = activity.findTheme()
         activity.setTheme(activity.mTheme)
 
-        activity.mUsingEnterKey = activity.usingEnterKey()
+        activity.mUsingEnterKey = usingEnterKey()
     }
 }
 
@@ -368,10 +365,10 @@ class GetThemeResource @Inject constructor(
 
 @ActivityScope
 class UsingEnterKey @Inject constructor(
-    private val activity: XmppActivity
+    private val getBooleanPreference: GetBooleanPreference
 ) {
     operator fun invoke(): Boolean {
-        return activity.getBooleanPreference("display_enter_key", R.bool.display_enter_key)
+        return getBooleanPreference("display_enter_key", R.bool.display_enter_key)
     }
 }
 
@@ -483,11 +480,10 @@ class SwitchToAccount @Inject constructor(
     private val activity: XmppActivity
 ) {
     operator fun invoke(account: Account, fingerprint: String) {
-        switchToAccount(account, false, fingerprint)
+        invoke(account, false, fingerprint)
     }
 
-    @JvmOverloads
-    fun switchToAccount(account: Account, init: Boolean = false, fingerprint: String? = null) {
+    operator fun invoke(account: Account, init: Boolean = false, fingerprint: String? = null) {
         val intent = Intent(activity, EditAccountActivity::class.java)
         intent.putExtra("jid", account.jid.asBareJid().toString())
         intent.putExtra("init", init)
@@ -546,7 +542,7 @@ class AnnouncePgp @Inject constructor(
     operator fun invoke(
         account: Account,
         conversation: Conversation?,
-        intent: Intent,
+        intent: Intent?,
         onSuccess: Runnable?
     ) {
         if (account.pgpId == 0L) {
@@ -559,7 +555,7 @@ class AnnouncePgp @Inject constructor(
             if (status == null) {
                 status = ""
             }
-            activity.xmppConnectionService!!.pgpEngine!!.generateSignature(
+            activity.xmppConnectionService.pgpEngine!!.generateSignature(
                 intent,
                 account,
                 status,
@@ -582,7 +578,7 @@ class AnnouncePgp @Inject constructor(
 
                     override fun success(signature: String) {
                         account.pgpSignature = signature
-                        val xmppConnectionService = activity.xmppConnectionService!!
+                        val xmppConnectionService = activity.xmppConnectionService
                         xmppConnectionService.databaseBackend.updateAccount(account)
                         xmppConnectionService.sendPresence(account)
                         if (conversation != null) {
@@ -598,7 +594,7 @@ class AnnouncePgp @Inject constructor(
                         if (error == 0) {
                             account.setPgpSignId(0)
                             account.unsetPgpSignature()
-                            activity.xmppConnectionService!!.databaseBackend.updateAccount(account)
+                            activity.xmppConnectionService.databaseBackend.updateAccount(account)
                             choosePgpSignId(account)
                         } else {
                             displayErrorDialog(error)
@@ -631,7 +627,7 @@ class ChoosePgpSignId @Inject constructor(
 
 ) {
     operator fun invoke(account: Account) {
-        activity.xmppConnectionService!!.pgpEngine!!.chooseKey(
+        activity.xmppConnectionService.pgpEngine!!.chooseKey(
             account,
             object : UiCallback<Account> {
                 override fun success(account1: Account) {}
@@ -681,7 +677,7 @@ class ShowAddToRosterDialog @Inject constructor(
         builder.setMessage(activity.getString(R.string.not_in_roster))
         builder.setNegativeButton(activity.getString(R.string.cancel), null)
         builder.setPositiveButton(activity.getString(R.string.add_contact)) { dialog, which ->
-            activity.xmppConnectionService!!.createContact(
+            activity.xmppConnectionService.createContact(
                 contact,
                 true
             )
@@ -703,9 +699,9 @@ class ShowAskForPresenceDialog @Inject constructor(
             R.string.request_now
         ) { dialog, which ->
             if (activity.xmppConnectionServiceBound) {
-                activity.xmppConnectionService!!.sendPresencePacket(
+                activity.xmppConnectionService.sendPresencePacket(
                     contact.account,
-                    activity.xmppConnectionService!!
+                    activity.xmppConnectionService
                         .presenceGenerator
                         .requestPresenceUpdatesFrom(contact)
                 )
@@ -730,7 +726,7 @@ class QuickEdit @Inject constructor(
     operator fun invoke(
         previousValue: String,
         @StringRes hint: Int,
-        onValueEdited: XmppActivity.OnValueEdited,
+        onValueEdited: (String) -> String?,
         permitEmpty: Boolean
     ) {
         invoke(previousValue, onValueEdited, hint, false, permitEmpty)
@@ -739,7 +735,7 @@ class QuickEdit @Inject constructor(
     @SuppressLint("InflateParams")
     operator fun invoke(
         previousValue: String?,
-        onValueEdited: XmppActivity.OnValueEdited,
+        onValueEdited: (String) -> String?,
         @StringRes hint: Int,
         password: Boolean,
         permitEmpty: Boolean
@@ -796,8 +792,8 @@ class QuickEdit @Inject constructor(
 class QuickPasswordEdit @Inject constructor(
     private val quickEdit: QuickEdit
 ) {
-    operator fun invoke(previousValue: String, callback: XmppActivity.OnValueEdited) {
-        quickEdit(previousValue, callback, R.string.password, password = true, permitEmpty = false)
+    operator fun invoke(previousValue: String, onValueEdited: (String) -> String?) {
+        quickEdit(previousValue, onValueEdited, R.string.password, password = true, permitEmpty = false)
     }
 
 }
@@ -809,7 +805,10 @@ class HasStoragePermission @Inject constructor(
     operator fun invoke(requestCode: Int): Boolean =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                activity.requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), requestCode)
+                activity.requestPermissions(
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    requestCode
+                )
                 false
             } else {
                 true
@@ -823,13 +822,13 @@ class HasStoragePermission @Inject constructor(
 class OnActivityResult @Inject constructor(
     private val activity: XmppActivity
 ) {
-//            super.onActivityResult(requestCode, resultCode, data)
     operator fun invoke(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == XmppActivity.REQUEST_INVITE_TO_CONVERSATION && resultCode == Activity.RESULT_OK) {
             activity.mPendingConferenceInvite = XmppActivity.ConferenceInvite.parse(data!!)
             if (activity.xmppConnectionServiceBound && activity.mPendingConferenceInvite != null) {
                 if (activity.mPendingConferenceInvite!!.execute(activity)) {
-                    activity.mToast = Toast.makeText(activity, R.string.creating_conference, Toast.LENGTH_LONG)
+                    activity.mToast =
+                        Toast.makeText(activity, R.string.creating_conference, Toast.LENGTH_LONG)
                     activity.mToast!!.show()
                 }
                 activity.mPendingConferenceInvite = null
@@ -844,7 +843,8 @@ class CopyTextToClipboard @Inject constructor(
     private val resources: Resources
 ) {
     operator fun invoke(text: String, labelResId: Int): Boolean {
-        val mClipBoardManager = activity.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+        val mClipBoardManager =
+            activity.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
         val label = resources.getString(labelResId)
         if (mClipBoardManager != null) {
             val mClipData = ClipData.newPlainText(label, text)
@@ -857,10 +857,10 @@ class CopyTextToClipboard @Inject constructor(
 
 @ActivityScope
 class ManuallyChangePresence @Inject constructor(
-    private val activity: XmppActivity
+    private val getBooleanPreference: GetBooleanPreference
 ) {
     operator fun invoke(): Boolean {
-        return activity.getBooleanPreference(
+        return getBooleanPreference(
             SettingsActivity.MANUALLY_CHANGE_PRESENCE,
             R.bool.manually_change_presence
         )
@@ -868,9 +868,7 @@ class ManuallyChangePresence @Inject constructor(
 }
 
 @ActivityScope
-class GetShareableUri @Inject constructor(
-    private val activity: XmppActivity
-) {
+class GetShareableUri @Inject constructor() {
     operator fun invoke(http: Boolean): String? {
         return null
     }
@@ -889,7 +887,12 @@ class ShareLink @Inject constructor(
         intent.type = "text/plain"
         intent.putExtra(Intent.EXTRA_TEXT, activity.getShareableUri(http))
         try {
-            activity.startActivity(Intent.createChooser(intent, activity.getText(R.string.share_uri_with)))
+            activity.startActivity(
+                Intent.createChooser(
+                    intent,
+                    activity.getText(R.string.share_uri_with)
+                )
+            )
         } catch (e: ActivityNotFoundException) {
             Toast.makeText(activity, R.string.no_application_to_share_uri, Toast.LENGTH_SHORT)
                 .show()
@@ -904,7 +907,7 @@ class LaunchOpenKeyChain @Inject constructor(
 ) {
 
     operator fun invoke(keyId: Long) {
-        val pgp = activity.xmppConnectionService!!.pgpEngine
+        val pgp = activity.xmppConnectionService.pgpEngine
         try {
             activity.startIntentSenderForResult(
                 pgp!!.getIntentForKey(keyId).intentSender, 0, null, 0,
@@ -926,19 +929,21 @@ class FindTheme @Inject constructor(
 }
 
 @ActivityScope
-class OnMenuOpened @Inject constructor(
-    private val activity: XmppActivity
-) {
+class OnMenuOpened @Inject constructor() {
     operator fun invoke(id: Int, menu: Menu?) {
         if (id == AppCompatDelegate.FEATURE_SUPPORT_ACTION_BAR && menu != null) {
             MenuDoubleTabUtil.recordMenuOpen()
         }
     }
-//    return super.onMenuOpened(id, menu)
+}
 
+@ActivityScope
+class ShowQrCode @Inject constructor(
+   private val activity: XmppActivity
+) {
 
     @JvmOverloads
-    fun showQrCode(uri: String? = activity.shareableUri) {
+    operator fun invoke(uri: String? = activity.shareableUri) {
         if (uri == null || uri.isEmpty()) {
             return
         }
@@ -963,7 +968,7 @@ class ExtractAccount @Inject constructor(
     operator fun invoke(intent: Intent?): Account? {
         val jid = intent?.getStringExtra(XmppActivity.EXTRA_ACCOUNT)
         return try {
-            if (jid != null) activity.xmppConnectionService!!.findAccountByJid(Jid.of(jid)) else null
+            if (jid != null) activity.xmppConnectionService.findAccountByJid(Jid.of(jid)) else null
         } catch (e: IllegalArgumentException) {
             null
         }
@@ -971,22 +976,14 @@ class ExtractAccount @Inject constructor(
 }
 
 @ActivityScope
-class AvatarService @Inject constructor(
-    private val activity: XmppActivity
-) {
-    operator fun invoke(): AvatarService {
-        return activity.xmppConnectionService!!.avatarService
-    }
-}
-
-@ActivityScope
 class LoadBitmap @Inject constructor(
-    private val activity: XmppActivity
+    private val activity: XmppActivity,
+    private val resources: Resources
 ) {
     operator fun invoke(message: Message, imageView: ImageView) {
         var bm: Bitmap?
         try {
-            bm = activity.xmppConnectionService!!.fileBackend.getThumbnail(
+            bm = activity.xmppConnectionService.fileBackend.getThumbnail(
                 message,
                 (activity.metrics!!.density * 288).toInt(),
                 true
@@ -1005,7 +1002,7 @@ class LoadBitmap @Inject constructor(
                 imageView.setImageDrawable(null)
                 val task = XmppActivity.BitmapWorkerTask(imageView)
                 val asyncDrawable = XmppActivity.AsyncDrawable(
-                    activity.resources, null, task
+                    resources, null, task
                 )
                 imageView.setImageDrawable(asyncDrawable)
                 try {

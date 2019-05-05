@@ -31,4 +31,8 @@ class ActivityModule(
     @Provides
     @ActivityScope
     fun resources() = activity.resources!!
+
+    @Provides
+    @ActivityScope
+    fun packageManager() = activity.packageManager
 }

@@ -5,18 +5,17 @@ import android.content.Intent
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import eu.siacs.conversations.feature.di.ActivityModule
+import eu.siacs.conversations.feature.xmpp.di.XmppActivityModule
 import eu.siacs.conversations.ui.ConversationsActivity
 import eu.siacs.conversations.ui.util.PendingItem
 import io.aakit.scope.ActivityScope
-
 import java.util.concurrent.atomic.AtomicBoolean
 
 @ActivityScope
 @Component(modules = [ConversationsModule::class])
 interface ConversationsComponent : (ConversationsActivity) -> ConversationsActivity
 
-@Module(includes = [ActivityModule::class])
+@Module(includes = [XmppActivityModule::class])
 class ConversationsModule {
 
     @Provides
