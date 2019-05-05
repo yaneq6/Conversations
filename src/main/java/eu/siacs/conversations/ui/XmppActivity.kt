@@ -2,16 +2,17 @@ package eu.siacs.conversations.ui
 
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
-import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-import android.net.ConnectivityManager
 import android.net.Uri
-import android.os.*
+import android.os.AsyncTask
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
 import android.preference.PreferenceManager
 import android.support.annotation.BoolRes
 import android.support.annotation.StringRes
@@ -25,8 +26,10 @@ import eu.siacs.conversations.entities.Account
 import eu.siacs.conversations.entities.Contact
 import eu.siacs.conversations.entities.Conversation
 import eu.siacs.conversations.entities.Message
+import eu.siacs.conversations.feature.di.ActivityModule
 import eu.siacs.conversations.feature.xmpp.callback.*
 import eu.siacs.conversations.feature.xmpp.command.*
+import eu.siacs.conversations.feature.xmpp.di.DaggerXmppActivityComponent
 import eu.siacs.conversations.feature.xmpp.query.*
 import eu.siacs.conversations.services.AvatarService
 import eu.siacs.conversations.services.XmppConnectionService
@@ -124,9 +127,8 @@ abstract class XmppActivity : ActionBarActivity() {
     lateinit var showQrCode: ShowQrCode
     @Inject
     lateinit var loadBitmap: LoadBitmap
-
     @Inject
-    lateinit var onOpenPGPKeyPublished : OnOpenPGPKeyPublished
+    lateinit var onOpenPGPKeyPublished: OnOpenPGPKeyPublished
     @Inject
     lateinit var connection: Connection
     @Inject
@@ -179,39 +181,30 @@ abstract class XmppActivity : ActionBarActivity() {
             )
         )
 
-    val isDarkTheme: Boolean
-        get() = ThemeHelper.isDark(mTheme)
+    val isDarkTheme: Boolean get() = IsDarkTheme(this)()
 
-    val isOptimizingBattery: Boolean
-        get() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-                return pm != null && !pm.isIgnoringBatteryOptimizations(packageName)
-            } else {
-                return false
-            }
-        }
+    val isOptimizingBattery: Boolean get() = IsOptimizingBattery(
+        this
+    )()
 
-    val isAffectedByDataSaver: Boolean
-        get() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                return (cm != null
-                        && cm.isActiveNetworkMetered
-                        && cm.restrictBackgroundStatus == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED)
-            } else {
-                return false
-            }
-        }
+    val isAffectedByDataSaver: Boolean get() = IsAffectedByDataSaver(
+        this
+    )()
 
-    val shareableUri: String?
-        get() = getShareableUri(false)
+    val shareableUri: String? get() = getShareableUri(false)
 
 
     abstract fun refreshUiReal()
 
     abstract fun onBackendConnected()
 
+    open fun injectDependencies()  {
+        DaggerXmppActivityComponent
+            .builder()
+            .activityModule(ActivityModule(this))
+            .build()
+            .invoke(this)
+    }
 
     open fun hideToast() = hideToast.invoke()
 

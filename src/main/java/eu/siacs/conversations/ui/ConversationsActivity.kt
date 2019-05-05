@@ -169,13 +169,16 @@ class ConversationsActivity :
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun injectDependencies() {
         DaggerConversationsComponent.builder().activityModule(
             ActivityModule(
                 this
             )
         ).build()(this)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         ConversationMenuConfigurator.reloadFeatures(this)
         OmemoSetting.load(this)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_conversations)

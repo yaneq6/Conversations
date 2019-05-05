@@ -30,5 +30,6 @@ class OnCreate @Inject constructor(
         activity.setTheme(activity.mTheme)
 
         activity.mUsingEnterKey = usingEnterKey()
+        activity.injectDependencies()
     }
 }
