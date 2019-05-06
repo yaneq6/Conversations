@@ -99,19 +99,19 @@ class XmppConnectionService : Service() {
 
     @JvmField
     val restoredFromDatabaseLatch = CountDownLatch(1)
-    private val mFileAddingExecutor = SerialSingleThreadExecutor("FileAdding")
-    private val mVideoCompressionExecutor = SerialSingleThreadExecutor("VideoCompression")
-    private val mDatabaseWriterExecutor = SerialSingleThreadExecutor("DatabaseWriter")
-    private val mDatabaseReaderExecutor = SerialSingleThreadExecutor("DatabaseReader")
-    private val mNotificationExecutor = SerialSingleThreadExecutor("NotificationExecutor")
-    private val mRosterSyncTaskManager = ReplacingTaskManager()
-    private val mBinder = XmppConnectionBinder()
-    private val conversations = CopyOnWriteArrayList<Conversation>()
+    val mFileAddingExecutor = SerialSingleThreadExecutor("FileAdding")
+    val mVideoCompressionExecutor = SerialSingleThreadExecutor("VideoCompression")
+    val mDatabaseWriterExecutor = SerialSingleThreadExecutor("DatabaseWriter")
+    val mDatabaseReaderExecutor = SerialSingleThreadExecutor("DatabaseReader")
+    val mNotificationExecutor = SerialSingleThreadExecutor("NotificationExecutor")
+    val mRosterSyncTaskManager = ReplacingTaskManager()
+    val mBinder = XmppConnectionBinder()
+    val conversations = CopyOnWriteArrayList<Conversation>()
     val iqGenerator = IqGenerator(this)
-    private val mInProgressAvatarFetches = HashSet<String>()
-    private val mOmittedPepAvatarFetches = HashSet<String>()
-    private val mLowPingTimeoutMode = HashSet<Jid>()
-    private val mDefaultIqHandler = OnIqPacketReceived { account, packet ->
+    val mInProgressAvatarFetches = HashSet<String>()
+    val mOmittedPepAvatarFetches = HashSet<String>()
+    val mLowPingTimeoutMode = HashSet<Jid>()
+    val mDefaultIqHandler = OnIqPacketReceived { account, packet ->
         if (packet.getType() != IqPacket.TYPE.RESULT) {
             val error = packet.findChild("error")
             val text = if (error != null) error.findChildContent("text") else null
@@ -121,17 +121,17 @@ class XmppConnectionService : Service() {
         }
     }
     lateinit var databaseBackend: DatabaseBackend
-    private val mContactMergerExecutor = ReplacingSerialSingleThreadExecutor("ContactMerger")
-    private var mLastActivity: Long = 0
+    val mContactMergerExecutor = ReplacingSerialSingleThreadExecutor("ContactMerger")
+    var mLastActivity: Long = 0
     val fileBackend = FileBackend(this)
     var memorizingTrustManager: MemorizingTrustManager? = null
     val notificationService = NotificationService(this)
     val shortcutService = ShortcutService(this)
-    private val mInitialAddressbookSyncCompleted = AtomicBoolean(false)
-    private val mForceForegroundService = AtomicBoolean(false)
-    private val mForceDuringOnCreate = AtomicBoolean(false)
-    private val mMessageParser = MessageParser(this)
-    private val mPresenceParser = PresenceParser(this)
+    val mInitialAddressbookSyncCompleted = AtomicBoolean(false)
+    val mForceForegroundService = AtomicBoolean(false)
+    val mForceDuringOnCreate = AtomicBoolean(false)
+    val mMessageParser = MessageParser(this)
+    val mPresenceParser = PresenceParser(this)
     val iqParser = IqParser(this)
     val messageGenerator = MessageGenerator(this)
     @JvmField
@@ -150,7 +150,7 @@ class XmppConnectionService : Service() {
     val jingleConnectionManager = JingleConnectionManager(
         this
     )
-    private val jingleListener = OnJinglePacketReceived { account, packet ->
+    val jingleListener = OnJinglePacketReceived { account, packet ->
         jingleConnectionManager.deliverPacket(
             account,
             packet
@@ -160,16 +160,16 @@ class XmppConnectionService : Service() {
     val avatarService = AvatarService(this)
     val messageArchiveService = MessageArchiveService(this)
     val pushManagementService = PushManagementService(this)
-    private var muclumbusService: MuclumbusService? = null
+    var muclumbusService: MuclumbusService? = null
     val quickConversationsService = QuickConversationsService(this)
-    private val fileObserver = object : ConversationsFileObserver(
+    val fileObserver = object : ConversationsFileObserver(
         Environment.getExternalStorageDirectory().absolutePath
     ) {
         override fun onEvent(event: Int, path: String) {
             markFileDeleted(path)
         }
     }
-    private val mOnMessageAcknowledgedListener = OnMessageAcknowledged { account, uuid ->
+    val mOnMessageAcknowledgedListener = OnMessageAcknowledged { account, uuid ->
         for (conversation in getConversations()) {
             if (conversation.account === account) {
                 val message = conversation.findUnsentMessageWithUuid(uuid)
@@ -184,31 +184,31 @@ class XmppConnectionService : Service() {
         false
     }
 
-    private var destroyed = false
+    var destroyed = false
 
-    private var unreadCount = -1
+    var unreadCount = -1
 
     //Ui callback listeners
-    private val mOnConversationUpdates =
+    val mOnConversationUpdates =
         Collections.newSetFromMap(WeakHashMap<OnConversationUpdate, Boolean>())
-    private val mOnShowErrorToasts =
+    val mOnShowErrorToasts =
         Collections.newSetFromMap(WeakHashMap<OnShowErrorToast, Boolean>())
-    private val mOnAccountUpdates =
+    val mOnAccountUpdates =
         Collections.newSetFromMap(WeakHashMap<OnAccountUpdate, Boolean>())
-    private val mOnCaptchaRequested =
+    val mOnCaptchaRequested =
         Collections.newSetFromMap(WeakHashMap<OnCaptchaRequested, Boolean>())
-    private val mOnRosterUpdates = Collections.newSetFromMap(WeakHashMap<OnRosterUpdate, Boolean>())
-    private val mOnUpdateBlocklist =
+    val mOnRosterUpdates = Collections.newSetFromMap(WeakHashMap<OnRosterUpdate, Boolean>())
+    val mOnUpdateBlocklist =
         Collections.newSetFromMap(WeakHashMap<OnUpdateBlocklist, Boolean>())
-    private val mOnMucRosterUpdate =
+    val mOnMucRosterUpdate =
         Collections.newSetFromMap(WeakHashMap<OnMucRosterUpdate, Boolean>())
-    private val mOnKeyStatusUpdated =
+    val mOnKeyStatusUpdated =
         Collections.newSetFromMap(WeakHashMap<OnKeyStatusUpdated, Boolean>())
 
-    private val LISTENER_LOCK = Any()
+    val LISTENER_LOCK = Any()
 
 
-    private val mOnBindListener = OnBindListener { account ->
+    val mOnBindListener = OnBindListener { account ->
         synchronized(mInProgressAvatarFetches) {
             val iterator = mInProgressAvatarFetches.iterator()
             while (iterator.hasNext()) {
@@ -266,12 +266,12 @@ class XmppConnectionService : Service() {
         connectMultiModeConversations(account)
         syncDirtyContacts(account)
     }
-    private val mLastExpiryRun = AtomicLong(0)
+    val mLastExpiryRun = AtomicLong(0)
     var rng: SecureRandom? = null
-        private set
+        set
     fun getRNG() = rng
-    private val discoCache = LruCache<Pair<String, String>, ServiceDiscoveryResult>(20)
-    private val statusListener = OnStatusChanged { account ->
+    val discoCache = LruCache<Pair<String, String>, ServiceDiscoveryResult>(20)
+    val statusListener = OnStatusChanged { account ->
         val connection = account.xmppConnection
         updateAccountUi()
 
@@ -367,14 +367,14 @@ class XmppConnectionService : Service() {
         }
         notificationService.updateErrorNotification()
     }
-    private var pgpServiceConnection: OpenPgpServiceConnection? = null
-    private var mPgpEngine: PgpEngine? = null
-    private var wakeLock: WakeLock? = null
-    private var pm: PowerManager? = null
+    var pgpServiceConnection: OpenPgpServiceConnection? = null
+    var mPgpEngine: PgpEngine? = null
+    var wakeLock: WakeLock? = null
+    var pm: PowerManager? = null
     var bitmapCache: LruCache<String, Bitmap>? = null
-        private set
-    private val mInternalEventReceiver = InternalEventReceiver()
-    private val mInternalScreenEventReceiver = InternalEventReceiver()
+        set
+    val mInternalEventReceiver = InternalEventReceiver()
+    val mInternalScreenEventReceiver = InternalEventReceiver()
 
     val pgpEngine: PgpEngine?
         get() {
@@ -416,13 +416,13 @@ class XmppConnectionService : Service() {
             }
         }
 
-    private val compressPicturesPreference: String?
+    val compressPicturesPreference: String?
         get() = preferences.getString(
             "picture_compression",
             resources.getString(R.string.picture_compression)
         )
 
-    private val targetPresence: Presence.Status
+    val targetPresence: Presence.Status
         get() = if (dndOnSilentMode() && isPhoneSilenced) {
             Presence.Status.DND
         } else if (awayWhenScreenOff() && !isInteractive) {
@@ -450,7 +450,7 @@ class XmppConnectionService : Service() {
 
         }
 
-    private val isPhoneSilenced: Boolean
+    val isPhoneSilenced: Boolean
         get() {
             val notificationDnd: Boolean
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -476,7 +476,7 @@ class XmppConnectionService : Service() {
 
         }
 
-    private val preferences: SharedPreferences
+    val preferences: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
     val automaticMessageDeletionDate: Long
@@ -533,7 +533,7 @@ class XmppConnectionService : Service() {
             return mucServers
         }
 
-    private fun isInLowPingTimeoutMode(account: Account): Boolean {
+    fun isInLowPingTimeoutMode(account: Account): Boolean {
         synchronized(mLowPingTimeoutMode) {
             return mLowPingTimeoutMode.contains(account.jid.asBareJid())
         }
@@ -839,7 +839,7 @@ class XmppConnectionService : Service() {
         return Service.START_STICKY
     }
 
-    private fun processAccountState(
+    fun processAccountState(
         account: Account,
         interactive: Boolean,
         isUiAction: Boolean,
@@ -953,7 +953,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun discoverChannelsInternal(listener: OnChannelSearchResultsFound) {
+    fun discoverChannelsInternal(listener: OnChannelSearchResultsFound) {
         val call = muclumbusService!!.getRooms(1)
         try {
             call.enqueue(object : Callback<MuclumbusService.Rooms> {
@@ -975,7 +975,7 @@ class XmppConnectionService : Service() {
 
     }
 
-    private fun discoverChannelsInternal(query: String, listener: OnChannelSearchResultsFound) {
+    fun discoverChannelsInternal(query: String, listener: OnChannelSearchResultsFound) {
         val searchResultCall = muclumbusService!!.search(MuclumbusService.SearchRequest(query))
 
         searchResultCall.enqueue(object : Callback<MuclumbusService.SearchResult> {
@@ -1001,7 +1001,7 @@ class XmppConnectionService : Service() {
         fun onChannelSearchResultsFound(results: List<MuclumbusService.Room>)
     }
 
-    private fun directReply(conversation: Conversation, body: String, dismissAfterReply: Boolean) {
+    fun directReply(conversation: Conversation, body: String, dismissAfterReply: Boolean) {
         val message = Message(conversation, body, conversation.nextEncryption)
         message.markUnread()
         if (message.encryption == Message.ENCRYPTION_PGP) {
@@ -1032,32 +1032,32 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun dndOnSilentMode(): Boolean {
+    fun dndOnSilentMode(): Boolean {
         return getBooleanPreference(SettingsActivity.DND_ON_SILENT_MODE, R.bool.dnd_on_silent_mode)
     }
 
-    private fun manuallyChangePresence(): Boolean {
+    fun manuallyChangePresence(): Boolean {
         return getBooleanPreference(
             SettingsActivity.MANUALLY_CHANGE_PRESENCE,
             R.bool.manually_change_presence
         )
     }
 
-    private fun treatVibrateAsSilent(): Boolean {
+    fun treatVibrateAsSilent(): Boolean {
         return getBooleanPreference(
             SettingsActivity.TREAT_VIBRATE_AS_SILENT,
             R.bool.treat_vibrate_as_silent
         )
     }
 
-    private fun awayWhenScreenOff(): Boolean {
+    fun awayWhenScreenOff(): Boolean {
         return getBooleanPreference(
             SettingsActivity.AWAY_WHEN_SCREEN_IS_OFF,
             R.bool.away_when_screen_off
         )
     }
 
-    private fun resetAllAttemptCounts(reallyAll: Boolean, retryImmediately: Boolean) {
+    fun resetAllAttemptCounts(reallyAll: Boolean, retryImmediately: Boolean) {
         Timber.d("resetting all attempt counts")
         for (account in accounts!!) {
             if (account.hasErrorStatus() || reallyAll) {
@@ -1071,7 +1071,7 @@ class XmppConnectionService : Service() {
         notificationService.updateErrorNotification()
     }
 
-    private fun dismissErrorNotifications() {
+    fun dismissErrorNotifications() {
         for (account in this.accounts!!) {
             if (account.hasErrorStatus()) {
                 Log.d(
@@ -1085,7 +1085,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun expireOldMessages() {
+    fun expireOldMessages() {
         expireOldMessages(false)
     }
 
@@ -1230,7 +1230,7 @@ class XmppConnectionService : Service() {
         muclumbusService = retrofit.create(MuclumbusService::class.java)
     }
 
-    private fun checkForDeletedFiles() {
+    fun checkForDeletedFiles() {
         if (destroyed) {
             Log.d(
                 Config.LOGTAG,
@@ -1325,7 +1325,7 @@ class XmppConnectionService : Service() {
         toggleForegroundService(false)
     }
 
-    private fun toggleForegroundService(force: Boolean) {
+    fun toggleForegroundService(force: Boolean) {
         val status: Boolean
         if (force || mForceDuringOnCreate.get() || mForceForegroundService.get() || Compatibility.keepForegroundService(
                 this
@@ -1363,7 +1363,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun logoutAndSave(stop: Boolean) {
+    fun logoutAndSave(stop: Boolean) {
         var activeAccounts = 0
         for (account in accounts!!) {
             if (account.status != Account.State.DISABLED) {
@@ -1380,7 +1380,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun schedulePostConnectivityChange() {
+    fun schedulePostConnectivityChange() {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager ?: return
         val triggerAtMillis =
             SystemClock.elapsedRealtime() + Config.POST_CONNECTIVITY_CHANGE_PING_INTERVAL * 1000
@@ -1423,7 +1423,7 @@ class XmppConnectionService : Service() {
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private fun scheduleNextIdlePing() {
+    fun scheduleNextIdlePing() {
         val timeToWake = SystemClock.elapsedRealtime() + Config.IDLE_PING_INTERVAL * 1000
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager ?: return
         val intent = Intent(this, EventReceiver::class.java)
@@ -1466,7 +1466,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun sendFileMessage(message: Message, delay: Boolean) {
+    fun sendFileMessage(message: Message, delay: Boolean) {
         Timber.d("send file message")
         val account = message.conversation.account
         if (account.httpUploadAvailable(
@@ -1486,7 +1486,7 @@ class XmppConnectionService : Service() {
         sendMessage(message, false, false)
     }
 
-    private fun sendMessage(message: Message, resend: Boolean, delay: Boolean) {
+    fun sendMessage(message: Message, resend: Boolean, delay: Boolean) {
         val account = message.conversation.account
         if (account.setShowErrorNotification(true)) {
             databaseBackend.updateAccount(account)
@@ -1642,7 +1642,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun sendUnsentMessages(conversation: Conversation) {
+    fun sendUnsentMessages(conversation: Conversation) {
         conversation.findWaitingMessages { message -> resendMessage(message, true) }
     }
 
@@ -1744,10 +1744,10 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun pushBookmarksPrivateXml(account: Account) {
+    fun pushBookmarksPrivateXml(account: Account) {
         Log.d(
             Config.LOGTAG,
-            account.jid.asBareJid().toString() + ": pushing bookmarks via private xml"
+            account.jid.asBareJid().toString() + ": pushing bookmarks via xml"
         )
         val iqPacket = IqPacket(IqPacket.TYPE.SET)
         val query = iqPacket.query("jabber:iq:private")
@@ -1758,7 +1758,7 @@ class XmppConnectionService : Service() {
         sendIqPacket(account, iqPacket, mDefaultIqHandler)
     }
 
-    private fun pushBookmarksPep(account: Account) {
+    fun pushBookmarksPep(account: Account) {
         Timber.d(account.jid.asBareJid().toString() + ": pushing bookmarks via pep")
         val storage = Element("storage", "storage:bookmarks")
         for (bookmark in account.bookmarks) {
@@ -1773,7 +1773,7 @@ class XmppConnectionService : Service() {
 
     }
 
-    private fun pushNodeAndEnforcePublishOptions(
+    fun pushNodeAndEnforcePublishOptions(
         account: Account,
         node: String,
         element: Element,
@@ -1809,7 +1809,7 @@ class XmppConnectionService : Service() {
         })
     }
 
-    private fun restoreFromDatabase() {
+    fun restoreFromDatabase() {
         synchronized(this.conversations) {
             val accountLookupTable = Hashtable<String, Account>()
             for (account in this.accounts!!) {
@@ -1881,7 +1881,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun restoreMessages(conversation: Conversation) {
+    fun restoreMessages(conversation: Conversation) {
         conversation.addAll(0, databaseBackend.getMessages(conversation, Config.PAGE_SIZE))
         conversation.findUnsentTextMessages { message ->
             markMessage(
@@ -1930,7 +1930,7 @@ class XmppConnectionService : Service() {
         return this.conversations
     }
 
-    private fun markFileDeleted(path: String) {
+    fun markFileDeleted(path: String) {
         val file = File(path)
         val isInternalFile = fileBackend.isInternalFile(file)
         val uuids = databaseBackend.markFileAsDeleted(file, isInternalFile)
@@ -1941,7 +1941,7 @@ class XmppConnectionService : Service() {
         markUuidsAsDeletedFiles(uuids)
     }
 
-    private fun markUuidsAsDeletedFiles(uuids: List<String>) {
+    fun markUuidsAsDeletedFiles(uuids: List<String>) {
         var deleted = false
         for (conversation in getConversations()) {
             deleted = deleted or conversation.markAsDeleted(uuids)
@@ -1951,7 +1951,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun markChangedFiles(infos: List<DatabaseBackend.FilePathInfo>) {
+    fun markChangedFiles(infos: List<DatabaseBackend.FilePathInfo>) {
         var changed = false
         for (conversation in getConversations()) {
             changed = changed or conversation.markAsChanged(infos)
@@ -2221,7 +2221,7 @@ class XmppConnectionService : Service() {
         archiveConversation(conversation, true)
     }
 
-    private fun archiveConversation(
+    fun archiveConversation(
         conversation: Conversation,
         maySyncronizeWithBookmarks: Boolean
     ) {
@@ -2273,14 +2273,14 @@ class XmppConnectionService : Service() {
         toggleForegroundService()
     }
 
-    private fun syncEnabledAccountSetting() {
+    fun syncEnabledAccountSetting() {
         val hasEnabledAccounts = hasEnabledAccounts()
         preferences.edit().putBoolean(EventReceiver.SETTING_ENABLED_ACCOUNTS, hasEnabledAccounts)
             .apply()
         toggleSetProfilePictureActivity(hasEnabledAccounts)
     }
 
-    private fun toggleSetProfilePictureActivity(enabled: Boolean) {
+    fun toggleSetProfilePictureActivity(enabled: Boolean) {
         try {
             val name = ComponentName(this, ChooseAccountForProfilePictureActivity::class.java)
             val targetState =
@@ -2741,7 +2741,7 @@ class XmppConnectionService : Service() {
                 && this.mOnKeyStatusUpdated.size == 0)
     }
 
-    private fun switchToForeground() {
+    fun switchToForeground() {
         val broadcastLastActivity = broadcastLastActivity()
         for (conversation in getConversations()) {
             if (conversation.mode == Conversation.MODE_MULTI) {
@@ -2770,7 +2770,7 @@ class XmppConnectionService : Service() {
         Timber.d("app switched into foreground")
     }
 
-    private fun switchToBackground() {
+    fun switchToBackground() {
         val broadcastLastActivity = broadcastLastActivity()
         if (broadcastLastActivity) {
             mLastActivity = System.currentTimeMillis()
@@ -2795,7 +2795,7 @@ class XmppConnectionService : Service() {
         Timber.d("app switched into background")
     }
 
-    private fun connectMultiModeConversations(account: Account) {
+    fun connectMultiModeConversations(account: Account) {
         val conversations = getConversations()
         for (conversation in conversations) {
             if (conversation.mode == Conversation.MODE_MULTI && conversation.account === account) {
@@ -2812,7 +2812,7 @@ class XmppConnectionService : Service() {
         joinMuc(conversation, null, followedInvite)
     }
 
-    private fun joinMuc(
+    fun joinMuc(
         conversation: Conversation,
         onConferenceJoined: ((Conversation) -> Unit)?,
         followedInvite: Boolean = false
@@ -2829,7 +2829,7 @@ class XmppConnectionService : Service() {
             conversation.setHasMessagesLeftOnServer(false)
             fetchConferenceConfiguration(conversation, object : OnConferenceConfigurationFetched {
 
-                private fun join(conversation: Conversation) {
+                fun join(conversation: Conversation) {
                     val account = conversation.account
                     val mucOptions = conversation.mucOptions
 
@@ -2926,14 +2926,14 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun fetchConferenceMembers(conversation: Conversation) {
+    fun fetchConferenceMembers(conversation: Conversation) {
         val account = conversation.account
         val axolotlService = account.axolotlService
         val affiliations = arrayOf("member", "admin", "owner")
         val callback = object : OnIqPacketReceived {
 
-            private var i = 0
-            private var success = true
+            var i = 0
+            var success = true
 
             override fun onIqPacketReceived(account: Account, packet: IqPacket) {
                 val omemoEnabled = conversation.nextEncryption == Message.ENCRYPTION_AXOLOTL
@@ -3015,7 +3015,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun hasEnabledAccounts(): Boolean {
+    fun hasEnabledAccounts(): Boolean {
         if (this.accounts == null) {
             return false
         }
@@ -3122,7 +3122,7 @@ class XmppConnectionService : Service() {
         leaveMuc(conversation, false)
     }
 
-    private fun leaveMuc(conversation: Conversation, now: Boolean) {
+    fun leaveMuc(conversation: Conversation, now: Boolean) {
         val account = conversation.account
         account.pendingConferenceJoins.remove(conversation)
         account.pendingConferenceLeaves.remove(conversation)
@@ -3453,7 +3453,7 @@ class XmppConnectionService : Service() {
         })
     }
 
-    private fun disconnect(account: Account, force: Boolean) {
+    fun disconnect(account: Account, force: Boolean) {
         if (account.status == Account.State.ONLINE || account.status == Account.State.DISABLED) {
             val connection = account.xmppConnection
             if (!force) {
@@ -3488,7 +3488,7 @@ class XmppConnectionService : Service() {
         updateConversationUi()
     }
 
-    protected fun syncDirtyContacts(account: Account) {
+    fun syncDirtyContacts(account: Account) {
         for (contact in account.roster.contacts) {
             if (contact.getOption(Contact.Options.DIRTY_PUSH)) {
                 pushContactToServer(contact)
@@ -3596,7 +3596,7 @@ class XmppConnectionService : Service() {
 
     }
 
-    private fun publishMucAvatar(
+    fun publishMucAvatar(
         conversation: Conversation,
         avatar: Avatar,
         callback: OnAvatarPublication
@@ -3758,7 +3758,7 @@ class XmppConnectionService : Service() {
         val packet = this.iqGenerator.retrieveAvatarMetaData(null)
         this.sendIqPacket(account, packet, object : OnIqPacketReceived {
 
-            private fun parseAvatar(packet: IqPacket): Avatar? {
+            fun parseAvatar(packet: IqPacket): Avatar? {
                 val pubsub = packet.findChild("pubsub", "http://jabber.org/protocol/pubsub")
                 if (pubsub != null) {
                     val items = pubsub.findChild("items")
@@ -3769,7 +3769,7 @@ class XmppConnectionService : Service() {
                 return null
             }
 
-            private fun errorIsItemNotFound(packet: IqPacket): Boolean {
+            fun errorIsItemNotFound(packet: IqPacket): Boolean {
                 val error = packet.findChild("error")
                 return (packet.type == IqPacket.TYPE.ERROR
                         && error != null
@@ -3829,7 +3829,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun fetchAvatarPep(account: Account, avatar: Avatar?, callback: UiCallback<Avatar>?) {
+    fun fetchAvatarPep(account: Account, avatar: Avatar?, callback: UiCallback<Avatar>?) {
         val packet = this.iqGenerator.retrievePepAvatar(avatar)
         sendIqPacket(account, packet, OnIqPacketReceived { a, result ->
             synchronized(mInProgressAvatarFetches) {
@@ -3880,7 +3880,7 @@ class XmppConnectionService : Service() {
         })
     }
 
-    private fun fetchAvatarVcard(account: Account, avatar: Avatar, callback: UiCallback<Avatar>?) {
+    fun fetchAvatarVcard(account: Account, avatar: Avatar, callback: UiCallback<Avatar>?) {
         val packet = this.iqGenerator.retrieveVcardAvatar(avatar)
         this.sendIqPacket(account, packet, OnIqPacketReceived { account, packet ->
             val previouslyOmittedPepFetch: Boolean
@@ -4017,7 +4017,7 @@ class XmppConnectionService : Service() {
         mDatabaseWriterExecutor.execute { databaseBackend.updateConversation(conversation) }
     }
 
-    private fun reconnectAccount(account: Account, force: Boolean, interactive: Boolean) {
+    fun reconnectAccount(account: Account, force: Boolean, interactive: Boolean) {
         synchronized(account) {
             var connection: XmppConnection? = account.xmppConnection
             if (connection == null) {
@@ -4166,7 +4166,7 @@ class XmppConnectionService : Service() {
         return getBooleanPreference("chat_states", R.bool.chat_states)
     }
 
-    private fun synchronizeWithBookmarks(): Boolean {
+    fun synchronizeWithBookmarks(): Boolean {
         return getBooleanPreference("autojoin", R.bool.autojoin)
     }
 
@@ -4201,7 +4201,7 @@ class XmppConnectionService : Service() {
     }
 
 
-    private fun <T> threadSafeList(set: Set<T>): List<T> {
+    fun <T> threadSafeList(set: Set<T>): List<T> {
         synchronized(LISTENER_LOCK) {
             return if (set.size == 0) emptyList() else ArrayList(set)
         }
@@ -4422,7 +4422,7 @@ class XmppConnectionService : Service() {
         sendPresence(account, checkListeners() && broadcastLastActivity())
     }
 
-    private fun sendPresence(account: Account, includeIdleTimestamp: Boolean) {
+    fun sendPresence(account: Account, includeIdleTimestamp: Boolean) {
         val status: Presence.Status
         if (manuallyChangePresence()) {
             status = account.presenceStatus
@@ -4443,7 +4443,7 @@ class XmppConnectionService : Service() {
         sendPresencePacket(account, packet)
     }
 
-    private fun deactivateGracePeriod() {
+    fun deactivateGracePeriod() {
         for (account in accounts!!) {
             account.deactivateGracePeriod()
         }
@@ -4458,7 +4458,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun refreshAllFcmTokens() {
+    fun refreshAllFcmTokens() {
         for (account in accounts!!) {
             if (account.isOnlineAndConnected && pushManagementService.available(account)) {
                 pushManagementService.registerPushTokenOnServer(account)
@@ -4466,7 +4466,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun sendOfflinePresence(account: Account) {
+    fun sendOfflinePresence(account: Account) {
         Timber.d(account.jid.asBareJid().toString() + ": sending offline presence")
         sendPresencePacket(account, presenceGenerator.sendOfflinePresence(account))
     }
@@ -4676,7 +4676,7 @@ class XmppConnectionService : Service() {
         }
     }
 
-    private fun injectServiceDiscoveryResult(
+    fun injectServiceDiscoveryResult(
         roster: Roster,
         hash: String,
         ver: String,
@@ -4883,7 +4883,7 @@ class XmppConnectionService : Service() {
             get() = this@XmppConnectionService
     }
 
-    private inner class InternalEventReceiver : BroadcastReceiver() {
+    inner class InternalEventReceiver : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent) {
             onStartCommand(intent, 0, 0)
@@ -4910,16 +4910,16 @@ class XmppConnectionService : Service() {
         val ACTION_FCM_TOKEN_REFRESH = "fcm_token_refresh"
         @JvmField
         val ACTION_FCM_MESSAGE_RECEIVED = "fcm_message_received"
-        private val ACTION_POST_CONNECTIVITY_CHANGE =
+        val ACTION_POST_CONNECTIVITY_CHANGE =
             "eu.siacs.conversations.POST_CONNECTIVITY_CHANGE"
 
-        private val SETTING_LAST_ACTIVITY_TS = "last_activity_timestamp"
+        val SETTING_LAST_ACTIVITY_TS = "last_activity_timestamp"
 
         init {
             URL.setURLStreamHandlerFactory(CustomURLStreamHandlerFactory())
         }
 
-        private fun generateFetchKey(account: Account, avatar: Avatar): String {
+        fun generateFetchKey(account: Account, avatar: Avatar): String {
             return account.jid.asBareJid().toString() + "_" + avatar.owner + "_" + avatar.sha1sum
         }
     }
