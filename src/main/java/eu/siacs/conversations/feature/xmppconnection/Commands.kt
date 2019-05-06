@@ -168,7 +168,7 @@
 //    val mInternalEventReceiver = InternalEventReceiver()
 //    val mInternalScreenEventReceiver = InternalEventReceiver()
 //
-//    val mDefaultIqHandler = object : OnIqPacketReceived {
+//    val defaultIqHandler = object : OnIqPacketReceived {
 //        override fun onIqPacketReceived(account: Account, packet: IqPacket) {
 //            if (packet.getType() != IqPacket.TYPE.RESULT) {
 //                val error = packet.findChild("error")
@@ -180,6 +180,7 @@
 //        }
 //    }
 //
+//    @JvmField
 //    val onContactStatusChanged = object : OnContactStatusChanged {
 //        override fun onContactStatusChanged(contact: Contact, online: Boolean) {
 //            val conversation = find(getConversations(), contact)
@@ -210,8 +211,8 @@
 //        }
 //    }
 //
-//    val mOnMessageAcknowledgedListener = object : OnMessageAcknowledged {
-//        override fun onMessageAcknowledged(account: Account, uuid: String): Boolean {
+//    val onMessageAcknowledgedListener = object : OnMessageAcknowledged {
+//        override fun onMessageAcknowledged(account: Account, uuid: String?): Boolean {
 //            for (conversation in getConversations()) {
 //                if (conversation.account === account) {
 //                    val message = conversation.findUnsentMessageWithUuid(uuid)
@@ -227,7 +228,7 @@
 //        }
 //    }
 //
-//    val mOnBindListener = object : OnBindListener {
+//    val onBindListener = object : OnBindListener {
 //        override fun onBind(account: Account) {
 //            synchronized(mInProgressAvatarFetches) {
 //                val iterator = mInProgressAvatarFetches.iterator()
@@ -1460,8 +1461,8 @@
 //        connection.setOnPresencePacketReceivedListener(this.mPresenceParser)
 //        connection.setOnUnregisteredIqPacketReceivedListener(this.iqParser)
 //        connection.setOnJinglePacketReceivedListener(this.jingleListener)
-//        connection.setOnBindListener(this.mOnBindListener)
-//        connection.setOnMessageAcknowledgeListener(this.mOnMessageAcknowledgedListener)
+//        connection.setOnBindListener(this.onBindListener)
+//        connection.setOnMessageAcknowledgeListener(this.onMessageAcknowledgedListener)
 //        connection.addOnAdvancedStreamFeaturesAvailableListener(this.messageArchiveService)
 //        connection.addOnAdvancedStreamFeaturesAvailableListener(this.avatarService)
 //        val axolotlService = account.axolotlService
@@ -1767,7 +1768,7 @@
 //        for (bookmark in account.bookmarks) {
 //            storage.addChild(bookmark)
 //        }
-//        sendIqPacket(account, iqPacket, mDefaultIqHandler)
+//        sendIqPacket(account, iqPacket, defaultIqHandler)
 //    }
 //
 //    fun pushBookmarksPep(account: Account) {
@@ -3436,7 +3437,7 @@
 //            }
 //        }
 //        val request = this.iqGenerator.changeAffiliation(conference, jids, after.toString())
-//        sendIqPacket(conference.account, request, mDefaultIqHandler)
+//        sendIqPacket(conference.account, request, defaultIqHandler)
 //    }
 //
 //    fun changeRoleInConference(conference: Conversation, nick: String, role: MucOptions.Role) {
@@ -3531,7 +3532,7 @@
 //            )
 //            val iq = IqPacket(IqPacket.TYPE.SET)
 //            iq.query(Namespace.ROSTER).addChild(contact.asElement())
-//            account.xmppConnection.sendIqPacket(iq, mDefaultIqHandler)
+//            account.xmppConnection.sendIqPacket(iq, defaultIqHandler)
 //            if (sendUpdates) {
 //                sendPresencePacket(account, presenceGenerator.sendPresenceUpdatesTo(contact))
 //            }
@@ -4021,7 +4022,7 @@
 //            val item = iq.query(Namespace.ROSTER).addChild("item")
 //            item.setAttribute("jid", contact.jid.toString())
 //            item.setAttribute("subscription", "remove")
-//            account.xmppConnection.sendIqPacket(iq, mDefaultIqHandler)
+//            account.xmppConnection.sendIqPacket(iq, defaultIqHandler)
 //        }
 //    }
 //
