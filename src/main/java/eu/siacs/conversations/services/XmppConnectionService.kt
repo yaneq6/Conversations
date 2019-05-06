@@ -89,6 +89,7 @@ import java.security.Security
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import java.util.*
+import java.util.Collections.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -111,20 +112,9 @@ class XmppConnectionService : Service() {
     val mInProgressAvatarFetches = HashSet<String>()
     val mOmittedPepAvatarFetches = HashSet<String>()
     val mLowPingTimeoutMode = HashSet<Jid>()
-    val mDefaultIqHandler = OnIqPacketReceived { account, packet ->
-        if (packet.getType() != IqPacket.TYPE.RESULT) {
-            val error = packet.findChild("error")
-            val text = if (error != null) error.findChildContent("text") else null
-            if (text != null) {
-                Timber.d(account.getJid().asBareJid().toString() + ": received iq error - " + text)
-            }
-        }
-    }
-    lateinit var databaseBackend: DatabaseBackend
     val mContactMergerExecutor = ReplacingSerialSingleThreadExecutor("ContactMerger")
-    var mLastActivity: Long = 0
+
     val fileBackend = FileBackend(this)
-    var memorizingTrustManager: MemorizingTrustManager? = null
     val notificationService = NotificationService(this)
     val shortcutService = ShortcutService(this)
     val mInitialAddressbookSyncCompleted = AtomicBoolean(false)
@@ -134,8 +124,61 @@ class XmppConnectionService : Service() {
     val mPresenceParser = PresenceParser(this)
     val iqParser = IqParser(this)
     val messageGenerator = MessageGenerator(this)
+
+    val presenceGenerator = PresenceGenerator(this)
+    val jingleConnectionManager = JingleConnectionManager(this)
+    val httpConnectionManager = HttpConnectionManager(this)
+    val avatarService = AvatarService(this)
+    val messageArchiveService = MessageArchiveService(this)
+    val pushManagementService = PushManagementService(this)
+    val quickConversationsService = QuickConversationsService(this)
+
+    var muclumbusService: MuclumbusService? = null
+    var memorizingTrustManager: MemorizingTrustManager? = null
+    var mLastActivity: Long = 0
+    var destroyed = false
+    var unreadCount = -1
+    var accounts: MutableList<Account>? = null
+
+
+    //Ui callback listeners
+    val mOnConversationUpdates = newSetFromMap(WeakHashMap<OnConversationUpdate, Boolean>())
+    val mOnShowErrorToasts = newSetFromMap(WeakHashMap<OnShowErrorToast, Boolean>())
+    val mOnAccountUpdates = newSetFromMap(WeakHashMap<OnAccountUpdate, Boolean>())
+    val mOnCaptchaRequested = newSetFromMap(WeakHashMap<OnCaptchaRequested, Boolean>())
+    val mOnRosterUpdates = newSetFromMap(WeakHashMap<OnRosterUpdate, Boolean>())
+    val mOnUpdateBlocklist = newSetFromMap(WeakHashMap<OnUpdateBlocklist, Boolean>())
+    val mOnMucRosterUpdate = newSetFromMap(WeakHashMap<OnMucRosterUpdate, Boolean>())
+    val mOnKeyStatusUpdated = newSetFromMap(WeakHashMap<OnKeyStatusUpdated, Boolean>())
+
+    val LISTENER_LOCK = Any()
+
+    lateinit var databaseBackend: DatabaseBackend
+
+    val mLastExpiryRun = AtomicLong(0)
+    var rng: SecureRandom? = null
+    val discoCache = LruCache<Pair<String, String>, ServiceDiscoveryResult>(20)
+
+    var pgpServiceConnection: OpenPgpServiceConnection? = null
+    var mPgpEngine: PgpEngine? = null
+    var wakeLock: WakeLock? = null
+    var pm: PowerManager? = null
+    var bitmapCache: LruCache<String, Bitmap>? = null
+    val mInternalEventReceiver = InternalEventReceiver()
+    val mInternalScreenEventReceiver = InternalEventReceiver()
+
+    val mDefaultIqHandler = OnIqPacketReceived { account, packet ->
+        if (packet.getType() != IqPacket.TYPE.RESULT) {
+            val error = packet.findChild("error")
+            val text = if (error != null) error.findChildContent("text") else null
+            if (text != null) {
+                Timber.d(account.getJid().asBareJid().toString() + ": received iq error - " + text)
+            }
+        }
+    }
+
     @JvmField
-    var onContactStatusChanged = OnContactStatusChanged { contact, online ->
+    val onContactStatusChanged = OnContactStatusChanged { contact, online ->
         val conversation = find(getConversations(), contact)
         if (conversation != null) {
             if (online) {
@@ -145,23 +188,14 @@ class XmppConnectionService : Service() {
             }
         }
     }
-    val presenceGenerator = PresenceGenerator(this)
-    var accounts: MutableList<Account>? = null
-    val jingleConnectionManager = JingleConnectionManager(
-        this
-    )
+
     val jingleListener = OnJinglePacketReceived { account, packet ->
         jingleConnectionManager.deliverPacket(
             account,
             packet
         )
     }
-    val httpConnectionManager = HttpConnectionManager(this)
-    val avatarService = AvatarService(this)
-    val messageArchiveService = MessageArchiveService(this)
-    val pushManagementService = PushManagementService(this)
-    var muclumbusService: MuclumbusService? = null
-    val quickConversationsService = QuickConversationsService(this)
+
     val fileObserver = object : ConversationsFileObserver(
         Environment.getExternalStorageDirectory().absolutePath
     ) {
@@ -169,6 +203,7 @@ class XmppConnectionService : Service() {
             markFileDeleted(path)
         }
     }
+
     val mOnMessageAcknowledgedListener = OnMessageAcknowledged { account, uuid ->
         for (conversation in getConversations()) {
             if (conversation.account === account) {
@@ -183,30 +218,6 @@ class XmppConnectionService : Service() {
         }
         false
     }
-
-    var destroyed = false
-
-    var unreadCount = -1
-
-    //Ui callback listeners
-    val mOnConversationUpdates =
-        Collections.newSetFromMap(WeakHashMap<OnConversationUpdate, Boolean>())
-    val mOnShowErrorToasts =
-        Collections.newSetFromMap(WeakHashMap<OnShowErrorToast, Boolean>())
-    val mOnAccountUpdates =
-        Collections.newSetFromMap(WeakHashMap<OnAccountUpdate, Boolean>())
-    val mOnCaptchaRequested =
-        Collections.newSetFromMap(WeakHashMap<OnCaptchaRequested, Boolean>())
-    val mOnRosterUpdates = Collections.newSetFromMap(WeakHashMap<OnRosterUpdate, Boolean>())
-    val mOnUpdateBlocklist =
-        Collections.newSetFromMap(WeakHashMap<OnUpdateBlocklist, Boolean>())
-    val mOnMucRosterUpdate =
-        Collections.newSetFromMap(WeakHashMap<OnMucRosterUpdate, Boolean>())
-    val mOnKeyStatusUpdated =
-        Collections.newSetFromMap(WeakHashMap<OnKeyStatusUpdated, Boolean>())
-
-    val LISTENER_LOCK = Any()
-
 
     val mOnBindListener = OnBindListener { account ->
         synchronized(mInProgressAvatarFetches) {
@@ -266,11 +277,8 @@ class XmppConnectionService : Service() {
         connectMultiModeConversations(account)
         syncDirtyContacts(account)
     }
-    val mLastExpiryRun = AtomicLong(0)
-    var rng: SecureRandom? = null
-        set
-    fun getRNG() = rng
-    val discoCache = LruCache<Pair<String, String>, ServiceDiscoveryResult>(20)
+
+
     val statusListener = OnStatusChanged { account ->
         val connection = account.xmppConnection
         updateAccountUi()
@@ -367,14 +375,7 @@ class XmppConnectionService : Service() {
         }
         notificationService.updateErrorNotification()
     }
-    var pgpServiceConnection: OpenPgpServiceConnection? = null
-    var mPgpEngine: PgpEngine? = null
-    var wakeLock: WakeLock? = null
-    var pm: PowerManager? = null
-    var bitmapCache: LruCache<String, Bitmap>? = null
-        set
-    val mInternalEventReceiver = InternalEventReceiver()
-    val mInternalScreenEventReceiver = InternalEventReceiver()
+
 
     val pgpEngine: PgpEngine?
         get() {
@@ -532,6 +533,8 @@ class XmppConnectionService : Service() {
             }
             return mucServers
         }
+
+    fun getRNG() = rng
 
     fun isInLowPingTimeoutMode(account: Account): Boolean {
         synchronized(mLowPingTimeoutMode) {
@@ -995,10 +998,6 @@ class XmppConnectionService : Service() {
                 throwable.printStackTrace()
             }
         })
-    }
-
-    interface OnChannelSearchResultsFound {
-        fun onChannelSearchResultsFound(results: List<MuclumbusService.Room>)
     }
 
     fun directReply(conversation: Conversation, body: String, dismissAfterReply: Boolean) {
@@ -1988,7 +1987,7 @@ class XmppConnectionService : Service() {
         }
         try {
             if (orderedUuids != null) {
-                Collections.sort(list) { a, b ->
+                sort(list) { a, b ->
                     val indexA = orderedUuids.indexOf(a.uuid)
                     val indexB = orderedUuids.indexOf(b.uuid)
                     if (indexA == -1 || indexB == -1 || indexA == indexB)
@@ -1997,7 +1996,7 @@ class XmppConnectionService : Service() {
                         indexA - indexB
                 }
             } else {
-                Collections.sort(list)
+                sort(list)
             }
         } catch (e: IllegalArgumentException) {
             //ignore
@@ -4867,6 +4866,11 @@ class XmppConnectionService : Service() {
     }
 
     interface OnConferenceJoined : (Conversation) -> Unit
+
+
+    interface OnChannelSearchResultsFound {
+        fun onChannelSearchResultsFound(results: List<MuclumbusService.Room>)
+    }
 
     interface OnConfigurationPushed {
         fun onPushSucceeded()
