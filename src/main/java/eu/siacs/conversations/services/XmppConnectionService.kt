@@ -108,6 +108,7 @@ class XmppConnectionService : Service() {
     val mNotificationExecutor = SerialSingleThreadExecutor("NotificationExecutor")
     val mRosterSyncTaskManager = ReplacingTaskManager()
     val mBinder = XmppConnectionBinder()
+    @JvmField
     val conversations = CopyOnWriteArrayList<Conversation>()
     val iqGenerator = IqGenerator(this)
     val mInProgressAvatarFetches = HashSet<String>()

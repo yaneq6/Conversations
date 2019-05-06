@@ -8,6 +8,7 @@ import java.util.List;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import rocks.xmpp.addr.Jid;
 
+@SuppressWarnings("ConstantConditions")
 public final class Config {
     private static final int UNENCRYPTED = 1;
     private static final int OPENPGP = 2;

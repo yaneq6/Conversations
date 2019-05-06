@@ -130,7 +130,7 @@ public class MessageArchiveService implements OnAdvancedStreamFeaturesLoaded {
 		this.execute(query);
 	}
 
-	void catchupMUC(final Conversation conversation) {
+	public void catchupMUC(final Conversation conversation) {
 		if (conversation.getLastMessageTransmitted().getTimestamp() < 0 && conversation.countMessages() == 0) {
 			query(conversation,
 					new MamReference(0),
@@ -207,7 +207,7 @@ public class MessageArchiveService implements OnAdvancedStreamFeaturesLoaded {
 		}
 	}
 
-	void executePendingQueries(final Account account) {
+	public void executePendingQueries(final Account account) {
 		List<Query> pending = new ArrayList<>();
 		synchronized (this.pendingQueries) {
 			for (Iterator<Query> iterator = this.pendingQueries.iterator(); iterator.hasNext(); ) {
@@ -275,7 +275,7 @@ public class MessageArchiveService implements OnAdvancedStreamFeaturesLoaded {
 		}
 	}
 
-	boolean inCatchup(Account account) {
+	public boolean inCatchup(Account account) {
 		synchronized (this.queries) {
 			for (Query query : queries) {
 				if (query.account == account && query.isCatchup() && query.getWith() == null) {
@@ -300,7 +300,7 @@ public class MessageArchiveService implements OnAdvancedStreamFeaturesLoaded {
 		return false;
 	}
 
-	boolean queryInProgress(Conversation conversation, XmppConnectionService.OnMoreMessagesLoaded callback) {
+	public boolean queryInProgress(Conversation conversation, XmppConnectionService.OnMoreMessagesLoaded callback) {
 		synchronized (this.queries) {
 			for (Query query : queries) {
 				if (query.conversation == conversation) {
@@ -375,7 +375,7 @@ public class MessageArchiveService implements OnAdvancedStreamFeaturesLoaded {
 		}
 	}
 
-	void kill(Conversation conversation) {
+	public void kill(Conversation conversation) {
 		final ArrayList<Query> toBeKilled = new ArrayList<>();
 		synchronized (this.queries) {
 			for (Query q : queries) {
@@ -389,7 +389,7 @@ public class MessageArchiveService implements OnAdvancedStreamFeaturesLoaded {
 		}
 	}
 
-	private void kill(Query query) {
+	public void kill(Query query) {
 		Log.d(Config.LOGTAG, query.getAccount().getJid().asBareJid() + ": killing mam query prematurely");
 		query.callback = null;
 		this.finalizeQuery(query, false);

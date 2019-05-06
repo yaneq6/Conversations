@@ -41,7 +41,7 @@ public class AttachFileToConversationRunnable implements Runnable, MediaTranscod
 	private final long originalFileSize;
 	private int currentProgress = -1;
 
-	AttachFileToConversationRunnable(XmppConnectionService xmppConnectionService, Uri uri, String type, Message message, UiCallback<Message> callback) {
+	public AttachFileToConversationRunnable(XmppConnectionService xmppConnectionService, Uri uri, String type, Message message, UiCallback<Message> callback) {
 		this.uri = uri;
 		this.type = type;
 		this.mXmppConnectionService = xmppConnectionService;
@@ -53,7 +53,7 @@ public class AttachFileToConversationRunnable implements Runnable, MediaTranscod
 		this.isVideoMessage = (mimeType != null && mimeType.startsWith("video/")) && originalFileSize > autoAcceptFileSize && !"uncompressed".equals(getVideoCompression());
 	}
 
-	boolean isVideoMessage() {
+	public boolean isVideoMessage() {
 		return this.isVideoMessage && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2;
 	}
 

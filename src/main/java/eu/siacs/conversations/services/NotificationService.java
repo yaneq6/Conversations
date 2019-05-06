@@ -72,10 +72,10 @@ public class NotificationService {
 
     private static final int LED_COLOR = 0xff00ff00;
 
-    private static final String CONVERSATIONS_GROUP = "eu.siacs.conversations";
-    private static final int NOTIFICATION_ID_MULTIPLIER = 1024 * 1024;
-    private static final int NOTIFICATION_ID = 2 * NOTIFICATION_ID_MULTIPLIER;
-    static final int FOREGROUND_NOTIFICATION_ID = NOTIFICATION_ID_MULTIPLIER * 4;
+    public static final String CONVERSATIONS_GROUP = "eu.siacs.conversations";
+    public static final int NOTIFICATION_ID_MULTIPLIER = 1024 * 1024;
+    public static final int NOTIFICATION_ID = 2 * NOTIFICATION_ID_MULTIPLIER;
+    public static final int FOREGROUND_NOTIFICATION_ID = NOTIFICATION_ID_MULTIPLIER * 4;
     private static final int ERROR_NOTIFICATION_ID = NOTIFICATION_ID_MULTIPLIER * 6;
     private final XmppConnectionService mXmppConnectionService;
     private final LinkedHashMap<String, ArrayList<Message>> notifications = new LinkedHashMap<>();
@@ -105,7 +105,7 @@ public class NotificationService {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    void initializeChannels() {
+    public void initializeChannels() {
         final Context c = mXmppConnectionService;
         final NotificationManager notificationManager = c.getSystemService(NotificationManager.class);
         if (notificationManager == null) {
@@ -230,7 +230,7 @@ public class NotificationService {
         }
     }
 
-    void pushFromDirectReply(final Message message) {
+    public void pushFromDirectReply(final Message message) {
         synchronized (notifications) {
             pushToStack(message);
             updateNotification(false);
@@ -277,7 +277,7 @@ public class NotificationService {
         return count;
     }
 
-    void finishBacklog(boolean notify) {
+    public void finishBacklog(boolean notify) {
         finishBacklog(notify, null);
     }
 
@@ -898,7 +898,7 @@ public class NotificationService {
         return SystemClock.elapsedRealtime() < (this.mLastNotification + miniGrace);
     }
 
-    Notification createForegroundNotification() {
+    public Notification createForegroundNotification() {
         final Notification.Builder mBuilder = new Notification.Builder(mXmppConnectionService);
         mBuilder.setContentTitle(mXmppConnectionService.getString(R.string.app_name));
         final List<Account> accounts = mXmppConnectionService.getAccounts();
@@ -932,7 +932,7 @@ public class NotificationService {
         return PendingIntent.getActivity(mXmppConnectionService, 0, new Intent(mXmppConnectionService, ConversationsActivity.class), 0);
     }
 
-    void updateErrorNotification() {
+    public void updateErrorNotification() {
         if (Config.SUPPRESS_ERROR_NOTIFICATION) {
             cancel(ERROR_NOTIFICATION_ID);
             return;
@@ -1001,7 +1001,7 @@ public class NotificationService {
         notify(FOREGROUND_NOTIFICATION_ID, notification);
     }
 
-    void dismissForcedForegroundNotification() {
+    public void dismissForcedForegroundNotification() {
         cancel(FOREGROUND_NOTIFICATION_ID);
     }
 
