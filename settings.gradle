@@ -1,2 +1,3 @@
 include ':libs:xmpp-addr'
+include ':libs:refactor-tool'
 rootProject.name = 'Conversations'

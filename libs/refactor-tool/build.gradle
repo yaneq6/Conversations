@@ -1,0 +1,19 @@
+apply plugin: 'java-library'
+apply plugin: 'kotlin'
+
+repositories {
+    google()
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation files('/home/janek/projects/kastree/ast/ast-jvm/build/libs/ast-jvm-0.5.0-SNAPSHOT.jar')
+    implementation files('/home/janek/projects/kastree/ast-psi/build/libs/ast-psi-0.5.0-SNAPSHOT.jar')
+    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlin_version"
+    testImplementation("junit:junit:4.12")
+}
+
+sourceCompatibility = "8"
+targetCompatibility = "8"

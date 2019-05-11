@@ -1129,7 +1129,7 @@ class XmppConnectionService : Service() {
             val activeNetwork = cm?.activeNetworkInfo
             return activeNetwork != null && (activeNetwork.isConnected || activeNetwork.type == ConnectivityManager.TYPE_ETHERNET)
         } catch (e: RuntimeException) {
-            Timber.d("unable to check for internet connection", e)
+            Timber.d(e, "unable to check for internet connection")
             return true //if internet connection can not be checked it is probably best to just try
         }
 
@@ -1450,7 +1450,7 @@ class XmppConnectionService : Service() {
                 pendingIntent
             )
         } catch (e: RuntimeException) {
-            Timber.d("unable to schedule alarm for idle ping", e)
+            Timber.d(e, "unable to schedule alarm for idle ping")
         }
 
     }
