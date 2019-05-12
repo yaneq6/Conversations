@@ -22,15 +22,31 @@ fun List<Node.Decl>.filterClasses(): List<Node.Decl.Structured> = this
 
 fun List<Node.Decl>.filterStateMembers() = this
     .filterIsInstance<Node.Decl.Property>()
-    .filter {
-        when (val expr = it.expr) {
-            null, !is Node.Expr.Call -> false
+    .filter { prop ->
+        when (val expr = prop.expr) {
+            null, is Node.Expr.Object -> false
             else -> AtomicBoolean(true).apply {
                 Visitor.visit(expr) { v: Node?, _: Node ->
                     compareAndSet(
                         true, true
                             .and(v !is Node.Expr.This)
                             .and(v !is Node.Decl.Property.Accessor.Get)
+                    )
+                }
+            }.get()
+        }
+    }
+
+fun List<Node.Decl>.filterModuleMembers(): List<Node.Decl.Property> = this
+    .filterIsInstance<Node.Decl.Property>()
+    .filter { prop ->
+        when (val expr = prop.expr) {
+            null, is Node.Expr.Object -> false
+            else -> AtomicBoolean(false).apply {
+                Visitor.visit(expr) { v: Node?, _: Node ->
+                    compareAndSet(
+                        false, true
+                            .and(v is Node.Expr.This)
                     )
                 }
             }.get()
@@ -53,8 +69,15 @@ fun Node.Decl.Property.toParam(): Node.Decl.Func.Param {
     )
 }
 
+val suffixes = listOf(
+    "state",
+    "activity",
+    "fragment",
+    "service"
+)
+
 fun Node.Decl.Structured.toParam(name: String = this.name.decapitalize()) = funcParam(
-    name = name,
+    name = suffixes.find { name.endsWith(suffix = it, ignoreCase = true)} ?: name,
     typeName = this.name
 )
 
@@ -133,6 +156,9 @@ fun Node.Decl.Structured.updateConstructor(params: Set<Node.Decl.Func.Param>) = 
         ).flatten()
     )
 )
+
+fun <T: Node>T.map(fn: (v: Node?, parent: Node) -> Node?): T = MutableVisitor.postVisit(this, fn)
+fun Node.forEach(fn: (v: Node?, parent: Node) -> Unit): Unit = Visitor.visit(this, fn)
 
 fun structuredDeclaration(
     name: String,

@@ -1,6 +1,5 @@
 package io.refactor.tool
 
-import kastree.ast.MutableVisitor
 import kastree.ast.Node
 import kastree.ast.Visitor
 import kastree.ast.Writer
@@ -32,10 +31,11 @@ data class Refactor(
 
     data class Scope(
         val root: Node.Decl.Structured,
-        val state: Node.Decl.Structured,
+        val state: Node.Decl.Structured = root,
+        val module: Node.Decl.Structured = root,
         val dependencies: Map<String, Dependency> = emptyMap(),
         val classes: Set<Node.Decl.Structured> = emptySet(),
-        val callbacks: Set<Node.Decl.Structured> = emptySet(),
+        val objects: Set<Node.Decl.Structured> = emptySet(),
         val functionalClasses: Set<Node.Decl.Structured> = emptySet()
     )
 
@@ -59,15 +59,18 @@ fun refactorV2(path: String) = Refactor(path = path)
     .readCode()
     .parseInput()
     .generateScopes()
-    .generateStatesV2()
+    .generateStateV2()
+    .generateModule()
+    .extractObjects()
     .extractInnerClasses()
     .extractFunctions()
     .generateDependenciesV2()
     .generateStaticImports()
     .generateInterfacesImports()
+    .updateConstructors()
     .writeToFileV2()
 
-fun Refactor.generateStatesV2() = eachScope {
+fun Refactor.generateStateV2() = eachScope {
     copy(
         state = structuredDeclaration(
             name = root.name + "State",
@@ -77,14 +80,23 @@ fun Refactor.generateStatesV2() = eachScope {
     )
 }
 
+fun Refactor.generateModule() = eachScope {
+    copy(
+        module = structuredDeclaration(
+            name = root.name + "Module",
+            form = Node.Decl.Structured.Form.CLASS,
+            members = root.members.filterModuleMembers()
+        )
+    )
+}
+
 fun Refactor.extractInnerClasses() = eachScope {
     copy(
         classes = root.members
             .filterClasses()
             .filter { it.mods.contains(Node.Modifier.Lit(Node.Modifier.Keyword.INNER)) }
-            .apply { forEach(::println) }
             .map {
-                it.updateConstructor(listOf(root.toParam()))
+                it.updateConstructor(setOf(root.toParam()))
                     .copy(mods = emptyList())
             }
             .toSet()
@@ -95,53 +107,96 @@ fun Refactor.extractFunctions() = eachScope {
     copy(
         functionalClasses = root.members
             .toFunctionalClasses()
-            .apply { forEach(::println) }
             .toSet()
+    )
+}
+
+fun Refactor.extractObjects() = eachScope {
+    copy(
+        objects = root.members.filterIsInstance<Node.Decl.Property>().mapNotNull { prop ->
+            when (val expr = prop.expr) {
+                is Node.Expr.Object -> structuredDeclaration(
+                    name = prop.vars.first()!!.name.capitalize(),
+                    form = Node.Decl.Structured.Form.CLASS,
+                    members = expr.members
+                )
+                else -> null
+            }
+        }.toSet()
     )
 }
 
 fun Refactor.generateDependenciesV2() = eachScope {
     copy(
-        dependencies = createFunctionalDependency() +
-                createPropertyDependency()
+        dependencies = createFunctionalDependency() + createPropertyDependency()
+            .apply { forEach(::println) }
     )
 }
 
 fun Refactor.updateConstructors() = eachScope {
     copy(
-        classes = updateConstructors(classes),
-        functionalClasses = updateConstructors(functionalClasses),
-        callbacks = updateConstructors(callbacks)
+        classes = updateDependencies(classes),
+        functionalClasses = updateDependencies(functionalClasses),
+        objects = updateDependencies(objects),
+        state = updateDependencies(listOf(state)).first()
     )
 }
 
+fun Refactor.Scope.updateDependencies(
+    classes: Iterable<Node.Decl.Structured>
+): Set<Node.Decl.Structured> =
+    fixDependenciesAccess(updateConstructors(classes))
+//    updateConstructors(classes)
+
+
 fun Refactor.Scope.updateConstructors(classes: Iterable<Node.Decl.Structured>): Set<Node.Decl.Structured> =
     classes.map { type ->
-        val params = mutableSetOf<Node.Decl.Func.Param>()
-        type.copy(
-            members = type.members.map { member ->
-                MutableVisitor.preVisit(member) { v: Node?, parent: Node ->
+        type.updateConstructor(
+            params = mutableSetOf<Node.Decl.Func.Param>().apply {
+                Visitor.visit(type) { v: Node?, parent: Node ->
                     when (v) {
-                        is Node.Expr.Call -> v.also {
-                            it.args.first().name?.let { name ->
-                                params.addIfNotNull(dependencies[name])
-                            } ?: Unit
+                        is Node.Expr.Name -> v.name.let(dependencies::get)?.let { dep ->
+                            add(
+                                when (dep) {
+                                    is Refactor.Dependency.Functional -> dep.param
+                                    is Refactor.Dependency.Custom -> dep.param
+                                }
+                            )
                         }
-                        else -> v
                     }
                 }
             }
-        ).updateConstructor(
-            params = params
         )
+    }.toSet()
+
+fun Refactor.Scope.fixDependenciesAccess(classes: Iterable<Node.Decl.Structured>): Set<Node.Decl.Structured> =
+    classes.map { type ->
+        type.map { v: Node?, _: Node ->
+            when (v) {
+                is Node.Expr.BinaryOp ->
+                    if (v.lhs !is Node.Expr.This) v
+                    else v.rhs
+                is Node.Expr.Name -> v.name.let(dependencies::get)?.let { dep ->
+                    when (dep) {
+                        is Refactor.Dependency.Custom -> Node.Expr.BinaryOp(
+                            lhs = Node.Expr.Name(dep.param.name),
+                            oper = Node.Expr.BinaryOp.Oper.Token(Node.Expr.BinaryOp.Token.DOT),
+                            rhs = v
+                        )
+                        else -> v
+                    }
+                } ?: v
+                else -> v
+            }
+        }
     }.toSet()
 
 inline fun <reified T : Node.Decl> Refactor.Scope.generateDependencies(
     crossinline createDependency: Refactor.Scope.(T) -> Refactor.Dependency?
 ): Map<String, Refactor.Dependency> =
     TreeSet<Refactor.Dependency>(compareBy(Refactor.Dependency::name)).apply {
-        Visitor.visit(root) { node, _ ->
-            addIfNotNull(
+        root.forEach { node, parent ->
+            if (parent == root) addIfNotNull(
                 when (node) {
                     is T -> createDependency(node)
                     else -> null
@@ -153,32 +208,45 @@ inline fun <reified T : Node.Decl> Refactor.Scope.generateDependencies(
         .toMap()
 
 
-fun Refactor.Scope.createFunctionalDependency() =
-    generateDependencies<Node.Decl.Func> { func ->
-        func.toParam().let(Refactor.Dependency::Functional)
-    }
+fun Refactor.Scope.createFunctionalDependency() = generateDependencies<Node.Decl.Func> { func ->
+    func.toParam().let(Refactor.Dependency::Functional)
+}
 
 
-fun Refactor.Scope.createPropertyDependency() =
-    generateDependencies<Node.Decl.Property> { property ->
-        property.vars.first()?.name?.let { name ->
+fun Refactor.Scope.createPropertyDependency() = generateDependencies<Node.Decl.Property> { property ->
+    property.vars.first()?.name?.let { name ->
+        let {
             state.takeIf {
                 it.members.any { decl ->
                     (decl as? Node.Decl.Property)?.vars?.first()?.name == name
                 }
-            }?.toParam()?.let { param ->
-                Refactor.Dependency.Custom(name, param)
+            } ?: objects.find {
+                it.name.contains(name, ignoreCase = true)
+            }
+        }?.toParam()?.let { param ->
+            Refactor.Dependency.Custom(name, param)
+        } ?: let {
+            module.members.filterIsInstance<Node.Decl.Property>().firstOrNull { decl ->
+                decl.vars.first()?.name == name
+            }?.let { member ->
+                Refactor.Dependency.Functional(member.toParam())
             }
         }
     }
+}
+
+//fun Refactor.Scope.createModuleDependencies() = generateDependencies<Node.Decl.Property> {
+//
+//}
 
 
 fun Refactor.writeToFileV2() = apply {
     input!!.copy(
         imports = input.imports + imports,
         decls = scopes.map(Refactor.Scope::state) +
+                scopes.map(Refactor.Scope::module) +
                 scopes.map(Refactor.Scope::classes).flatten() +
-                scopes.map(Refactor.Scope::callbacks).flatten() +
+                scopes.map(Refactor.Scope::objects).flatten() +
                 scopes.map(Refactor.Scope::functionalClasses).flatten()
     ).writeToFile(
         path.replace(".kt", "DomainV2.kt")
@@ -241,7 +309,6 @@ fun Refactor.generateStates() = copy(
                         }
                     } ?: false
                 }
-                .apply { forEach(::println) }
         )
     }
 )
@@ -315,7 +382,7 @@ fun Refactor.updateConstructorParams() = copy(
             listOf(
                 propertiesDependencies,
                 functionDependencies
-            ).flatten()
+            ).flatten().toSet()
         )
     }
 )
@@ -363,8 +430,6 @@ fun Refactor.generateInterfacesImports() = input!!.pkg?.names?.let { names ->
 
 fun Node.File.writeToFile(path: String) {
     Writer.write(this).let { code ->
-        //        println(path)
-//        println(code)
         File(path).writeText(code)
     }
 }
