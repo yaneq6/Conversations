@@ -9,6 +9,6 @@ class RefactorTest {
 
     @Test
     fun testV2() {
-        refactorV2(FILE_PATH)
+        refactor(FILE_PATH)
     }
 }

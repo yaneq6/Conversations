@@ -3,54 +3,15 @@ package io.refactor.tool
 import kastree.ast.MutableVisitor
 import kastree.ast.Node
 import kastree.ast.Visitor
-import java.util.concurrent.atomic.AtomicBoolean
+
+inline fun Refactor.eachScope(map: Refactor.Scope.() -> Refactor.Scope) = copy(
+    scopes = scopes.map(map).toSet()
+)
 
 fun List<Node.Decl>.filterBy(form: Node.Decl.Structured.Form): List<Node.Decl.Structured> = this
     .filterIsInstance<Node.Decl.Structured>()
     .filter { it.form == form }
 
-
-fun List<Node.Decl>.filterFunctions(): List<Node.Decl.Func> = this
-    .filterIsInstance<Node.Decl.Func>()
-
-
-fun List<Node.Decl>.filterClasses(): List<Node.Decl.Structured> = this
-    .filterIsInstance<Node.Decl.Structured>()
-    .filter { it.form == Node.Decl.Structured.Form.CLASS }
-
-
-fun List<Node.Decl>.filterStateMembers() = this
-    .filterIsInstance<Node.Decl.Property>()
-    .filter { prop ->
-        when (val expr = prop.expr) {
-            null, is Node.Expr.Object -> false
-            else -> AtomicBoolean(true).apply {
-                Visitor.visit(expr) { v: Node?, _: Node ->
-                    compareAndSet(
-                        true, true
-                            .and(v !is Node.Expr.This)
-                            .and(v !is Node.Decl.Property.Accessor.Get)
-                    )
-                }
-            }.get()
-        }
-    }
-
-fun List<Node.Decl>.filterModuleMembers(): List<Node.Decl.Property> = this
-    .filterIsInstance<Node.Decl.Property>()
-    .filter { prop ->
-        when (val expr = prop.expr) {
-            null, is Node.Expr.Object -> false
-            else -> AtomicBoolean(false).apply {
-                Visitor.visit(expr) { v: Node?, _: Node ->
-                    compareAndSet(
-                        false, true
-                            .and(v is Node.Expr.This)
-                    )
-                }
-            }.get()
-        }
-    }
 
 fun Node.Decl.Func.toParam() = funcParam(
     name = name!!.decapitalize()
@@ -102,24 +63,6 @@ fun funcParam(
     default = null
 )
 
-
-val toFunctionalClass = fun List<Node.Decl.Func>.() = map(asInvokeFunction).fold(
-    initial = structuredDeclaration(
-        name = first().name?.capitalize() ?: throw RefactorException("cannot capitalize null name"),
-        form = Node.Decl.Structured.Form.CLASS
-    ),
-    operation = Node.Decl.Structured::plus
-)
-
-val asInvokeFunction = fun Node.Decl.Func.() = copy(
-    name = "invoke",
-    mods = listOf<Node.Modifier>(Node.Modifier.Lit(Node.Modifier.Keyword.OPERATOR)),
-    body = MutableVisitor.preVisit(body!!) { v: Node?, parent: Node ->
-        if (v !is Node.Expr.Name || v.name != name) v
-        else v.copy(name = "invoke")
-    }
-)
-
 operator fun Node.Decl.Structured.plus(func: Node.Decl.Func) = copy(
     members = members + func
 )
@@ -159,5 +102,3 @@ fun structuredDeclaration(
     typeConstraints = typeConstraints,
     primaryConstructor = primaryConstructor
 )
-
-class RefactorException(message: String) : Exception(message)
