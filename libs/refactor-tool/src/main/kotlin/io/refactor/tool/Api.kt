@@ -3,7 +3,6 @@ package io.refactor.tool
 import kastree.ast.MutableVisitor
 import kastree.ast.Node
 import kastree.ast.Visitor
-import kastree.ast.Writer
 import java.util.concurrent.atomic.AtomicBoolean
 
 fun List<Node.Decl>.filterBy(form: Node.Decl.Structured.Form): List<Node.Decl.Structured> = this
@@ -81,14 +80,6 @@ fun Node.Decl.Structured.toParam(name: String = this.name.decapitalize()) = func
     typeName = this.name
 )
 
-val Node.Decl.Func.Param.typeName
-    get() = type!!.ref.let {
-        when (it) {
-            is Node.TypeRef.Simple -> it.pieces.first().name
-            else -> null
-        }
-    }
-
 fun funcParam(
     name: String,
     typeName: String = name.capitalize(),
@@ -111,14 +102,6 @@ fun funcParam(
     default = null
 )
 
-val toFunctionalClasses = fun List<Node.Decl>.(): List<Node.Decl.Structured> = this
-    .filterFunctions()
-    .groupByName()
-    .map(toFunctionalClass)
-
-fun List<Node.Decl.Func>.groupByName(): Collection<List<Node.Decl.Func>> = this
-    .groupBy(Node.Decl.Func::name)
-    .values
 
 val toFunctionalClass = fun List<Node.Decl.Func>.() = map(asInvokeFunction).fold(
     initial = structuredDeclaration(
@@ -141,12 +124,6 @@ operator fun Node.Decl.Structured.plus(func: Node.Decl.Func) = copy(
     members = members + func
 )
 
-
-fun Set<Node.Decl.Func.Param>.filterMatchingTo(func: Node.Decl.Func): List<Node.Decl.Func.Param> {
-    val body = Writer.write(func.body!!)
-    return filter { param -> body.contains(param.name) }
-}
-
 fun Node.Decl.Structured.updateConstructor(params: Set<Node.Decl.Func.Param>) = copy(
     primaryConstructor = Node.Decl.Structured.PrimaryConstructor(
         mods = mods,
@@ -158,6 +135,7 @@ fun Node.Decl.Structured.updateConstructor(params: Set<Node.Decl.Func.Param>) = 
 )
 
 fun <T: Node>T.map(fn: (v: Node?, parent: Node) -> Node?): T = MutableVisitor.postVisit(this, fn)
+
 fun Node.forEach(fn: (v: Node?, parent: Node) -> Unit): Unit = Visitor.visit(this, fn)
 
 fun structuredDeclaration(

@@ -11,8 +11,4 @@ class RefactorTest {
     fun testV2() {
         refactorV2(FILE_PATH)
     }
-    @Test
-    fun test() {
-        defaultRefactor(FILE_PATH)
-    }
 }
