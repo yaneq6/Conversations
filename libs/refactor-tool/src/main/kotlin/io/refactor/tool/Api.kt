@@ -124,10 +124,13 @@ fun Set<Node.Decl.Func.Param>.filterMatchingTo(func: Node.Decl.Func): List<Node.
     return filter { param -> body.contains(param.name) }
 }
 
-fun Node.Decl.Structured.setConstructor(allParams: List<Node.Decl.Func.Param>) = copy(
+fun Node.Decl.Structured.updateConstructor(params: Set<Node.Decl.Func.Param>) = copy(
     primaryConstructor = Node.Decl.Structured.PrimaryConstructor(
-        mods = listOf(),
-        params = allParams
+        mods = mods,
+        params = listOfNotNull(
+            primaryConstructor?.params,
+            params
+        ).flatten()
     )
 )
 

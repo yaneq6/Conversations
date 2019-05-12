@@ -1,14 +1,15 @@
 package io.refactor.tool
 
+import kastree.ast.MutableVisitor
 import kastree.ast.Node
 import kastree.ast.Visitor
 import kastree.ast.Writer
 import kastree.ast.psi.Converter
 import kastree.ast.psi.Parser
-import org.jetbrains.kotlin.psi.primaryConstructorVisitor
 import org.jetbrains.kotlin.utils.addIfNotNull
 import java.io.File
 import java.nio.charset.Charset
+import java.util.*
 
 
 // V2
@@ -32,11 +33,26 @@ data class Refactor(
     data class Scope(
         val root: Node.Decl.Structured,
         val state: Node.Decl.Structured,
-        val dependencies: Set<Node.Decl.Func.Param> = emptySet(),
+        val dependencies: Map<String, Dependency> = emptyMap(),
         val classes: Set<Node.Decl.Structured> = emptySet(),
         val callbacks: Set<Node.Decl.Structured> = emptySet(),
         val functionalClasses: Set<Node.Decl.Structured> = emptySet()
     )
+
+    sealed class Dependency {
+        abstract val name: String
+
+        data class Functional(
+            val param: Node.Decl.Func.Param
+        ) : Dependency() {
+            override val name get() = param.name
+        }
+
+        data class Custom(
+            override val name: String,
+            val param: Node.Decl.Func.Param
+        ) : Dependency()
+    }
 }
 
 fun refactorV2(path: String) = Refactor(path = path)
@@ -45,10 +61,21 @@ fun refactorV2(path: String) = Refactor(path = path)
     .generateScopes()
     .generateStatesV2()
     .extractInnerClasses()
+    .extractFunctions()
     .generateDependenciesV2()
     .generateStaticImports()
     .generateInterfacesImports()
     .writeToFileV2()
+
+fun Refactor.generateStatesV2() = eachScope {
+    copy(
+        state = structuredDeclaration(
+            name = root.name + "State",
+            form = Node.Decl.Structured.Form.CLASS,
+            members = root.members.filterStateMembers()
+        )
+    )
+}
 
 fun Refactor.extractInnerClasses() = eachScope {
     copy(
@@ -57,39 +84,94 @@ fun Refactor.extractInnerClasses() = eachScope {
             .filter { it.mods.contains(Node.Modifier.Lit(Node.Modifier.Keyword.INNER)) }
             .apply { forEach(::println) }
             .map {
-                it.setConstructor(listOf(root.toParam()))
+                it.updateConstructor(listOf(root.toParam()))
                     .copy(mods = emptyList())
             }
             .toSet()
     )
 }
 
-fun Refactor.generateStatesV2() = eachScope {
+fun Refactor.extractFunctions() = eachScope {
     copy(
-        state = structuredDeclaration(
-            name = root.name + "State",
-            form = Node.Decl.Structured.Form.CLASS,
-            members = root.members.filterStateMembers()
-//                .apply { forEach(::println) }
-        )
+        functionalClasses = root.members
+            .toFunctionalClasses()
+            .apply { forEach(::println) }
+            .toSet()
     )
 }
 
 fun Refactor.generateDependenciesV2() = eachScope {
     copy(
-        dependencies = mutableSetOf<Node.Decl.Func.Param>().apply {
-            Visitor.visit(root) { node, _ ->
-                addIfNotNull(
-                    when (node) {
-                        is Node.Decl.Func -> node.toParam()
-                        is Node.Decl.Property -> node.toParam().takeIf { it.typeName != "!!!Error!!!" }
-                        else -> null
-                    }
-                )
-            }
-        }
+        dependencies = createFunctionalDependency() +
+                createPropertyDependency()
     )
 }
+
+fun Refactor.updateConstructors() = eachScope {
+    copy(
+        classes = updateConstructors(classes),
+        functionalClasses = updateConstructors(functionalClasses),
+        callbacks = updateConstructors(callbacks)
+    )
+}
+
+fun Refactor.Scope.updateConstructors(classes: Iterable<Node.Decl.Structured>): Set<Node.Decl.Structured> =
+    classes.map { type ->
+        val params = mutableSetOf<Node.Decl.Func.Param>()
+        type.copy(
+            members = type.members.map { member ->
+                MutableVisitor.preVisit(member) { v: Node?, parent: Node ->
+                    when (v) {
+                        is Node.Expr.Call -> v.also {
+                            it.args.first().name?.let { name ->
+                                params.addIfNotNull(dependencies[name])
+                            } ?: Unit
+                        }
+                        else -> v
+                    }
+                }
+            }
+        ).updateConstructor(
+            params = params
+        )
+    }.toSet()
+
+inline fun <reified T : Node.Decl> Refactor.Scope.generateDependencies(
+    crossinline createDependency: Refactor.Scope.(T) -> Refactor.Dependency?
+): Map<String, Refactor.Dependency> =
+    TreeSet<Refactor.Dependency>(compareBy(Refactor.Dependency::name)).apply {
+        Visitor.visit(root) { node, _ ->
+            addIfNotNull(
+                when (node) {
+                    is T -> createDependency(node)
+                    else -> null
+                }
+            )
+        }
+    }
+        .map { dependency -> dependency.name to dependency }
+        .toMap()
+
+
+fun Refactor.Scope.createFunctionalDependency() =
+    generateDependencies<Node.Decl.Func> { func ->
+        func.toParam().let(Refactor.Dependency::Functional)
+    }
+
+
+fun Refactor.Scope.createPropertyDependency() =
+    generateDependencies<Node.Decl.Property> { property ->
+        property.vars.first()?.name?.let { name ->
+            state.takeIf {
+                it.members.any { decl ->
+                    (decl as? Node.Decl.Property)?.vars?.first()?.name == name
+                }
+            }?.toParam()?.let { param ->
+                Refactor.Dependency.Custom(name, param)
+            }
+        }
+    }
+
 
 fun Refactor.writeToFileV2() = apply {
     input!!.copy(
@@ -229,7 +311,7 @@ fun Refactor.updateConstructorParams() = copy(
             .map(dependencies::filterMatchingTo)
             .flatten()
 
-        type.setConstructor(
+        type.updateConstructor(
             listOf(
                 propertiesDependencies,
                 functionDependencies
