@@ -8,7 +8,8 @@ fun Refactor.updateDependencies() = eachScope {
         classes = updateDependencies(classes),
         functionalClasses = updateDependencies(functionalClasses),
         objects = updateDependencies(objects),
-        state = updateDependencies(listOf(state)).first()
+        state = updateDependencies(listOf(state)).first(),
+        helper = updateDependencies(listOf(helper)).first()
     )
 }
 
@@ -50,6 +51,7 @@ fun Refactor.Scope.fixDependenciesAccess(classes: Iterable<Node.Decl.Structured>
                     else v.rhs
                 is Node.Expr.Name -> v.name
                     .let(dependencies::get)
+                    ?.takeIf { dep -> !objects.any { it.name.contains(dep.name, ignoreCase = true) } }
                     ?.let { dep ->
                         when (dep) {
                             is Refactor.Dependency.Custom -> Node.Expr.BinaryOp(

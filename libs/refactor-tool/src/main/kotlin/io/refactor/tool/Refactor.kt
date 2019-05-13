@@ -20,6 +20,7 @@ data class Refactor(
             typeName = root.name
         ),
         val state: Node.Decl.Structured = root,
+        val helper: Node.Decl.Structured = root,
         val module: Node.Decl.Structured = root,
         val dependencies: Map<String, Dependency> = emptyMap(),
         val classes: Set<Node.Decl.Structured> = emptySet(),
@@ -49,6 +50,7 @@ fun refactor(path: String) = Refactor(path = path)
     .init()
     .generateScope()
     .generateState()
+    .generateHelper()
     .generateModule()
     .extractObjects()
     .extractInnerClasses()

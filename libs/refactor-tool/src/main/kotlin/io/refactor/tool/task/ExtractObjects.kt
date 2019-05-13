@@ -11,11 +11,14 @@ fun Refactor.extractObjects() = eachScope {
             .filterIsInstance<Node.Decl.Property>()
             .mapNotNull { prop ->
                 when (val expr = prop.expr) {
-                    is Node.Expr.Object -> structuredDeclaration(
-                        name = prop.vars.first()!!.name.capitalize(),
-                        form = Node.Decl.Structured.Form.CLASS,
-                        members = expr.members
-                    )
+                    is Node.Expr.Object -> {
+                        structuredDeclaration(
+                            name = prop.vars.first()!!.name.capitalize(),
+                            form = Node.Decl.Structured.Form.CLASS,
+                            members = expr.members,
+                            parents = expr.parents
+                        )
+                    }
                     else -> null
                 }
             }

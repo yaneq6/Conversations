@@ -28,6 +28,10 @@ fun Refactor.Scope.createPropertyDependencies() = generateDependencies<Node.Decl
                 it.members.any { decl ->
                     (decl as? Node.Decl.Property)?.vars?.first()?.name == name
                 }
+            } ?: helper.takeIf {
+                it.members.any { decl ->
+                    (decl as? Node.Decl.Property)?.vars?.first()?.name == name
+                }
             } ?: objects.find {
                 it.name.contains(name, ignoreCase = true)
             }
@@ -69,7 +73,8 @@ val serviceMembers = setOf(
     "startForeground",
     "stopForeground",
     "stopSelf",
-    "packageManager"
+    "packageManager",
+    "resources"
 )
 
 fun Refactor.Scope.createRootDependencies() = funcParam(

@@ -9,6 +9,7 @@ fun Refactor.writeToFile() = apply {
     input!!.copy(
         imports = input.imports + imports,
         decls = scopes.map(Refactor.Scope::state) +
+                scopes.map(Refactor.Scope::helper) +
                 scopes.map(Refactor.Scope::module) +
                 scopes.map(Refactor.Scope::classes).flatten() +
                 scopes.map(Refactor.Scope::objects).flatten() +
