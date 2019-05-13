@@ -15,6 +15,10 @@ data class Refactor(
 
     data class Scope(
         val root: Node.Decl.Structured,
+        val rootParam: Node.Decl.Func.Param = funcParam(
+            name = "service",
+            typeName = root.name
+        ),
         val state: Node.Decl.Structured = root,
         val module: Node.Decl.Structured = root,
         val dependencies: Map<String, Dependency> = emptyMap(),

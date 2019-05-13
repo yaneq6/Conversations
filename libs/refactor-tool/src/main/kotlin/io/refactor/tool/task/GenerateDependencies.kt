@@ -1,9 +1,6 @@
 package io.refactor.tool.task
 
-import io.refactor.tool.Refactor
-import io.refactor.tool.eachScope
-import io.refactor.tool.forEach
-import io.refactor.tool.toParam
+import io.refactor.tool.*
 import kastree.ast.Node
 import org.jetbrains.kotlin.utils.addIfNotNull
 import java.util.*
@@ -12,20 +9,19 @@ import java.util.*
 fun Refactor.generateDependencies() = eachScope {
     copy(
         dependencies = listOf(
-            createFunctionalDependency(),
-            createPropertyDependency()
+            createFunctionalDependencies(),
+            createPropertyDependencies(),
+            createRootDependencies()
         )
             .reduce { acc, map -> acc + map }
-            .apply { forEach(::println) }
     )
 }
 
-fun Refactor.Scope.createFunctionalDependency() = generateDependencies<Node.Decl.Func> { func ->
+fun Refactor.Scope.createFunctionalDependencies() = generateDependencies<Node.Decl.Func> { func ->
     func.toParam().let(Refactor.Dependency::Functional)
 }
 
-
-fun Refactor.Scope.createPropertyDependency() = generateDependencies<Node.Decl.Property> { property ->
+fun Refactor.Scope.createPropertyDependencies() = generateDependencies<Node.Decl.Property> { property ->
     property.vars.first()?.name?.let { name ->
         let {
             state.takeIf {
@@ -62,3 +58,28 @@ inline fun <reified T : Node.Decl> Refactor.Scope.generateDependencies(
 }
     .map { dependency -> dependency.name to dependency }
     .toMap()
+
+
+val serviceMembers = setOf(
+    "getSystemService",
+    "applicationContext",
+    "registerReceiver",
+    "unregisterReceiver",
+    "contentResolver",
+    "startForeground",
+    "stopForeground",
+    "stopSelf",
+    "packageManager"
+)
+
+fun Refactor.Scope.createRootDependencies() = funcParam(
+    name = "service",
+    typeName = root.name
+).let { param ->
+    serviceMembers.map { member ->
+        member to Refactor.Dependency.Custom(
+            name = member,
+            param = param
+        )
+    }.toMap()
+}

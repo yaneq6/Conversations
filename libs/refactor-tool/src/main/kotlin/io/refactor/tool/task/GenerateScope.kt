@@ -9,8 +9,7 @@ fun Refactor.generateScope() = copy(
         .filterBy(Node.Decl.Structured.Form.CLASS)
         .map { type ->
             Refactor.Scope(
-                root = type,
-                state = type
+                root = type
             )
         }
         .toSet()

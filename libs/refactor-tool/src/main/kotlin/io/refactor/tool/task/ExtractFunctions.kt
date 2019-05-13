@@ -7,7 +7,8 @@ fun Refactor.extractFunctions() = eachScope {
     copy(
         functionalClasses = root.members
             .filterIsInstance<Node.Decl.Func>()
-            .groupBy(Node.Decl.Func::name).values
+            .groupBy(Node.Decl.Func::name)
+            .values
             .map(toFunctionalClass)
             .toSet()
     )
@@ -24,8 +25,12 @@ val toFunctionalClass = fun List<Node.Decl.Func>.() = map(asInvokeFunction).fold
 val asInvokeFunction = fun Node.Decl.Func.() = copy(
     name = "invoke",
     mods = listOf<Node.Modifier>(Node.Modifier.Lit(Node.Modifier.Keyword.OPERATOR)),
-    body = body!!.map { v: Node?, _: Node ->
-        if (v !is Node.Expr.Name || v.name != name) v
-        else v.copy(name = "invoke")
+    body = body!!.map { v: Node?, parent: Node ->
+        if (v is Node.Expr.Call && parent !is Node.Expr.BinaryOp) {
+            val expr = v.expr
+            if (expr is Node.Expr.Name && expr.name == name) v.copy(Node.Expr.Name("invoke"))
+            else v
+        }
+        else v
     }
 )

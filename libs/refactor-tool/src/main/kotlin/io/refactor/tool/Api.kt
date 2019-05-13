@@ -20,12 +20,15 @@ fun Node.Decl.Func.toParam() = funcParam(
 fun Node.Decl.Property.toParam(): Node.Decl.Func.Param {
     return funcParam(
         name = vars.first()!!.name,
-        typeName = expr.let { expr ->
-            when (expr) {
-                is Node.Expr.Call -> expr.expr.let { it as Node.Expr.Name }.name
-                else -> "!!!Error!!!"
+        typeName = vars.first()?.type?.ref
+            ?.let { it as? Node.TypeRef.Simple }
+            ?.pieces?.first()?.name
+            ?: expr.let { expr ->
+                when (expr) {
+                    is Node.Expr.Call -> expr.expr.let { it as Node.Expr.Name }.name
+                    else -> "!!!Error!!!"
+                }
             }
-        }
     )
 }
 
@@ -37,7 +40,7 @@ val suffixes = listOf(
 )
 
 fun Node.Decl.Structured.toParam(name: String = this.name.decapitalize()) = funcParam(
-    name = suffixes.find { name.endsWith(suffix = it, ignoreCase = true)} ?: name,
+    name = suffixes.find { name.endsWith(suffix = it, ignoreCase = true) } ?: name,
     typeName = this.name
 )
 
@@ -77,7 +80,7 @@ fun Node.Decl.Structured.updateConstructor(params: Set<Node.Decl.Func.Param>) = 
     )
 )
 
-fun <T: Node>T.map(fn: (v: Node?, parent: Node) -> Node?): T = MutableVisitor.postVisit(this, fn)
+fun <T : Node> T.map(fn: (v: Node?, parent: Node) -> Node?): T = MutableVisitor.postVisit(this, fn)
 
 fun Node.forEach(fn: (v: Node?, parent: Node) -> Unit): Unit = Visitor.visit(this, fn)
 

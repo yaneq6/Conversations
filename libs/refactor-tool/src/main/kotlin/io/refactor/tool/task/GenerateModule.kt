@@ -21,7 +21,8 @@ fun List<Node.Decl>.filterModuleMembers(): List<Node.Decl.Property> = this
     .filterIsInstance<Node.Decl.Property>()
     .filter { prop ->
         when (val expr = prop.expr) {
-            null, is Node.Expr.Object -> false
+            null -> prop.accessors == null
+            is Node.Expr.Object -> false
             else -> AtomicBoolean(false).apply {
                 expr.forEach { v: Node?, _: Node ->
                     compareAndSet(
