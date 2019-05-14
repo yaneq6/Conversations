@@ -32,6 +32,24 @@ fun Node.Decl.Property.toParam(): Node.Decl.Func.Param {
     )
 }
 
+val Node.Decl.name get() = when(this) {
+    is Node.Decl.Property -> vars.first()?.name
+    is Node.Decl.Func -> name
+    else -> null
+}
+
+val Node.Decl.Property.typeName get() = vars.first()
+    ?.type
+    ?.ref
+    ?.let { it as? Node.TypeRef.Simple }
+    ?.pieces
+    ?.first()
+    ?.name
+    ?: expr.let { it as? Node.Expr.Call }
+        ?.expr
+        ?.let { it as Node.Expr.Name }
+        ?.name
+
 val suffixes = listOf(
     "state",
     "activity",

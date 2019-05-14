@@ -33,8 +33,5 @@ fun List<Node.Decl>.filterHelperMembers() = this
             }.get()
         }
     }
-    .apply {
-        forEach(::println)
-    }
 
 
