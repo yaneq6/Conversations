@@ -3,6 +3,7 @@ package io.refactor.tool
 import io.refactor.tool.task.*
 import kastree.ast.Node
 import java.nio.charset.Charset
+import java.util.*
 
 data class Refactor(
     val encoding: Charset = Charsets.UTF_8,
@@ -49,6 +50,11 @@ data class Refactor(
 fun refactor(path: String) = Refactor(path = path)
     .init()
     .generateScope()
+//    .apply {
+//        scopes.forEach {
+//            it.root.members.forEach(::println)
+//        }
+//    }
     .extractObjects()
     .extractInnerClasses()
     .extractFunctions()
@@ -60,3 +66,9 @@ fun refactor(path: String) = Refactor(path = path)
     .generateDependencies()
     .updateDependencies()
     .writeToFile()
+
+
+
+val test = {
+
+}

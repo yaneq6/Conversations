@@ -34,10 +34,7 @@ fun List<Node.Decl>.filterStateMembers(scope: Refactor.Scope) = this
                 }.get()
             }
     }
-    .apply {
-        forEach(::println)
-    }
 
-infix fun Node.Decl.Property.`hasInnerTypeIn`(scope: Refactor.Scope) = typeName
+infix fun Node.Decl.Property.hasInnerTypeIn(scope: Refactor.Scope) = typeName
     ?.let { typeName -> scope.root.members.filterBy(Node.Decl.Structured.Form.CLASS).any { typeName == it.name } }
-    ?: false``
+    ?: false

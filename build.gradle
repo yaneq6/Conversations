@@ -6,6 +6,10 @@ buildscript {
         dagger_version = '2.22.1'
         aakit_version = '7c550e9a94'
         timber_version = '4.7.1'
+        rx_version = '1.0.1'
+        rxjava_version = '2.1.6'
+        rxandroid_version = '2.0.1'
+        rxkotlin_version = '2.3.0'
     }
     repositories {
         google()
@@ -273,6 +277,8 @@ dependencies {
         exclude group: 'com.intellij', module: 'annotations'
     }
     implementation "com.jakewharton.timber:timber:$timber_version"
+    implementation "io.reactivex.rxjava2:rxjava:$rxjava_version"
+    implementation "io.reactivex.rxjava2:rxkotlin:$rxkotlin_version"
 
 //    testImplementation 'com.github.cretz.kastree:kastree-ast-jvm:0.4.0'
 //    testImplementation 'com.github.cretz.kastree:kastree-ast-psi:0.4.0'

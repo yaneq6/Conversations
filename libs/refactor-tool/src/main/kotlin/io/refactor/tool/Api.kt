@@ -88,7 +88,10 @@ operator fun Node.Decl.Structured.plus(func: Node.Decl.Func) = copy(
     members = members + func
 )
 
-fun Node.Decl.Structured.updateConstructor(params: Set<Node.Decl.Func.Param>) = copy(
+fun Node.Decl.Structured.updateConstructor(
+    mods: List<Node.Modifier> = this.mods,
+    params: Set<Node.Decl.Func.Param> = setOf()
+) = copy(
     primaryConstructor = Node.Decl.Structured.PrimaryConstructor(
         mods = mods,
         params = listOfNotNull(

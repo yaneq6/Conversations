@@ -19,7 +19,6 @@ fun Refactor.generateHelper() = eachScope {
 
 fun List<Node.Decl>.filterHelperMembers() = this
     .filterIsInstance<Node.Decl.Property>()
-    .apply { forEach(::println) }
     .filter { prop ->
         when {
             prop.accessors == null -> false

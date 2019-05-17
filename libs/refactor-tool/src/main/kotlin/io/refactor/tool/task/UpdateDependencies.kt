@@ -8,10 +8,16 @@ fun Refactor.updateDependencies() = eachScope {
         classes = updateDependencies(classes),
         functionalClasses = updateDependencies(functionalClasses),
         objects = updateDependencies(objects),
-        state = updateDependencies(listOf(state)).first(),
-        helper = updateDependencies(listOf(helper)).first()
+        state = updateDependencies(state),
+        helper = updateDependencies(helper),
+        module = updateDependencies(module)
     )
 }
+
+
+fun Refactor.Scope.updateDependencies(
+    type: Node.Decl.Structured
+): Node.Decl.Structured = updateDependencies(listOf(type)).first()
 
 fun Refactor.Scope.updateDependencies(
     classes: Iterable<Node.Decl.Structured>

@@ -9,7 +9,7 @@ fun Refactor.extractInnerClasses() = eachScope {
             .filterBy(Node.Decl.Structured.Form.CLASS)
             .filter { it.mods.contains(Node.Modifier.Lit(Node.Modifier.Keyword.INNER)) }
             .map {
-                it.updateConstructor(setOf(root.toParam()))
+                it.updateConstructor(mods = emptyList())
                     .copy(mods = emptyList())
             }
             .toSet()

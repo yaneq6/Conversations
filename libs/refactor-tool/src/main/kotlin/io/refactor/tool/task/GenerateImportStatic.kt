@@ -14,15 +14,19 @@ fun Refactor.generateImportStatic(): Refactor = input!!.pkg?.names?.let { names 
                     .filterBy(Node.Decl.Structured.Form.COMPANION_OBJECT)
                     .firstOrNull()
                     ?.members
-                    ?.filterIsInstance<Node.Decl.Property>()
-                    ?.mapNotNull { property ->
-                        property.vars.first()?.name?.let { memberName ->
-                            Node.Import(
-                                names = names + type.name + "Companion" + memberName,
-                                alias = null,
-                                wildcard = false
-                            )
+                    ?.mapNotNull { member ->
+                        when (member) {
+                            is Node.Decl.Property -> member.vars.first()?.name
+                            is Node.Decl.Func -> member.name
+                            else -> null
                         }
+                    }
+                    ?.map { memberName ->
+                        Node.Import(
+                            names = names + type.name + "Companion" + memberName,
+                            alias = null,
+                            wildcard = false
+                        )
                     }
             }.flatten().toSet()
     )

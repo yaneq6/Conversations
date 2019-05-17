@@ -38,8 +38,8 @@ fun Refactor.Scope.createPropertyDependencies() = generateDependencies<Node.Decl
         }?.toParam()?.let { param ->
             Refactor.Dependency.Custom(name, param)
         } ?: let {
-            module.members.filterIsInstance<Node.Decl.Property>().firstOrNull { decl ->
-                decl.vars.first()?.name == name
+            module.members.filterIsInstance<Node.Decl.Func>().firstOrNull { decl ->
+                decl.name == name
             }?.let { member ->
                 Refactor.Dependency.Functional(member.toParam())
             }
