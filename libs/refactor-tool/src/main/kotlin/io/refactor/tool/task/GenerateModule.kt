@@ -34,7 +34,6 @@ fun List<Node.Decl>.filterModuleMembers(): List<Node.Decl.Property> = this
     }
 
 fun List<Node.Decl.Property>.toFunctions() = map { prop ->
-    println(prop)
     Node.Decl.Func(
         mods = listOf(),
         name = prop.name,

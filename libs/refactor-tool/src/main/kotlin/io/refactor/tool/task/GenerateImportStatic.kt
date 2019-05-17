@@ -2,6 +2,7 @@ package io.refactor.tool.task
 
 import io.refactor.tool.Refactor
 import io.refactor.tool.filterBy
+import io.refactor.tool.import
 import kastree.ast.Node
 
 
@@ -22,11 +23,7 @@ fun Refactor.generateImportStatic(): Refactor = input!!.pkg?.names?.let { names 
                         }
                     }
                     ?.map { memberName ->
-                        Node.Import(
-                            names = names + type.name + "Companion" + memberName,
-                            alias = null,
-                            wildcard = false
-                        )
+                        import(names + type.name + "Companion" + memberName)
                     }
             }.flatten().toSet()
     )

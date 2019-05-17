@@ -126,3 +126,13 @@ fun structuredDeclaration(
     typeConstraints = typeConstraints,
     primaryConstructor = primaryConstructor
 )
+
+fun import(
+    names: List<String> = listOf(),
+    alias: String? = null,
+    wildcard: Boolean = false
+) = Node.Import(
+    names = names,
+    alias = alias,
+    wildcard = wildcard
+)
